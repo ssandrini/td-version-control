@@ -1,6 +1,6 @@
 # TouchDesigner Version Control CLI
 
-CLI inicial
+CLI inicial.
 
 ## Requisitos Previos
 

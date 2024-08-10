@@ -17,8 +17,7 @@
     "child_process": "^1.0.2",
     "fs-extra": "^11.2.0",
     "hidefile": "^3.0.0",
-    "simple-git": "^3.25.0",
-    "yargs": "^17.7.2"
+    "simple-git": "^3.25.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",

@@ -8,11 +8,12 @@ export const listVersions = async () => {
         const tags = await git.tags();
         if (tags.all.length === 0) {
             console.log('No versions found.');
+            return [];
         } else {
-            console.log('Available versions:');
-            tags.all.forEach(tag => console.log(tag));
+            return tags.all;
         }
     } catch (error) {
         console.error('Error listing versions:', error);
+        return [];
     }
 };

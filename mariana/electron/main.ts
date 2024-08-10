@@ -1,7 +1,8 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import {listVersions} from "./version-mgr";
 
 createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -31,9 +32,12 @@ function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC, 'img.png'),
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: true,
       preload: path.join(__dirname, 'preload.mjs'),
     },
   })
+
+  ipcMain.handle('list-versions', listVersions());
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

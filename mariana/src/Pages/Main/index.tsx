@@ -7,6 +7,9 @@ const Main: React.FC = () => {
             <div className="w-56 h-screen">
                 <Sidebar/>
             </div>
+            <div className="">
+
+            </div>
         </div>
     )
 }

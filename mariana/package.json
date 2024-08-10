@@ -13,7 +13,12 @@
     "@fontsource/montserrat": "^5.0.18",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite-tsconfig-paths": "^4.3.2",
+    "child_process": "^1.0.2",
+    "fs-extra": "^11.2.0",
+    "hidefile": "^3.0.0",
+    "simple-git": "^3.25.0",
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",

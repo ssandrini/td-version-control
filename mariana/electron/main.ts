@@ -37,7 +37,7 @@ function createWindow() {
     },
   })
 
-  ipcMain.handle('list-versions', listVersions());
+  ipcMain.handle('list-versions', listVersions);
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

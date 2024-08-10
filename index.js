@@ -19,18 +19,17 @@ const initRepo = async () => {
         const git = simpleGit();
         if (!fs.existsSync('.git')) {
             await git.init();
-            console.log('Initialized empty Git repository in .td');
+            //console.log('Initialized empty Git repository in .td');
         } else {
             console.log('Git repository already exists in .td');
         }
-
 
         process.chdir('..');
         const toeFile = findToeFile();
         if (toeFile) {
             try {
                 execSync(`toeexpand.exe ${toeFile}`, { stdio: 'inherit' });
-                console.log(`Expanded ${toeFile}`);
+                //console.log(`Expanded ${toeFile}`);
             } catch (e) {
                 // no hago nada por ahora con el error
             }
@@ -44,9 +43,10 @@ const initRepo = async () => {
 
             process.chdir(tdDir);
             await git.add('.');
-            await git.commit('Initial commit');
+            await git.commit('Initial version');
             await git.addAnnotatedTag("version0", "version0");
             process.chdir('..'); // Volver al directorio raíz
+            console.log("Created initial version: version0")
         } else {
             console.log('No .toe file found');
         }
@@ -55,7 +55,6 @@ const initRepo = async () => {
         console.error('Error in initRepo:', err);
     }
 };
-
 
 const newVersion = async (name, message) => {
     try {
@@ -83,9 +82,9 @@ const newVersion = async (name, message) => {
         }
 
         for (const file of fileList) {
-            const sourcePath = path.join(process.cwd(),`${toeFile}.dir`, file);
-            const targetPath = path.join(tdDir,`${toeFile}.dir`, file);
-            console.log("moving file: "+ file + " of path " + sourcePath + " to " + targetPath)
+            const sourcePath = path.join(process.cwd(), `${toeFile}.dir`, file);
+            const targetPath = path.join(tdDir, `${toeFile}.dir`, file);
+            //console.log(`moving file: ${file} from ${sourcePath} to ${targetPath}`);
             fs.renameSync(sourcePath, targetPath);
         }
 
@@ -93,7 +92,7 @@ const newVersion = async (name, message) => {
         fs.renameSync(tocFilePath, tocTargetPath);
 
         const toeDirPath = path.join(process.cwd(), `${toeFile}.dir`);
-        fs.rm(toeDirPath, { recursive: true, force: true })
+        fs.rm(toeDirPath, { recursive: true, force: true });
 
         process.chdir(tdDir);
         const git = simpleGit();
@@ -115,8 +114,8 @@ const checkoutVersion = async (version) => {
             return;
         }
 
-        const rootDir = process.cwd()
-        const tdDir = path.join(process.cwd(), '.td');
+        const rootDir = process.cwd();
+        const tdDir = path.join(rootDir, '.td');
         process.chdir(tdDir);
         const git = simpleGit();
 
@@ -129,7 +128,6 @@ const checkoutVersion = async (version) => {
         await git.checkout(version);
 
         try {
-            console.log("toeFile")
             execSync(`toecollapse.exe ${toeFile}`, { stdio: 'inherit' });
             console.log(`Collapsed to version ${version}`);
         } catch (e) {
@@ -138,15 +136,11 @@ const checkoutVersion = async (version) => {
 
         const newToeFile = findToeFile();
         if (newToeFile) {
-            // Mover el archivo .toe al directorio raíz
             const sourcePath = path.join(tdDir, newToeFile);
             const targetPath = path.join(rootDir, newToeFile);
-            console.log("moving " + sourcePath + " to " + targetPath)
-            try {
-                fs.renameSync(sourcePath, targetPath);
-            } catch (e) {
-                console.log(e)
-            }
+            //console.log(`Moving ${sourcePath} to ${targetPath}`);
+            fs.renameSync(sourcePath, targetPath);
+            //console.log(`Moved new .toe to root directory`);
         } else {
             console.log('No new .toe file found after collapse');
         }
@@ -155,6 +149,37 @@ const checkoutVersion = async (version) => {
     }
 };
 
+const listVersions = async () => {
+    try {
+        const tdDir = path.join(process.cwd(), '.td');
+        const git = simpleGit(tdDir);
+        const tags = await git.tags();
+        if (tags.all.length === 0) {
+            console.log('No versions found.');
+        } else {
+            console.log('Available versions:');
+            tags.all.forEach(tag => console.log(tag));
+        }
+    } catch (error) {
+        console.error('Error listing versions:', error);
+    }
+};
+
+const currentVersion = async () => {
+    try {
+        const tdDir = path.join(process.cwd(), '.td');
+        const git = simpleGit(tdDir);
+        const log = await git.log();
+        const latestTag = await git.raw(['describe', '--tags', '--abbrev=0', log.latest.hash]);
+        if (latestTag) {
+            console.log(`Current version: ${latestTag.trim()}`);
+        } else {
+            console.log('No version found.');
+        }
+    } catch (error) {
+        console.error('Error getting current version:', error);
+    }
+};
 
 const findToeFile = () => {
     const files = fs.readdirSync('.');
@@ -193,6 +218,8 @@ yargs(hideBin(process.argv))
     }, (argv) => {
         checkoutVersion(argv.tag);
     })
+    .command('list-versions', 'List all available versions', () => {}, listVersions)
+    .command('current-version', 'Show the current version', () => {}, currentVersion)
     .demandCommand(1, 'You need at least one command before moving on')
     .help()
     .argv;

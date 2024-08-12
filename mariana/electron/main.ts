@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import {listVersions} from "./version-mgr";
+import {filePicker, listVersions} from "./version-mgr";
 
 createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -37,7 +37,8 @@ function createWindow() {
     },
   })
 
-  ipcMain.handle('list-versions', listVersions);
+  ipcMain.handle('list-versions', (_, dir: string) => listVersions(dir));
+  ipcMain.handle('file-picker', (_) => filePicker());
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

@@ -1,19 +1,21 @@
 import path from 'path';
 import simpleGit from 'simple-git';
+import { dialog } from 'electron'
 
-export const listVersions = async () => {
-    try {
-        const tdDir = path.join('/home/jbrave/Desktop/ITBA/PF/td1/', '.td');
-        const git = simpleGit(tdDir);
-        const tags = await git.tags();
-        if (tags.all.length === 0) {
-            console.log('No versions found.');
-            return [];
-        } else {
+export const listVersions = async (dir: string): Promise<string[]> => {
+    const tdDir = path.join(dir, '.td');
+    const git = simpleGit(tdDir);
+    return git.tags().then((tags) => {
+        if (tags.all.length !== 0) {
             return tags.all;
         }
-    } catch (error) {
-        console.error('Error listing versions:', error);
-        return [];
-    }
+        return []
+    });
 };
+
+
+export const filePicker = async (): Promise<Electron.OpenDialogReturnValue> => {
+    return dialog.showOpenDialog({properties: ['openDirectory']}).then((result) => {
+        return result;
+    });
+}

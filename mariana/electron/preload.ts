@@ -21,5 +21,6 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 })
 
 contextBridge.exposeInMainWorld('api', {
-  listVersions: async () => ipcRenderer.invoke('list-versions')
+  listVersions: async (dir: string) => ipcRenderer.invoke('list-versions', dir),
+  filePicker: async () => ipcRenderer.invoke('file-picker'),
 });

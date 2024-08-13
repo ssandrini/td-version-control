@@ -39,6 +39,7 @@ function createWindow() {
 
   ipcMain.handle('list-versions', (_, dir: string) => listVersions(dir));
   ipcMain.handle('file-picker', (_) => filePicker());
+  // TODO: @santi complete
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

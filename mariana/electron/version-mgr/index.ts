@@ -19,3 +19,5 @@ export const filePicker = async (): Promise<Electron.OpenDialogReturnValue> => {
         return result;
     });
 }
+
+// TODO: @santi complete

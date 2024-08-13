@@ -16,9 +16,19 @@ const Sidebar: React.FC<SidebarProps> = ({setPath}) => {
         })
     }
 
+    const handleNewProject = () => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.filePicker().then((files) => {
+            console.log(files);
+            setPath(files.filePaths[0]);
+        })
+    }
+
     return (
-        <div>
+        <div className="flex flex-col gap-3">
             <Button onClick={handleFilePick}>Elegi el path</Button>
+            <Button onClick={handleNewProject}>Crea un proyecto</Button>
         </div>
     )
 }

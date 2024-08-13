@@ -23,4 +23,5 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 contextBridge.exposeInMainWorld('api', {
   listVersions: async (dir: string) => ipcRenderer.invoke('list-versions', dir),
   filePicker: async () => ipcRenderer.invoke('file-picker'),
+  // TODO: @santi complete
 });

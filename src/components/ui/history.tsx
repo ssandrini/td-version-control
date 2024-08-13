@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import HistoryItem from "../../../Elements/HistoryItem"
+import HistoryItem from "../../Elements/HistoryItem"
 
 interface HistoryProps {
     path: string;

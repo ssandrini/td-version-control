@@ -1,20 +1,21 @@
-import React, {useState} from 'react'
-import History from "./History";
-import Sidebar from "../Sidebar";
+import React from 'react'
+import Sidebar from '../../components/ui/Sidebar';
+// import History from "./History";
+// import Sidebar from "../Sidebar";
+
 
 const Main: React.FC = () => {
-    const [path, setPath] = useState<string>("");
-
     return (
-        <div className="flex flex-row w-full h-full">
-            <div className="w-56 h-screen">
-                <Sidebar setPath={setPath}/>
-            </div>
-            <div className="w-56 h-screen">
-                <History path={path}/>
-            </div>
+        <div className="flex h-screen">
+            <Sidebar />
+
+            <main className="flex-1 bg-gray-100 p-8">
+                <div className="flex items-center justify-center h-full">
+                    <h2 className="text-2xl text-gray-700">Welcome to the Main Page</h2>
+                </div>
+            </main>
         </div>
-    )
-}
+    );
+};
 
 export default Main

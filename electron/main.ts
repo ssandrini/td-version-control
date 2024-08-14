@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import {filePicker, listVersions} from "./version-mgr";
 import userDataMgr from './user-data-mgr/user-data-mgr';
 import Project from '../src/models/Project';
 import tdMgr from './td-mgr/td-mgr';
@@ -30,8 +29,8 @@ function createWindow() {
     },
   })
 
-  ipcMain.handle('list-versions', (_, dir: string) => listVersions(dir));
-  ipcMain.handle('file-picker', (_) => filePicker());
+  ipcMain.handle('list-versions', (_, dir: string) => tdMgr.listVersions(dir));
+  ipcMain.handle('file-picker', (_) => tdMgr.filePicker());
   ipcMain.handle('recent-projects', (_) => userDataMgr.getRecentProjects());
   ipcMain.handle('save-project', (_, project: Project) => userDataMgr.addRecentProject(project));
   ipcMain.handle('delete-project', (_, path: string) => userDataMgr.removeRecentProject(path));

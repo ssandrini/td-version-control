@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import HistoryItem from "../../Elements/HistoryItem"
+import { Version } from '../../../electron/td-mgr/td-mgr';
 
 interface HistoryProps {
     path: string;
@@ -11,11 +12,13 @@ const History: React.FC<HistoryProps> = ({path}) => {
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.listVersions(path).then((versions) => {
-            setVersions(versions);
+        window.api.listVersions(path).then((versions: Version[]) => {
+            // TO DO: JERO, ACÁ ESTAN LAS VERSIONES CON LOS DATOS QUE USARÍAMOS POR AHORA
+            const names = versions.map((version: Version) => version.name);
+            setVersions(names);
         }).catch(() => {
             setVersions([]);
-        })
+        });
     }, [path]);
 
     return (<div>

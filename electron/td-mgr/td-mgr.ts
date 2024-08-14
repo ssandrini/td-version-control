@@ -3,10 +3,51 @@ import path from 'path';
 import fs from 'fs-extra';
 import { execSync } from 'child_process';
 import simpleGit from 'simple-git';
-import hidefile from 'hidefile'
+import hidefile from 'hidefile';
+import { dialog } from 'electron';
+
+export interface Version {
+    name: string;
+    author: string;
+    description: string;
+    date: string;
+    // TO DO: que otros campos hacen falta?
+}
 
 class TouchDesignerManager {
     constructor() {}
+
+    public listVersions = async (dir: string): Promise<Version[]> => {
+        const tdDir = path.join(dir, '.td');
+        const git = simpleGit(tdDir);
+    
+        const tags = await git.tags();
+        const versions: Version[] = [];
+    
+        for (const tagName of tags.all) {
+          // Obtiene la información del commit asociado al tag
+          const commitData = await git.show([`${tagName}`, '--pretty=format:%H|%an|%s|%ad', '--no-patch']);
+          const [_, author, description, date] = commitData.split('|');
+    
+          const version: Version = {
+            name: tagName,
+            author: author || 'Unknown',
+            description: description || 'No description',
+            date: date || 'Unknown date',
+          };
+    
+          versions.push(version);
+        }
+    
+        return versions;
+      };
+    
+    
+    public filePicker = async (): Promise<Electron.OpenDialogReturnValue> => {
+        return dialog.showOpenDialog({properties: ['openDirectory']}).then((result) => {
+            return result;
+        });
+    }
 
     public async openToeFile(projectFolderPath: string): Promise<boolean> {
         try {
@@ -109,6 +150,19 @@ class TouchDesignerManager {
         const files = fs.readdirSync(projectPath);
         return files.find(file => path.extname(file).toLowerCase() === '.toe');
     }
+
+    // Función para crear un proyecto donde ya hay un .toe existente.
+    // Esta función debería llamarse al hacer Open de un proyecto, para validar
+    // si es necesario empezar a generar versiones o ya tiene.
+
+
+
+    // Función para crear una nueva versión
+
+    // Función de checkout entre versiones
+
+    // Función para obtener la versión actual de un proyecto.
+
 }
 
 export default new TouchDesignerManager();

@@ -6,6 +6,7 @@ import {filePicker, listVersions} from "./version-mgr";
 import userDataMgr from './user-data-mgr/user-data-mgr';
 import Project from '../src/models/Project';
 import tdMgr from './td-mgr/td-mgr';
+import watcherMgr from './watcher-mgr/watcher-mgr';
 
 createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -38,6 +39,13 @@ function createWindow() {
   ipcMain.handle('get-td-path', (_) => userDataMgr.getTouchDesignerBinPath());
   ipcMain.handle('open-toe', (_, path: string) => tdMgr.openToeFile(path));
   ipcMain.handle('create-project', (_, path: string, template: string) => tdMgr.createProjectFromTemplate(path, template));
+  ipcMain.handle('watch-project', (_, path: string) => watcherMgr.registerWatcher(path, () => {
+    // Registrar los callbacks que necesitemos acá
+    // yo creo que los callbacks van a ser mensajes hacia el Render process que va a usar para
+    // mostrar en pantalla algo cuando se detectó un cambio, por ejemplo "queres crear una nueva version?"
+    console.log("Project "+ path + " changed.")
+  }));
+  ipcMain.handle('unwatch-project', (_, path: string) => watcherMgr.removeWatcher(path));
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

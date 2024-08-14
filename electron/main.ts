@@ -37,6 +37,7 @@ function createWindow() {
   ipcMain.handle('save-td-path', (_, path: string) => userDataMgr.setTouchDesignerBinPath(path));
   ipcMain.handle('get-td-path', (_) => userDataMgr.getTouchDesignerBinPath());
   ipcMain.handle('open-toe', (_, path: string) => tdMgr.openToeFile(path));
+  ipcMain.handle('create-project', (_, path: string, template: string) => tdMgr.createProjectFromTemplate(path, template));
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

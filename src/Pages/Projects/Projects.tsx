@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { FaFolderOpen, FaPlay, FaTrashAlt } from "react-icons/fa";
@@ -27,7 +27,7 @@ const Projects: React.FC = () => {
         console.log("PICKEANDO" + path);
         const project = projects.find(p => p.name === projectName);
         if (project) {
-            navigate(`/projects`, { state: { path: path, projectName: projectName } });
+            navigate(`/projects/${projectName}`, { state: { path: path, projectName: projectName } });
         }
     };
 
@@ -56,7 +56,32 @@ const Projects: React.FC = () => {
     };
 
     const handleNewProject = () => {
-        handleFilePick();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.filePicker().then((files) => {
+            const selectedPath = files.filePaths[0];
+            setPath(selectedPath);
+            const projectName = selectedPath.split('\\').pop() || 'Untitled'; // WARNING: EN WINDOWS USO ESA BARRA, EN LINUX/MAC LA OTRA
+            const newProject: Project = {
+                name: projectName,
+                author: "Unknown Author",
+                lastModified: new Date().toLocaleDateString(),
+                lastVersion: "0.0.1",
+                path: selectedPath,
+            };
+            const projectExists = projects.some(proj => proj.path === selectedPath);
+            if (!projectExists) {
+                setProjects([...projects, newProject]);
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                window.api.saveProject(newProject);
+            }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api.createProjectFromTemplate(selectedPath, "template0").then((created) => {
+                console.log("se creo: "+ created);
+            })
+        });
     };
 
     const handlePlayProject = async (project: Project) => {
@@ -66,7 +91,7 @@ const Projects: React.FC = () => {
                 // @ts-expect-error
                 window.api.openToe(project.path);
             if (success) {
-                navigate(`/projects`, { state: { path: path, projectName: project.name } }); // Navegar a la página del proyecto
+                navigate(`/projects/${project.name}`, { state: { path: path, projectName: project.name } }); // Navegar a la página del proyecto
             } else {
                 alert('Error: No se pudo abrir el proyecto debido a un problema con el archivo.');
             }
@@ -93,6 +118,14 @@ const Projects: React.FC = () => {
     const confirmDeleteProject = (project: Project) => {
         setProjectToDelete(project);
         setDeleteDialogOpen(true);
+    };
+
+    const handleCellClick = (event: MouseEvent, projectName: string) => {
+        // Prevents the row click if the click is within a button
+        if ((event.target as HTMLElement).closest('button')) {
+            return;
+        }
+        handleRowClick(projectName);
     };
 
     return (
@@ -136,7 +169,7 @@ const Projects: React.FC = () => {
                                     {projects.map((project, index) => (
                                         <tr
                                             key={index}
-                                            onClick={() => handleRowClick(project.name)}
+                                            onClick={(event) => handleCellClick(event, project.name)}
                                             className="cursor-pointer hover:bg-gray-700"
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">{project.name}</td>
@@ -144,10 +177,22 @@ const Projects: React.FC = () => {
                                             <td className="px-6 py-4 whitespace-nowrap">{project.lastModified}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">{project.lastVersion}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <Button className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400" onClick={() => handlePlayProject(project)}>
+                                                <Button
+                                                    className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handlePlayProject(project);
+                                                    }}
+                                                >
                                                     <FaPlay />
                                                 </Button>
-                                                <Button className="p-2 bg-transparent text-red-600 hover:text-red-500" onClick={() => confirmDeleteProject(project)}>
+                                                <Button
+                                                    className="p-2 bg-transparent text-red-600 hover:text-red-500"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        confirmDeleteProject(project);
+                                                    }}
+                                                >
                                                     <FaTrashAlt />
                                                 </Button>
                                             </td>
@@ -158,7 +203,7 @@ const Projects: React.FC = () => {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center">
-                            <FaFolderOpen className="text-6xl text-gray-300 mb-4"/>
+                            <FaFolderOpen className="text-6xl text-gray-300 mb-4" />
                             <h1 className="text-2xl text-gray-200 mb-2">No projects, yet</h1>
                             <p className="text-lg text-gray-300">
                                 To get started, create or open a project.

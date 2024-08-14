@@ -16,7 +16,7 @@ const App: React.FC = () => {
                     <Route path="" element={<Main/>}/>
                     <Route path='projects' element={<Projects/>}/>
                     <Route path='profile' element={<Profile/>}/>
-                    <Route path='projects' element={<ProjectDetail/>}/> {/* Ruta para el detalle del proyecto */}
+                    <Route path='/projects/:projectName' element={<ProjectDetail />} />
                 </Route>
             </Routes>
         </BrowserRouter>

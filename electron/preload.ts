@@ -30,4 +30,5 @@ contextBridge.exposeInMainWorld('api', {
   saveTDBinPath: async (path: string) => ipcRenderer.invoke('save-td-path', path),
   getTDBinPath: async() => ipcRenderer.invoke('get-td-path'),
   openToe: async(path: string) => ipcRenderer.invoke('open-toe', path),
+  createProjectFromTemplate: async(path: string, template: string) => ipcRenderer.invoke('create-project', path, template),
 });

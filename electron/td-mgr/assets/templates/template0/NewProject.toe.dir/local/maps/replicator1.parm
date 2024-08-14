@@ -1,0 +1,10 @@
+?
+repsuffixstart 67108864 0
+template 67108864 select2
+namefromtable 67108864 colbyname
+colname 67108864 id
+opprefix 67108864 id
+master 67108864 master
+destination 201326609 "" me.parent()
+callbacks 67108864 replicator1_callbacks
+?

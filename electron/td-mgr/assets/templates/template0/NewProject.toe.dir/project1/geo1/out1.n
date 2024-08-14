@@ -1,0 +1,9 @@
+TOP:out
+tile 195 0 130 80
+flags =  current on viewer 1 parlanguage 0
+inputs
+{
+0 	in1
+}
+color 0.55 0.55 0.55 
+end

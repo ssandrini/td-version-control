@@ -1,0 +1,12 @@
+?
+type 67108864 hermite
+rough 67108864 0.25
+tx 67108913 6531 absTime.frame*.6
+ty 67108896 0
+tz 67108896 0
+constraint 67108864 offset
+constrmean 67108864 0.5
+end 67108864 2
+rate 201326609 60 me.time.rate
+autoexportroot 201326609 "" me.parent()
+?

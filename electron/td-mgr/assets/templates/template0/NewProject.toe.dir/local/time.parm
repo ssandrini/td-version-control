@@ -1,0 +1,4 @@
+?
+rate 67108881 60 cookRate()
+clone 67108864 /sys/local/time
+?

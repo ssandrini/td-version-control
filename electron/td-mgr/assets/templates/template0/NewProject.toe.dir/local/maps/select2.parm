@@ -1,0 +1,9 @@
+?
+extractrows 67108864 bynames
+rowindexend 201326609 0 "me.inputs[0].numRows - 1"
+rownames 67108864 ?*
+rowexpr 201326609 "" "re.match('.*',me.inputCell.val) != None"
+fromcol 67108864 1
+colindexend 201326609 1 "me.inputs[0].numCols - 1"
+colexpr 201326609 "" "re.match('.*',me.inputCell.val) != None"
+?

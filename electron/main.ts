@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import {filePicker, listVersions} from "./version-mgr";
 import userDataMgr from './user-data-mgr/user-data-mgr';
+import Project from '../src/models/Project';
+import tdMgr from './td-mgr/td-mgr';
 
 createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -30,10 +32,11 @@ function createWindow() {
   ipcMain.handle('list-versions', (_, dir: string) => listVersions(dir));
   ipcMain.handle('file-picker', (_) => filePicker());
   ipcMain.handle('recent-projects', (_) => userDataMgr.getRecentProjects());
-  ipcMain.handle('save-project', (_, path: string) => userDataMgr.addRecentProject(path));
+  ipcMain.handle('save-project', (_, project: Project) => userDataMgr.addRecentProject(project));
   ipcMain.handle('delete-project', (_, path: string) => userDataMgr.removeRecentProject(path));
   ipcMain.handle('save-td-path', (_, path: string) => userDataMgr.setTouchDesignerBinPath(path));
   ipcMain.handle('get-td-path', (_) => userDataMgr.getTouchDesignerBinPath());
+  ipcMain.handle('open-toe', (_, path: string) => tdMgr.openToeFile(path));
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

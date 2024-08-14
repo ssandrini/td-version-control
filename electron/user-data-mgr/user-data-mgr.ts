@@ -1,4 +1,5 @@
 import Store from 'electron-store';
+import Project from '../../src/models/Project';
 
 class UserDataManager {
     private store: Store;
@@ -7,22 +8,25 @@ class UserDataManager {
         this.store = new Store();
     }
 
-    addRecentProject(projectPath: string): void {
-        const recentProjects: string[] = this.store.get('recentProjects', []) as string[];
-        if (!recentProjects.includes(projectPath)) {
-            recentProjects.push(projectPath);
+    addRecentProject(project: Project): void {
+        const recentProjects: Project[] = this.store.get('recentProjects', []) as Project[];
+        const projectExists = recentProjects.some(proj => proj.path === project.path);
+
+        if (!projectExists) {
+            recentProjects.push(project);
             this.store.set('recentProjects', recentProjects);
         }
     }
 
     removeRecentProject(projectPath: string): void {
-        let recentProjects: string[] = this.store.get('recentProjects', []) as string[];
-        recentProjects = recentProjects.filter(path => path !== projectPath);
+        console.log("Voy a borrar el proyecto con path: " + projectPath);
+        let recentProjects: Project[] = this.store.get('recentProjects', []) as Project[];
+        recentProjects = recentProjects.filter(proj => proj.path !== projectPath);
         this.store.set('recentProjects', recentProjects);
     }
 
-    getRecentProjects(): string[] {
-        return this.store.get('recentProjects', []) as string[];
+    getRecentProjects(): Project[] {
+        return this.store.get('recentProjects', []) as Project[];
     }
 
     setTouchDesignerBinPath(path: string): void {

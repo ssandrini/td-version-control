@@ -11,8 +11,11 @@ const Profile: React.FC = () => {
         // @ts-expect-error
         window.api.filePicker().then((files) => {
             const selectedPath = files.filePaths[0];
+             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api.saveTDBinPath(selectedPath);
             setTouchDesignerLocation(selectedPath);
-        });
+        });        
     }
 
     return (<div className="flex h-full">

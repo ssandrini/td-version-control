@@ -17,14 +17,23 @@ const Layout: React.FC = () => {
     const {hasTDL, setTouchDesignerLocation} = useVariableContext();
 
     useEffect(() => {
-
-    }, [])
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.getTDBinPath().then((path: string) => {
+            if (path) {
+                setTouchDesignerLocation(path);
+            }
+        });
+    }, [setTouchDesignerLocation]);
 
     const handleSetLocation = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api.filePicker().then((files) => {
             const selectedPath = files.filePaths[0];
+             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api.saveTDBinPath(selectedPath);
             setTouchDesignerLocation(selectedPath);
         });
     }
@@ -34,9 +43,9 @@ const Layout: React.FC = () => {
             <Dialog open>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Indicar ubicaccion de TouchDesigner</DialogTitle>
+                        <DialogTitle>Select location of TouchDesigner</DialogTitle>
                         <DialogDescription>
-                            Para poder utilizar correctamente la herramienta por favor selecciona la ubicacion de touch designer.
+                            In order to use the tool correctly, please select TouchDesigner location.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>

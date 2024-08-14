@@ -3,22 +3,12 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import {filePicker, listVersions} from "./version-mgr";
+import userDataMgr from './user-data-mgr/user-data-mgr';
 
 createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// The built directory structure
-//
-// ├─┬─┬ dist
-// │ │ └── index.html
-// │ │
-// │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.mjs
-// │
 process.env.APP_ROOT = path.join(__dirname, '..')
-
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
@@ -39,7 +29,11 @@ function createWindow() {
 
   ipcMain.handle('list-versions', (_, dir: string) => listVersions(dir));
   ipcMain.handle('file-picker', (_) => filePicker());
-  // TODO: @santi complete
+  ipcMain.handle('recent-projects', (_) => userDataMgr.getRecentProjects());
+  ipcMain.handle('save-project', (_, path: string) => userDataMgr.addRecentProject(path));
+  ipcMain.handle('delete-project', (_, path: string) => userDataMgr.removeRecentProject(path));
+  ipcMain.handle('save-td-path', (_, path: string) => userDataMgr.setTouchDesignerBinPath(path));
+  ipcMain.handle('get-td-path', (_) => userDataMgr.getTouchDesignerBinPath());
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
@@ -49,7 +43,6 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 }

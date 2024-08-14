@@ -1,7 +1,20 @@
 import React from 'react';
-import {FaUserCircle} from 'react-icons/fa'; // Ícono para la foto de perfil
+import {FaUserCircle} from 'react-icons/fa';
+import {useVariableContext} from "../../hooks/Variables/useVariableContext.tsx";
+import {Button} from "../../components/ui/button.tsx"; // Ícono para la foto de perfil
 
 const Profile: React.FC = () => {
+    const {touchDesignerLocation, setTouchDesignerLocation} = useVariableContext();
+
+    const handleSetLocation = () => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.filePicker().then((files) => {
+            const selectedPath = files.filePaths[0];
+            setTouchDesignerLocation(selectedPath);
+        });
+    }
+
     return (<div className="flex h-full">
             <div className="flex-1 bg-gray-100 p-8">
                 <div className="mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -21,6 +34,14 @@ const Profile: React.FC = () => {
                                 viverra tincidunt, sapien lorem cursus est, eu consectetur purus eros nec mi.
                             </p>
                         </div>
+                    </div>
+                </div>
+                <div className="border-t-2 border-gray-900 mb-4"></div>
+                <div className="flex flex-col gap-3">
+                    <div>La ubicacion actual de touch designer es:</div>
+                    <div className="font-bold text-blue-400 underline">{touchDesignerLocation}</div>
+                    <div>
+                        <Button type="button" onClick={handleSetLocation}>Actualizar ubicaccion</Button>
                     </div>
                 </div>
             </div>

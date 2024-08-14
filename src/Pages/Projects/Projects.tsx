@@ -24,10 +24,9 @@ const Projects: React.FC = () => {
     }, []);
 
     const handleRowClick = (projectName: string) => {
-        console.log("PICKEANDO" + path);
         const project = projects.find(p => p.name === projectName);
         if (project) {
-            navigate(`/projects/${projectName}`, { state: { path: path, projectName: projectName } });
+            navigate(`/projects/${projectName}`, { state: { path: project.path, projectName: projectName } });
         }
     };
 
@@ -91,7 +90,7 @@ const Projects: React.FC = () => {
                 // @ts-expect-error
                 window.api.openToe(project.path);
             if (success) {
-                navigate(`/projects/${project.name}`, { state: { path: path, projectName: project.name } }); // Navegar a la página del proyecto
+                navigate(`/projects/${project.name}`, { state: { path: project.path, projectName: project.name } }); // Navegar a la página del proyecto
             } else {
                 alert('Error: No se pudo abrir el proyecto debido a un problema con el archivo.');
             }

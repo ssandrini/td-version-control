@@ -1,19 +1,16 @@
 import React from 'react';
-import Sidebar from "../../components/ui/Sidebar";
-import { FaUserCircle } from 'react-icons/fa'; // Ícono para la foto de perfil
+import {FaUserCircle} from 'react-icons/fa'; // Ícono para la foto de perfil
 
 const Profile: React.FC = () => {
-    return (
-        <div className="flex h-screen">
-            <Sidebar />
-
-            <main className="flex-1 bg-gray-100 p-8">
-                <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    return (<div className="flex h-full">
+            <div className="flex-1 bg-gray-100 p-8">
+                <div className="mx-auto bg-white p-6 rounded-lg shadow-md">
                     <div className="flex items-center space-x-6">
                         {/* Foto de Perfil */}
                         <div className="w-32 h-32 flex-shrink-0">
-                            <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-6xl">
-                                <FaUserCircle />
+                            <div
+                                className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-6xl">
+                                <FaUserCircle/>
                             </div>
                         </div>
                         <div>
@@ -26,9 +23,8 @@ const Profile: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
-    );
+            </div>
+        </div>);
 };
 
 export default Profile;

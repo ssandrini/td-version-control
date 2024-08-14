@@ -2,14 +2,7 @@ import React, {useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {Button} from "../../components/ui/button";
 import {FaFolderOpen} from "react-icons/fa";
-
-interface Project {
-    name: string;
-    author: string;
-    lastModified: string;
-    lastVersion: string;
-    path: string;
-}
+import Project from "../../models/Project.ts";
 
 const initialProjects: Project[] = [];
 

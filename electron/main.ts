@@ -40,6 +40,7 @@ function createWindow() {
   ipcMain.handle('get-td-path', (_) => userDataMgr.getTouchDesignerBinPath());
   ipcMain.handle('open-toe', (_, path: string) => tdMgr.openToeFile(path));
   ipcMain.handle('create-project', (_, path: string, template: string) => tdMgr.createProjectFromTemplate(path, template));
+  ipcMain.handle('checkout-version', (_, versionName: string, path: string) => tdMgr.checkoutVersion(versionName, path));
   ipcMain.handle('watch-project', (_, path: string) => watcherMgr.registerWatcher(path, () => {
     // Registrar los callbacks que necesitemos acá
     // yo creo que los callbacks van a ser mensajes hacia el Render process que va a usar para

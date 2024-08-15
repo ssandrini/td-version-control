@@ -33,4 +33,5 @@ contextBridge.exposeInMainWorld('api', {
   createProjectFromTemplate: async(path: string, template: string) => ipcRenderer.invoke('create-project', path, template),
   createNewVersion: async(title: string, description:string, path: string) => ipcRenderer.invoke('create-version', title, description, path),
   getCurrentVersion: async(path: string) => ipcRenderer.invoke('current-version', path),
+  checkoutVersion: async(versionName: string, path: string) => ipcRenderer.invoke('checkout-version', versionName, path),
 });

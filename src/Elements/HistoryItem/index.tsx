@@ -1,22 +1,28 @@
-import React from 'react'
+import React from 'react';
+import { Version } from '../../../electron/td-mgr/td-mgr';
 
 interface HistoryItemProps {
-    commit: string
+    version: Version;
+    isCurrent: boolean;
+    onClick: () => void;
+    isSelected: boolean;
 }
 
-const HistoryItem: React.FC<HistoryItemProps> = ({commit}) => {
-
+const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, isSelected }) => {
     return (
-        <div className="flex flex-row border-b-2 border-gray-900 h-20 px-4">
+        <div
+            className={`flex flex-row h-20 px-4 ${isSelected? 'bg-gray-600': ''} cursor-pointer hover:bg-gray-600 transition-colors duration-200}`}
+            onClick={onClick}
+        >
             <div className="flex flex-col h-full items-center">
-                <div className="w-3 h-4 bg-yellow-300 rounded-full" />
-                <div className="w-1 h-full bg-yellow-300" />
+                <div className={`w-6 h-8 ${isCurrent ? 'bg-yellow-400' : 'bg-blue-500'} rounded-full`} />
+                <div className={"w-1 h-full bg-blue-500"} />
             </div>
-            <div className="text-black font-bold">
-                {commit}
+            <div className="text-black font-bold px-2">
+                {version.name}
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default HistoryItem
+export default HistoryItem;

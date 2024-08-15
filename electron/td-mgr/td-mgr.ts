@@ -254,7 +254,6 @@ class TouchDesignerManager {
         return true;
     }
 
-    // Función de checkout entre versiones
     public async checkoutVersion(versionName: string, projectPath: string): Promise<boolean> {
         const originalDir = process.cwd();
         try {

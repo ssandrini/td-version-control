@@ -14,6 +14,7 @@ const History: React.FC<HistoryProps> = ({path}) => {
         // @ts-expect-error
         window.api.listVersions(path).then((versions: Version[]) => {
             // TO DO: JERO, ACÁ ESTAN LAS VERSIONES CON LOS DATOS QUE USARÍAMOS POR AHORA
+            console.log(versions)
             const names = versions.map((version: Version) => version.name);
             setVersions(names);
         }).catch(() => {

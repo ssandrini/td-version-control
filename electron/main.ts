@@ -30,6 +30,8 @@ function createWindow() {
   })
 
   ipcMain.handle('list-versions', (_, dir: string) => tdMgr.listVersions(dir));
+  ipcMain.handle('create-version',(_, title: string, description:string, path: string) => tdMgr.createNewVersion(title, description, path));
+  ipcMain.handle('current-version', (_, path: string) => tdMgr.getCurrentVersion(path));
   ipcMain.handle('file-picker', (_) => tdMgr.filePicker());
   ipcMain.handle('recent-projects', (_) => userDataMgr.getRecentProjects());
   ipcMain.handle('save-project', (_, project: Project) => userDataMgr.addRecentProject(project));

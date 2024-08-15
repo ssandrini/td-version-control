@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useLocation} from 'react-router-dom';
 import History from '../../components/ui/history';
+import { Version } from '../../../electron/td-mgr/td-mgr';
 
 const ProjectDetail: React.FC = () => {
     const location = useLocation();
@@ -12,15 +13,25 @@ const ProjectDetail: React.FC = () => {
     const [description, setDescription] = useState('');
 
     useEffect(() => {
-        // Aquí deberías obtener la versión actual del proyecto. 
-        // Esto podría venir de una API o del estado global.
-        // Simulación de obtención de versión actual:
-        setCurrentVersion('Version 4'); // Ejemplo de versión actual
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.getCurrentVersion(path).then((version: Version) => {
+            setCurrentVersion(version.name);
+        });
     }, []);
 
     const handleAddVersion = () => {
-        // Aquí iría la lógica para crear una nueva versión del proyecto y agregarla al historial
-        console.log('Nueva versión creada:', {title, description});
+        console.log('version a crear:', {title, description});
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.createNewVersion(title, description, path).then((created) => {
+            if (created) {
+                console.log("version creada");
+            } else {
+                console.log("no pudo crear");
+            }
+        });
+        // TO DO, COMO ACTUALIZO HISTORY??
     };
 
     return (<div className="flex h-full">

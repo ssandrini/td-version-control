@@ -31,4 +31,6 @@ contextBridge.exposeInMainWorld('api', {
   getTDBinPath: async() => ipcRenderer.invoke('get-td-path'),
   openToe: async(path: string) => ipcRenderer.invoke('open-toe', path),
   createProjectFromTemplate: async(path: string, template: string) => ipcRenderer.invoke('create-project', path, template),
+  createNewVersion: async(title: string, description:string, path: string) => ipcRenderer.invoke('create-version', title, description, path),
+  getCurrentVersion: async(path: string) => ipcRenderer.invoke('current-version', path),
 });

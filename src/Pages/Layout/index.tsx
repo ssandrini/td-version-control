@@ -26,17 +26,25 @@ const Layout: React.FC = () => {
         });
     }, [setTouchDesignerLocation]);
 
-    const handleSetLocation = () => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api.filePicker().then((files) => {
-            const selectedPath = files.filePaths[0];
-             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    const handleSetLocation = async () => {
+        try {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            window.api.saveTDBinPath(selectedPath);
-            setTouchDesignerLocation(selectedPath);
-        });
-    }
+            const files = await window.api.filePicker();
+
+            if (files.filePaths.length > 0) {
+                const selectedPath = files.filePaths[0];
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                await window.api.saveTDBinPath(selectedPath);
+                setTouchDesignerLocation(selectedPath);
+            } else {
+                console.log("No file was selected.");
+            }
+        } catch (error) {
+            console.error("Error selecting file:", error);
+        }
+    };
 
     return (<>
         {!hasTDL() && (<div>
@@ -49,7 +57,7 @@ const Layout: React.FC = () => {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button type="button" onClick={handleSetLocation}>Buscar ubicaccion</Button>
+                        <Button type="button" onClick={handleSetLocation}>Select location</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

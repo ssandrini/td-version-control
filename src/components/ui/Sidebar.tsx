@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaHome, FaFolderOpen, FaUser } from 'react-icons/fa'; // Asegúrate de tener react-icons instalado
+import { FaHome, FaFolderOpen, FaCog } from 'react-icons/fa'; // Actualizado el ícono
 
 const Sidebar: React.FC = () => {
     return (
@@ -23,9 +23,9 @@ const Sidebar: React.FC = () => {
                         </Link>
                     </li>
                     <li>
-                        <Link to="/profile" className="flex items-center py-2 px-4 rounded hover:bg-gray-700">
-                            <FaUser className="text-xl mr-3" />
-                            Profile
+                        <Link to="/settings" className="flex items-center py-2 px-4 rounded hover:bg-gray-700">
+                            <FaCog className="text-xl mr-3" />
+                            Settings
                         </Link>
                     </li>
                 </ul>

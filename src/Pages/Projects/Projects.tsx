@@ -4,10 +4,10 @@ import { Button } from "../../components/ui/button";
 import { FaFolderOpen, FaPlay, FaTrashAlt } from "react-icons/fa";
 import Project from "../../models/Project.ts";
 import { Dialog, DialogFooter, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog.tsx";
+import {localPaths} from "../../const";
 
 const Projects: React.FC = () => {
     const [projects, setProjects] = useState<Project[]>([]);
-    const [path, setPath] = useState<string>("");
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
     const [loadingProject, setLoadingProject] = useState<boolean>(false); // Estado para manejar el loader
@@ -35,7 +35,6 @@ const Projects: React.FC = () => {
         // @ts-expect-error
         window.api.filePicker().then((files) => {
             const selectedPath = files.filePaths[0];
-            setPath(selectedPath);
             const projectName = selectedPath.split('\\').pop() || 'Untitled'; // WARNING: EN WINDOWS USO ESA BARRA, EN LINUX/MAC LA OTRA
             const newProject: Project = {
                 name: projectName,
@@ -59,7 +58,6 @@ const Projects: React.FC = () => {
         // @ts-expect-error
         window.api.filePicker().then((files) => {
             const selectedPath = files.filePaths[0];
-            setPath(selectedPath);
             const projectName = selectedPath.split('\\').pop() || 'Untitled'; // WARNING: EN WINDOWS USO ESA BARRA, EN LINUX/MAC LA OTRA
             const newProject: Project = {
                 name: projectName,
@@ -128,7 +126,7 @@ const Projects: React.FC = () => {
     };
 
     return (
-        <div className="flex bg-gray-900 h-full">
+        <div className="flex bg-gray-900 w-full overflow-auto h-full">
             {/* Main Content */}
             <div className="flex-1 p-8 text-white">
                 {/* Header */}

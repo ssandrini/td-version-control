@@ -7,21 +7,10 @@ interface HistoryProps {
     onVersionSelect: (version: Version) => void;
     currentVersion: string;
     selectedVersion: string;
+    versions: Version[];
 }
 
-const History: React.FC<HistoryProps> = ({ path, onVersionSelect, currentVersion, selectedVersion}) => {
-    const [versions, setVersions] = useState<Version[]>([]);
-
-    useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api.listVersions(path).then((versions: Version[]) => {
-            setVersions(versions);
-        }).catch(() => {
-            setVersions([]);
-        });
-    }, [path]);
-
+const History: React.FC<HistoryProps> = ({ versions, onVersionSelect, currentVersion, selectedVersion}) => {
     return (
         <div>
             {versions.length === 0 ? <p>No versions found.</p> : versions.map((version) => (

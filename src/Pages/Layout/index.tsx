@@ -66,7 +66,7 @@ const Layout: React.FC = () => {
             <div className="min-w-40 max-w-40 h-full">
                 <Sidebar/>
             </div>
-            <div className="w-full h-screen">
+            <div className="w-full h-screen overflow-auto">
                 <Outlet/>
             </div>
         </div>

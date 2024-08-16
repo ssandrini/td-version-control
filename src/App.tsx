@@ -7,16 +7,17 @@ import Settings from './Pages/Settings/Settings.tsx';
 import ProjectDetail from './Pages/ProjectDetails/ProjectDetails';
 import Layout from "./Pages/Layout";
 import {VariableProvider} from "./hooks/Variables/useVariableContext.tsx";
+import {localPaths} from "./const";
 
 const App: React.FC = () => {
     return (<VariableProvider>
         <BrowserRouter>
             <Routes>
-                <Route path='/' element={<Layout/>}>
+                <Route path={localPaths.HOME} element={<Layout/>}>
                     <Route path="" element={<Main/>}/>
-                    <Route path='projects' element={<Projects/>}/>
-                    <Route path='settings' element={<Settings/>}/>
-                    <Route path='/projects/:projectName' element={<ProjectDetail />} />
+                    <Route path={localPaths.PROJECTS} element={<Projects/>}/>
+                    <Route path={localPaths.SETTINGS} element={<Settings/>}/>
+                    <Route path={localPaths.PROJECT_DETAIL} element={<ProjectDetail />} />
                 </Route>
             </Routes>
         </BrowserRouter>

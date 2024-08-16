@@ -89,7 +89,7 @@ const ProjectDetail: React.FC = () => {
                 </div>
             </div>
 
-            {versions[0].name === currentVersion && (
+            {versions[0] && versions[0].name === currentVersion && (
                 <div className="p-8 flex-1">
                     <h2 className="text-2xl font-semibold mb-4">Create New Version</h2>
                     <div className="bg-white rounded-lg p-4 shadow text-gray-700">

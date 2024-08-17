@@ -1,0 +1,5 @@
+?
+file 201326609 "" app.samplesFolder+'/Map/Jellybeans.1.jpg'
+index 201326608 396 me.time.frame
+timecodeop 201326609 "" tdu.Timecode()
+?

@@ -1,0 +1,9 @@
+DAT:null
+tile 175 0 130 90
+flags =  parlanguage 0
+inputs
+{
+0 	set_variables
+}
+color 0.55 0.55 0.55 
+end

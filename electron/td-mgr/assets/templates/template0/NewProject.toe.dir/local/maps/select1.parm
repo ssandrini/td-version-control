@@ -1,0 +1,9 @@
+?
+dat 67108864 /local/midi/device
+rowindexend 201326609 0 "me.inputs[0].numRows - 1"
+rowexpr 201326609 "" "re.match('.*',me.inputCell.val) != None"
+extractcols 67108864 bynames
+colindexend 201326609 4 "me.inputs[0].numCols - 1"
+colnames 67108864 "id definition"
+colexpr 201326609 "" "re.match('.*',me.inputCell.val) != None"
+?

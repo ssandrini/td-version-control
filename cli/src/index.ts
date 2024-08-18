@@ -35,7 +35,7 @@ const initRepo = async () => {
             }
 
             // muevo los archivos de toeexpand a .td
-            const expandedFiles = fs.readdirSync('.').filter(file => file !== '.td' && path.extname(file).toLowerCase() !== ".toe" && file !== 'Backup');
+            const expandedFiles = fs.readdirSync('.').filter((file: string) => file !== '.td' && path.extname(file).toLowerCase() !== ".toe" && file !== 'Backup');
             for (const file of expandedFiles) {
                 const targetPath = path.join(tdDir, file);
                 fs.renameSync(file, targetPath);
@@ -56,7 +56,7 @@ const initRepo = async () => {
     }
 };
 
-const newVersion = async (name, message) => {
+const newVersion = async (name : string, message : string) => {
     try {
         expandAndMove();
         const git = simpleGit();
@@ -70,7 +70,7 @@ const newVersion = async (name, message) => {
     }
 };
 
-const checkoutVersion = async (version) => {
+const checkoutVersion = async (version : string) => {
     try {
         const toeFile = findToeFile();
         if (!toeFile) {
@@ -122,7 +122,7 @@ const listVersions = async () => {
             console.log('No versions found.');
         } else {
             console.log('Available versions:');
-            tags.all.forEach(tag => console.log(tag));
+            tags.all.forEach((tag: any) => console.log(tag));
         }
     } catch (error) {
         console.error('Error listing versions:', error);
@@ -149,7 +149,7 @@ const findToeFile = () => {
     const files = fs.readdirSync('.');
     // Solo me quedo con el archivo que no tiene el numero de version
     const toeFileRegex = /^[^.]+\.toe$/;
-    return files.find(file => toeFileRegex.test(file));
+    return files.find((file: string) => toeFileRegex.test(file));
 };
 
 const expandAndMove = () => {
@@ -167,7 +167,7 @@ const expandAndMove = () => {
 
     const tocFilePath = `${toeFile}.toc`;
     const tocContent = fs.readFileSync(tocFilePath, 'utf-8');
-    const fileList = tocContent.split('\n').map(line => line.trim()).filter(line => line !== '');
+    const fileList = tocContent.split('\n').map((line: string) => line.trim()).filter((line: string) => line !== '');
 
     // Mover archivos a .td
     const tdDir = path.join(process.cwd(), '.td');
@@ -198,18 +198,18 @@ const nodeChanges = async () => {
         const git = simpleGit();
         process.chdir('..');
         const diffLines = (await git.diff([tocFile])).split('\n');
-        const addedLines = diffLines.filter(line => {
+        const addedLines = diffLines.filter((line: string) => {
             return line.startsWith('+') && !line.startsWith('+++');
         });
-        const deltedLines = diffLines.filter(line => {
+        const deltedLines = diffLines.filter((line: string) => {
             return line.startsWith('-') && !line.startsWith('---');
         });
       
-        const addedNodes = new Set(addedLines.map(line => {
+        const addedNodes = new Set(addedLines.map((line: any) => {
             return extractNodeName(line);
         }));
 
-        const deletedNodes = new Set(deltedLines.map(line => {
+        const deletedNodes = new Set(deltedLines.map((line: any) => {
             return extractNodeName(line);
         }));
 
@@ -228,7 +228,7 @@ const nodeChanges = async () => {
     }
 }
 
-const extractNodeName = (diffLine) => {
+const extractNodeName = (diffLine: string) => {
     const lineContent = diffLine.slice(1).trim();
     const parts = lineContent.split('/');
     const fileNameWithExtension = parts[parts.length - 1];
@@ -236,7 +236,7 @@ const extractNodeName = (diffLine) => {
     return fileName;
 }
 
-const getNodeInfo = async (node) => {
+const getNodeInfo = async (node: unknown) => {
     try {
         const toeDirPath = path.join(process.cwd(), '.td',  `${findToeFile()}.dir`, 'project1', `${node}.n`);
         const fileContent = await fs.readFile(toeDirPath, 'utf-8');
@@ -248,13 +248,13 @@ const getNodeInfo = async (node) => {
 }
 
 const findExpandedDir = () => {
-    const dirs = fs.readdirSync('.').filter(file => fs.lstatSync(file).isDirectory());
+    const dirs = fs.readdirSync('.').filter((file: any) => fs.lstatSync(file).isDirectory());
     return dirs.length > 0 ? dirs[0] : null;
 };
 
 yargs(hideBin(process.argv))
     .command('init', 'Initialize a git repository and expand .toe file', () => {}, initRepo)
-    .command('new-version', 'Create a new version', (yargs) => {
+    .command('new-version', 'Create a new version', (yargs: { option: (arg0: string, arg1: { alias: string; type: string; demandOption: boolean; describe: string; }) => { (): any; new(): any; option: { (arg0: string, arg1: { alias: string; type: string; demandOption: boolean; describe: string; }): void; new(): any; }; }; }) => {
         yargs.option('name', {
             alias: 'n',
             type: 'string',
@@ -266,17 +266,17 @@ yargs(hideBin(process.argv))
             demandOption: true,
             describe: 'Commit message for the new version'
         });
-    }, (argv) => {
+    }, (argv: { name: string; message: string; }) => {
         newVersion(argv.name, argv.message);
     })
-    .command('checkout', 'Checkout a specific version', (yargs) => {
+    .command('checkout', 'Checkout a specific version', (yargs: { option: (arg0: string, arg1: { alias: string; type: string; demandOption: boolean; describe: string; }) => void; }) => {
         yargs.option('tag', {
             alias: 't',
             type: 'string',
             demandOption: true,
             describe: 'Version to checkout'
         });
-    }, (argv) => {
+    }, (argv: { tag: string; }) => {
         checkoutVersion(argv.tag);
     })
     .command('list-versions', 'List all available versions', () => {}, listVersions)

@@ -4,7 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "gts lint",
+    "clean": "gts clean",
+    "compile": "tsc",
+    "fix": "gts fix",
+    "prepare": "npm.cmd run compile",
+    "pretest": "npm.cmd run compile",
+    "posttest": "npm.cmd run lint"
   },
   "bin": {
     "td": "./index.js"
@@ -18,5 +25,11 @@
     "hidefile": "^3.0.0",
     "simple-git": "^3.25.0",
     "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "20.12.7",
+    "@typescript-eslint/eslint-plugin": "^8.1.0",
+    "gts": "^5.3.1",
+    "typescript": "^5.5.4"
   }
 }

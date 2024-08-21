@@ -11,6 +11,7 @@ import {
     DialogDescription
 } from "../../components/ui/dialog.tsx";
 import {Button} from "../../components/ui/button.tsx";
+import log from 'electron-log/renderer';
 
 
 const Layout: React.FC = () => {
@@ -39,10 +40,10 @@ const Layout: React.FC = () => {
                 await window.api.saveTDBinPath(selectedPath);
                 setTouchDesignerLocation(selectedPath);
             } else {
-                console.log("No file was selected.");
+                log.info("No file was selected.");
             }
         } catch (error) {
-            console.error("Error selecting file:", error);
+            log.error("Error selecting file:", error);
         }
     };
 

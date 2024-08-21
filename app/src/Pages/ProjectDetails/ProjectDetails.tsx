@@ -4,6 +4,7 @@ import History from '../../components/ui/history';
 import {Version} from '../../../electron/td-mgr/td-mgr';
 import {Label} from "../../components/ui/label.tsx";
 import {Input} from "../../components/ui/input.tsx";
+import log from 'electron-log/renderer';
 
 const ProjectDetail: React.FC = () => {
     const location = useLocation();
@@ -38,7 +39,7 @@ const ProjectDetail: React.FC = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const handleAddVersion = () => {
-        console.log('version a crear:', {title, description});
+        log.info('version a crear:', {title, description});
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api.createNewVersion(title, description, path).then((created) => {
@@ -51,7 +52,7 @@ const ProjectDetail: React.FC = () => {
                     setCurrentVersion(versions[0]?.name ?? "");
                 });
             } else {
-                console.log("no pudo crear");
+                log.info("no pudo crear");
             }
         });
         // TO DO, COMO ACTUALIZO HISTORY??
@@ -68,9 +69,10 @@ const ProjectDetail: React.FC = () => {
             // @ts-expect-error
             window.api.checkoutVersion(selectedVersion.name, path).then((changed) => {
                 if (changed) {
+                    log.info('Log from the renderer');
                     setCurrentVersion(selectedVersion.name);
                 } else {
-                    console.log("fallo el checkout");
+                    log.info("fallo el checkout");
                 }
             });
         }

@@ -1,5 +1,6 @@
 import Store from 'electron-store';
 import Project from '../../src/models/Project';
+import log from 'electron-log/main';
 
 class UserDataManager {
     private store: Store;
@@ -19,7 +20,7 @@ class UserDataManager {
     }
 
     removeRecentProject(projectPath: string): void {
-        console.log("Voy a borrar el proyecto con path: " + projectPath);
+        log.info("Voy a borrar el proyecto con path: " + projectPath);
         let recentProjects: Project[] = this.store.get('recentProjects', []) as Project[];
         recentProjects = recentProjects.filter(proj => proj.path !== projectPath);
         this.store.set('recentProjects', recentProjects);

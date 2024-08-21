@@ -15,21 +15,21 @@ const Main: React.FC = () => {
             <div className="flex justify-center space-x-16">
                 <div className="text-center">
                     <div className="flex justify-center mb-4">
-                        <img src="public/capture.png" alt="Capture icon" className="w-16 h-16"/>
+                        <img src="resources/capture.png" alt="Capture icon" className="w-16 h-16"/>
                     </div>
                     <h3 className="text-3xl font-bold">Capture</h3>
                     <p className="text-sm mt-2 text-gray-300">every step of your creative process.</p>
                 </div>
                 <div className="text-center">
                     <div className="flex justify-center mb-4">
-                        <img src="public/recover.png" alt="Recover icon" className="w-16 h-16"/>
+                        <img src="resources/recover.png" alt="Recover icon" className="w-16 h-16"/>
                     </div>
                     <h3 className="text-3xl font-bold">Recover</h3>
                     <p className="text-sm mt-2 text-gray-300">any previous version</p>
                 </div>
                 <div className="text-center">
                     <div className="flex justify-center mb-4">
-                        <img src="public/refine.png" alt="Refine icon" className="w-16 h-16"/>
+                        <img src="resources/refine.png" alt="Refine icon" className="w-16 h-16"/>
                     </div>
                     <h3 className="text-3xl font-bold">Refine</h3>
                     <p className="text-sm mt-2 text-gray-300">and improve with confidence.</p>

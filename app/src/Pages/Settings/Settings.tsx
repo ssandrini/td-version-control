@@ -1,6 +1,7 @@
 import React from 'react';
 import { useVariableContext } from "../../hooks/Variables/useVariableContext.tsx";
 import { Button } from "../../components/ui/button.tsx"; // Ícono para la foto de perfil
+import log from 'electron-log/renderer';
 
 const Settings: React.FC = () => {
     const { touchDesignerLocation, setTouchDesignerLocation } = useVariableContext();
@@ -18,10 +19,10 @@ const Settings: React.FC = () => {
                 await window.api.saveTDBinPath(selectedPath);
                 setTouchDesignerLocation(selectedPath);
             } else {
-                console.log("No file was selected.");
+                log.info("No file was selected.");
             }
         } catch (error) {
-            console.error("Error selecting file:", error);
+            log.error("Error selecting file:", error);
         }
     };
 

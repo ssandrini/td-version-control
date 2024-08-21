@@ -6,6 +6,7 @@ import userDataMgr from './user-data-mgr/user-data-mgr';
 import Project from '../src/models/Project';
 import tdMgr from './td-mgr/td-mgr';
 import watcherMgr from './watcher-mgr/watcher-mgr';
+import log from 'electron-log/main';
 
 createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -15,13 +16,16 @@ export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
-
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'resources') : RENDERER_DIST
+const iconPath = path.join(process.env.VITE_PUBLIC, 'img.png');
 let win: BrowserWindow | null
 
 function createWindow() {
+  log.initialize();
+  log.info("Initializing app...");
+
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'img.png'),
+    icon: path.join(iconPath, 'img.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
@@ -45,7 +49,7 @@ function createWindow() {
     // Registrar los callbacks que necesitemos acá
     // yo creo que los callbacks van a ser mensajes hacia el Render process que va a usar para
     // mostrar en pantalla algo cuando se detectó un cambio, por ejemplo "queres crear una nueva version?"
-    console.log("Project "+ path + " changed.")
+    log.debug("Project "+ path + " changed.")
   }));
   ipcMain.handle('unwatch-project', (_, path: string) => watcherMgr.removeWatcher(path));
 

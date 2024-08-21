@@ -5,6 +5,7 @@ import { execSync } from 'child_process';
 import simpleGit from 'simple-git';
 import hidefile from 'hidefile';
 import { dialog } from 'electron';
+import log from 'electron-log/main';
 
 export interface Version {
     name: string;
@@ -61,7 +62,7 @@ class TouchDesignerManager {
             const toeFile = files.find(file => path.extname(file).toLowerCase() === '.toe');
 
             if (!toeFile) {
-                console.error('No .toe file found in the project folder.');
+                log.error('No .toe file found in the project folder.');
                 return false;
             }
 
@@ -70,18 +71,18 @@ class TouchDesignerManager {
             // Intentar abrir el archivo .toe
             const result = await shell.openPath(toeFilePath);
             if (result) {
-                console.error('Error opening .toe file:', result);
+                log.error('Error opening .toe file:', result);
                 return false;
             }
 
-            console.log('.toe file opened successfully');
+            log.info('.toe file opened successfully');
             
             // delay para que se vea mejor
             await new Promise(resolve => setTimeout(resolve, 4000));
             
             return true;
         } catch (error) {
-            console.error('Unexpected error:', error);
+            log.error('Unexpected error:', error);
             return false;
         }
     }
@@ -91,14 +92,14 @@ class TouchDesignerManager {
         try {
             const filesInDestination = await fs.readdir(destinationPath);
             if (filesInDestination.length > 0) {
-                console.error('Destination directory is not empty.');
+                log.error('Destination directory is not empty.');
                 return false;
             }
 
             const templatesPath = path.join(originalDir,'electron','td-mgr','assets','templates');
             const templatePath = path.join(templatesPath, templateName);
             if (!fs.existsSync(templatePath) || !(await fs.stat(templatePath)).isDirectory()) {
-                console.error('Template folder does not exist.');
+                log.error('Template folder does not exist.');
                 return false;
             }
 
@@ -111,9 +112,9 @@ class TouchDesignerManager {
             const git = simpleGit({ baseDir: tdDir });
             if (!fs.existsSync(path.join(tdDir, '.git'))) {
                 await git.init();
-                console.log('Initialized empty Git repository in .td');
+                log.info('Initialized empty Git repository in .td');
             } else {
-                console.log('Git repository already exists in .td');
+                log.warn('Git repository already exists in .td');
             }
 
             const toeFile = "NewProject.toe";
@@ -124,7 +125,7 @@ class TouchDesignerManager {
                 await git.addAnnotatedTag("version0", "version0");
                 execSync(`toecollapse.exe ${toeFile}`, { stdio: 'inherit' });
             } catch (e) {
-                console.error('Error collapsing version:', e);
+                log.error('Error collapsing version:', e);
             }
 
             const newToeFile = this.findToeFile(tdDir);
@@ -133,13 +134,13 @@ class TouchDesignerManager {
                 const targetPath = path.join(destinationPath, newToeFile);
                 fs.renameSync(sourcePath, targetPath);
             } else {
-                console.error('No new .toe file found after collapse');
+                log.error('No new .toe file found after collapse');
             }
 
-            console.log('Project created successfully from template.');
+            log.info('Project created successfully from template.');
             return true;
         } catch (error) {
-            console.error('Unexpected error:', error);
+            log.error('Unexpected error:', error);
             return false;
         } finally {
             process.chdir(originalDir);
@@ -156,7 +157,7 @@ class TouchDesignerManager {
         try {
             const toeFile = this.findToeFile(destinationPath);
             if (!toeFile) {
-                console.error('No .toe file found in the destination folder.');
+                log.error('No .toe file found in the destination folder.');
                 return false;
             }
 
@@ -169,15 +170,15 @@ class TouchDesignerManager {
             const git = simpleGit({ baseDir: tdDir });
             if (!fs.existsSync(path.join(tdDir, '.git'))) {
                 await git.init();
-                console.log('Initialized empty Git repository in .td');
+                log.info('Initialized empty Git repository in .td');
             } else {
-                console.log('Git repository already exists in .td');
+                log.warn('Git repository already exists in .td');
             }
 
             try {
                 execSync(`toeexpand.exe ${toeFile}`, { stdio: 'inherit' });
             } catch (e) {
-                console.error("toeexpand failed: " + e)
+                log.error("toeexpand failed: " + e)
             }
 
             const expandedFiles = fs.readdirSync('.').filter(file => file !== '.td' && path.extname(file).toLowerCase() !== ".toe" && file !== 'Backup');
@@ -191,10 +192,10 @@ class TouchDesignerManager {
             await git.commit('Initial commit');
             await git.addAnnotatedTag("version0", "Initial version");
 
-            console.log('Project created successfully with existing .toe file.');
+            log.info('Project created successfully with existing .toe file.');
             return true;
         } catch (error) {
-            console.error('Unexpected error:', error);
+            log.error('Unexpected error:', error);
             return false;
         } finally {
             process.chdir(originalDir);
@@ -206,7 +207,7 @@ class TouchDesignerManager {
         try {
             const toeFile = this.findToeFile(projectPath);
             if (!toeFile) {
-                console.log('No .toe file found');
+                log.error('No .toe file found');
                 return false;
             }
 
@@ -245,9 +246,9 @@ class TouchDesignerManager {
             await git.commit(versionDescription);
             await git.addAnnotatedTag(versionName, versionDescription);
 
-            console.log(`Created new version: ${versionName}`);
+            log.info(`Created new version: ${versionName}`);
         } catch (error) {
-            console.error('Error creating new version:', error);
+            log.error('Error creating new version:', error);
         } finally {
             process.chdir(originalDir);
         }
@@ -262,7 +263,7 @@ class TouchDesignerManager {
     
             const tags = await git.tags();
             if (!tags.all.includes(versionName)) {
-                console.log(`Version ${versionName} not found`);
+                log.warn(`Version ${versionName} not found`);
                 return false;
             }
     
@@ -271,9 +272,9 @@ class TouchDesignerManager {
             try {
                 process.chdir(tdDir)
                 execSync(`toecollapse.exe ${toeFile}`, { stdio: 'inherit' });
-                console.log(`Collapsed to version ${versionName}`);
+                log.info(`Collapsed to version ${versionName}`);
             } catch (e) {
-                console.error('Error collapsing version:', e);
+                log.error('Error collapsing version:', e);
             }
     
             const newToeFile = this.findToeFile(projectPath)
@@ -282,11 +283,11 @@ class TouchDesignerManager {
                 const targetPath = path.join(projectPath, newToeFile);
                 fs.renameSync(sourcePath, targetPath);
             } else {
-                console.log('No new .toe file found after collapse');
+                log.info('No new .toe file found after collapse');
                 return false;
             } 
         } catch (error) {
-            console.error('Error checking out version:', error);
+            log.error('Error checking out version:', error);
         } finally {
             process.chdir(originalDir)
         }
@@ -310,7 +311,7 @@ class TouchDesignerManager {
 
             return version;
         } catch (error) {
-            console.error('Error getting current version:', error);
+            log.error('Error getting current version:', error);
             return {
                 name: 'Unknown',
                 author: 'Unknown',

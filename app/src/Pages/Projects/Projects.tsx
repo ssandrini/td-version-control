@@ -5,6 +5,7 @@ import { FaFolderOpen, FaPlay, FaTrashAlt } from "react-icons/fa";
 import Project from "../../models/Project.ts";
 import { Dialog, DialogFooter, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog.tsx";
 import {localPaths} from "../../const";
+import log from 'electron-log/renderer';
 
 const Projects: React.FC = () => {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -76,7 +77,7 @@ const Projects: React.FC = () => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             window.api.createProjectFromTemplate(selectedPath, "template0").then((created) => {
-                console.log("se creo: "+ created);
+                log.info("se creo: "+ created);
             })
         });
     };
@@ -93,7 +94,7 @@ const Projects: React.FC = () => {
                 alert('Error: No se pudo abrir el proyecto debido a un problema con el archivo.');
             }
         } catch (error) {
-            console.error('Unexpected error:', error);
+            log.error('Unexpected error:', error);
             alert('Error: Ocurrió un problema inesperado al intentar abrir el proyecto.');
         } finally {
             setLoadingProject(false); // Ocultar loader

@@ -1,6 +1,0 @@
-COMP:geo
-tile 450 170 159 130
-flags =  viewer 1 activate on render on display on pickable on parlanguage 0
-color 0.55 0.55 0.55 
-view 28 0.2 1 1 0 0 1 0 0 1 0 0 0 0.552545 0.521786 -0.649949 0 1.1865e-05 0.779794 0.626037 0 0.833483 -0.345921 0.430865 0 1.54517e-08 3.35568e-08 -3.73705 1 16 1 1 1 195 4883 1 -1 1 1 11 0 0 0 3 0 1
-end

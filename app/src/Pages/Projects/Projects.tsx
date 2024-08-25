@@ -55,35 +55,11 @@ const Projects: React.FC = () => {
     };
 
     const handleNewProject = () => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api.filePicker().then((files) => {
-            const selectedPath = files.filePaths[0];
-            const projectName = selectedPath.split('\\').pop() || 'Untitled'; // WARNING: EN WINDOWS USO ESA BARRA, EN LINUX/MAC LA OTRA
-            const newProject: Project = {
-                name: projectName,
-                author: "Unknown Author",
-                lastModified: new Date().toLocaleDateString(),
-                lastVersion: "0.0.1",
-                path: selectedPath,
-            };
-            const projectExists = projects.some(proj => proj.path === selectedPath);
-            if (!projectExists) {
-                setProjects([...projects, newProject]);
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                window.api.saveProject(newProject);
-            }
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            window.api.createProjectFromTemplate(selectedPath, "template0").then((created) => {
-                log.info("se creo: "+ created);
-            })
-        });
+        navigate(localPaths.HOME + localPaths.NEW_PROJECT);
     };
 
     const handlePlayProject = async (project: Project) => {
-        setLoadingProject(true); // Mostrar loader
+        setLoadingProject(true);
         try {
             const success = await // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error

@@ -52,6 +52,7 @@ function createWindow() {
     log.debug("Project "+ path + " changed.")
   }));
   ipcMain.handle('unwatch-project', (_, path: string) => watcherMgr.removeWatcher(path));
+  ipcMain.handle('get-templates', (_) => tdMgr.getTemplates());
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

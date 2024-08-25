@@ -6,13 +6,13 @@ import simpleGit from 'simple-git';
 import hidefile from 'hidefile';
 import { dialog } from 'electron';
 import log from 'electron-log/main';
+import Template from '../../src/models/Template';
 
 export interface Version {
     name: string;
     author: string;
     description: string;
     date: string;
-    // TO DO: que otros campos hacen falta?
 }
 
 class TouchDesignerManager {
@@ -96,45 +96,48 @@ class TouchDesignerManager {
                 return false;
             }
 
-            const templatesPath = path.join(originalDir,'electron','td-mgr','assets','templates');
-            const templatePath = path.join(templatesPath, templateName);
+            const templatesListPath = path.join('resources','templates');
+            const templatePath = path.join(templatesListPath, templateName);
             if (!fs.existsSync(templatePath) || !(await fs.stat(templatePath)).isDirectory()) {
-                log.error('Template folder does not exist.');
+                log.error(`Template ${templatePath} does not exist`);
+                return false;
+            }
+
+            const toeFile = this.findToeFile(templatePath);
+            if (toeFile == undefined) {
+                log.error("Toe file not found at template folder");
                 return false;
             }
 
             const tdDir = path.join(destinationPath, '.td');
             await fs.mkdirSync(tdDir);
             hidefile.hideSync(tdDir);
+            
+            await fs.cpSync(path.join(templatePath, toeFile), path.join(tdDir, toeFile));
 
-            await fs.cpSync(templatePath, tdDir, { recursive: true });
+            process.chdir(tdDir);
+            try {
+                execSync(`toeexpand.exe ${toeFile}`, { stdio: ['ignore', 'ignore', 'inherit'] });
+            } catch (e) {
+                log.error("toeexpand failed: " + e)
+            }
+            const oldToePath = path.join(tdDir, toeFile);
+            log.debug(`renaming ${oldToePath} to ${destinationPath}`)
+            await fs.renameSync(oldToePath, path.join(destinationPath, toeFile));
 
-            const git = simpleGit({ baseDir: tdDir });
+            const git = simpleGit();
             if (!fs.existsSync(path.join(tdDir, '.git'))) {
                 await git.init();
                 log.info('Initialized empty Git repository in .td');
             } else {
                 log.warn('Git repository already exists in .td');
             }
-
-            const toeFile = "NewProject.toe";
             try {
-                process.chdir(tdDir);
                 await git.add('.');
                 await git.commit('Initial version');
                 await git.addAnnotatedTag("version0", "version0");
-                execSync(`toecollapse.exe ${toeFile}`, { stdio: 'inherit' });
             } catch (e) {
-                log.error('Error collapsing version:', e);
-            }
-
-            const newToeFile = this.findToeFile(tdDir);
-            if (newToeFile) {
-                const sourcePath = path.join(tdDir, newToeFile);
-                const targetPath = path.join(destinationPath, newToeFile);
-                fs.renameSync(sourcePath, targetPath);
-            } else {
-                log.error('No new .toe file found after collapse');
+                log.error('Error creating version0:', e);
             }
 
             log.info('Project created successfully from template.');
@@ -176,7 +179,7 @@ class TouchDesignerManager {
             }
 
             try {
-                execSync(`toeexpand.exe ${toeFile}`, { stdio: 'inherit' });
+                execSync(`toeexpand.exe ${toeFile}`, { stdio: ['ignore', 'ignore', 'inherit'] });
             } catch (e) {
                 log.error("toeexpand failed: " + e)
             }
@@ -214,7 +217,7 @@ class TouchDesignerManager {
             process.chdir(projectPath);
 
             try {
-                execSync(`toeexpand.exe ${toeFile}`, { stdio: 'inherit' });
+                execSync(`toeexpand.exe ${toeFile}`, { stdio: ['ignore', 'ignore', 'inherit'] });
             } catch (e) {
                 // tira error pero anda bien
             }
@@ -319,6 +322,50 @@ class TouchDesignerManager {
                 date: 'Unknown',
             };
         }
+    }
+
+    public async getTemplates(): Promise<Template[]> {
+        const templatesListPath = path.join('resources', 'templates');
+        const templateDirs = await fs.promises.readdir(templatesListPath);
+        const templates: Template[] = [];
+
+        for (const dir of templateDirs) {
+            const templatePath = path.join(templatesListPath, dir);
+
+            const stat = await fs.promises.stat(templatePath);
+            if (!stat.isDirectory()) continue;
+
+            try {
+                const detailsPath = path.join(templatePath, 'details.json');
+                const detailsData = await fs.promises.readFile(detailsPath, 'utf-8');
+                const details = JSON.parse(detailsData);
+
+                const imagePath = await this.getImagePath(templatePath);
+
+                templates.push({
+                    id: details.id as string || dir,
+                    name: details.name as string || "Untitled",
+                    description: details.description as string || "No description provided",
+                    imagePath: imagePath,
+                });
+            } catch (error) {
+                log.error(`Error reading template ${dir}:`, error);
+            }
+        }
+
+        return templates;
+    }
+
+    private async getImagePath(templatePath: string): Promise<string | undefined> {
+        const imageExtensions = ['.gif', '.png'];
+        for (const ext of imageExtensions) {
+            const imagePath = path.join(templatePath, `image${ext}`);
+            const imageExists = await fs.promises.access(imagePath).then(() => true).catch(() => false);
+            if (imageExists) {
+                return imagePath;
+            }
+        }
+        return undefined;
     }
 }
 

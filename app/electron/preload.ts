@@ -1,5 +1,6 @@
 import { ipcRenderer, contextBridge } from 'electron'
 import Project from '../src/models/Project'
+import { version } from 'react'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -34,4 +35,5 @@ contextBridge.exposeInMainWorld('api', {
   createNewVersion: async(title: string, description:string, path: string) => ipcRenderer.invoke('create-version', title, description, path),
   getCurrentVersion: async(path: string) => ipcRenderer.invoke('current-version', path),
   checkoutVersion: async(versionName: string, path: string) => ipcRenderer.invoke('checkout-version', versionName, path),
+  getTemplates: async() => ipcRenderer.invoke('get-templates'),
 });

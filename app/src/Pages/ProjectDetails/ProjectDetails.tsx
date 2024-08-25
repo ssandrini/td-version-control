@@ -55,7 +55,6 @@ const ProjectDetail: React.FC = () => {
                 log.info("no pudo crear");
             }
         });
-        // TO DO, COMO ACTUALIZO HISTORY??
     };
 
     const handleVersionSelect = (version: Version) => {

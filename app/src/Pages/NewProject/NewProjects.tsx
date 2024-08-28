@@ -65,9 +65,11 @@ const NewProject: React.FC = () => {
             } else {
                 setError("Project creation failed. Please try again.");
             }
-        }).catch((err) => {
+        }).catch((err: any) => {
             setLoading(false);
-            setError(`Error: ${err.message}`);
+            if (Object.prototype.hasOwnProperty.call(err, "message")) {
+                setError(`Error: ${err.message}`);
+            }
         });
     };
 

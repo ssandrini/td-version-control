@@ -5,6 +5,7 @@ import {Version} from '../../../electron/td-mgr/td-mgr';
 import {Label} from "../../components/ui/label.tsx";
 import {Input} from "../../components/ui/input.tsx";
 import log from 'electron-log/renderer';
+import NodeViz from "./NodeViz";
 
 const ProjectDetail: React.FC = () => {
     const location = useLocation();
@@ -173,6 +174,10 @@ const ProjectDetail: React.FC = () => {
                         >
                             Checkout this version
                         </button>
+                        <div>
+                            {/* Poner elementos en la diagonal rompe el diagrama :thumbs_up: */}
+                            <NodeViz matrix={[[false, false, false], [true, false, false], [false, true, false]]}/>
+                        </div>
                     </>) : (<p>Select a version to see details.</p>)}
                 </div>
             </div>

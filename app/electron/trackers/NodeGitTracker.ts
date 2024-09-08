@@ -1,5 +1,5 @@
-import { Tracker } from "../interfaces/Tracker";
-import { Version } from "../models/Version";
+import { Tracker } from './interfaces/Tracker';
+import { Version } from '../models/Version';
 
 export class NodeGitTracker implements Tracker {
     init(dir: string): Promise<Version> {

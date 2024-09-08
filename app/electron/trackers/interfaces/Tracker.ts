@@ -1,10 +1,10 @@
-import { Version } from "../models/Version";
+import { Version } from '../../models/Version';
 
 export interface Tracker {
     init(dir: string): Promise<Version>;
     currentVersion(dir: string): Promise<Version>;
     listVersions(dir: string): Promise<Version[]>;
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;
-    goToVersion(dir: string, versionName: string): Promise<Version>;
-    compare(dir: string, to?: string): Promise<object>; 
+    goToVersion(dir: string, versionId: string): Promise<Version>;
+    compare(dir: string, to?: string): Promise<string>; 
 }

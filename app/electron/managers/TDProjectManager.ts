@@ -1,10 +1,10 @@
 import log from 'electron-log/main';
-import { ProjectManager } from '../interfaces/ProjectManager';
+import { ProjectManager } from './interfaces/ProjectManager';
 import { Version } from '../models/Version';
 import fs from 'fs-extra';
-import { Processor } from '../interfaces/Processor';
+import { Processor } from '../processors/interfaces/Processor';
 import path from 'node:path';
-import { Tracker } from '../interfaces/Tracker';
+import { Tracker } from '../trackers/interfaces/Tracker';
 
 export class TDProjectManager implements ProjectManager {
     readonly processor: Processor;
@@ -95,11 +95,10 @@ export class TDProjectManager implements ProjectManager {
 
     async goToVersion(dir: string, versionName: string): Promise<Version> {
         await this.validateDirectory(dir);
-
         return this.tracker.goToVersion(dir, versionName);
     }
 
-    async compare(dir: string, to?: string): Promise<object> {
+    async compare(dir: string, to?: string): Promise<unknown> {
         await this.validateDirectory(dir);
         
         return this.tracker.compare(dir, to);

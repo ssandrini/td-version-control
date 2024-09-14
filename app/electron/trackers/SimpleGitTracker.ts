@@ -2,6 +2,7 @@ import simpleGit, { SimpleGit } from 'simple-git';
 import { Tracker } from '../trackers/interfaces/Tracker';
 import { Version } from '../models/Version';
 import { TrackerError } from '../errors/TrackerError';
+import log from 'electron-log/main';
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
@@ -20,10 +21,8 @@ export class SimpleGitTracker implements Tracker {
     async init(dir: string): Promise<Version> {
         await this.git.cwd(dir);
         await this.git.init();
-        await Promise.all([
-            this.git.raw(['config', '--local', 'user.name', this.username]),
-            this.git.raw(['config', '--local', 'user.email', this.email]),
-        ])
+        await this.git.raw(['config', '--local', 'user.name', this.username]);
+        await this.git.raw(['config', '--local', 'user.email', this.email]);
         return this.createVersion(
             dir,
             'Initial version',
@@ -64,6 +63,7 @@ export class SimpleGitTracker implements Tracker {
     }
 
     async createVersion(dir: string, versionName: string, description?: string): Promise<Version> {
+        log.debug(`Creating version ${versionName} (${description})`)
         await this.git.cwd(dir);
         await this.git.add('.');
         const message = `${versionName}${this.separator}${description || ''}`;

@@ -5,6 +5,6 @@ export interface ProjectManager {
     currentVersion(dir: string): Promise<Version>;
     listVersions(dir: string): Promise<Version[]>;
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;
-    goToVersion(dir: string, versionName: string): Promise<Version>;
+    goToVersion(dir: string, versionId: string): Promise<Version>;
     compare(dir: string, to?: string): Promise<unknown>; 
 }

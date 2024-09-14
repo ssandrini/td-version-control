@@ -1,5 +1,5 @@
 import React from 'react';
-import { Version } from '../../../electron/td-mgr/td-mgr';
+import {Version} from '../../../electron/models/Version.ts'
 
 interface HistoryItemProps {
     version: Version;

@@ -271,7 +271,7 @@ class TouchDesignerManager {
             }
     
             await git.checkout(versionName);
-            var toeFile = this.findToeFile(projectPath)
+            const toeFile = this.findToeFile(projectPath)
             try {
                 process.chdir(tdDir)
                 execSync(`toecollapse.exe ${toeFile}`, { stdio: 'inherit' });
@@ -303,6 +303,7 @@ class TouchDesignerManager {
         try {
             const tagName = await git.raw(['describe', '--tags', '--abbrev=0']);
             const commitData = await git.show([`${tagName.trim()}`, '--pretty=format:%H|%an|%s|%ad', '--no-patch']);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const [_, author, description, date] = commitData.split('|');
 
             const version: Version = {
@@ -344,6 +345,7 @@ class TouchDesignerManager {
 
                 templates.push({
                     id: details.id as string || dir,
+                    dir: templatePath,
                     name: details.name as string || "Untitled",
                     description: details.description as string || "No description provided",
                     imagePath: imagePath,

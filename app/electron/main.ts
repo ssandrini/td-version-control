@@ -1,87 +1,140 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
-import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
-import userDataMgr from './user-data-mgr/user-data-mgr';
-import Project from '../src/models/Project';
-import tdMgr from './td-mgr/td-mgr';
-import watcherMgr from './watcher-mgr/watcher-mgr';
-import log from 'electron-log/main';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { app, BrowserWindow, ipcMain } from "electron";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import userDataMgr from "./user-data-mgr/user-data-mgr";
+import Project from "../src/models/Project";
+import tdMgr from "./td-mgr/td-mgr";
+import watcherMgr from "./watcher-mgr/watcher-mgr";
+import log from "electron-log/main";
+import { ProjectManager } from "./managers/interfaces/ProjectManager";
+import { TDProjectManager } from "./managers/TDProjectManager";
+import { SimpleGitTracker } from "./trackers/SimpleGitTracker";
+import { TDProcessor } from "./processors/TDProcessor";
+import { API_METHODS } from "./apiMethods";
 
-createRequire(import.meta.url)
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-process.env.APP_ROOT = path.join(__dirname, '..')
-export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
-export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
-export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
+process.env.APP_ROOT = path.join(__dirname, "..");
+export const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+export const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
+export const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
 
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'resources') : RENDERER_DIST
-const iconPath = path.join(process.env.VITE_PUBLIC, 'img.png');
-let win: BrowserWindow | null
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
+  ? path.join(process.env.APP_ROOT, "resources")
+  : RENDERER_DIST;
+const iconPath = path.join(process.env.VITE_PUBLIC, "img.png");
+let win: BrowserWindow | null;
 
 function createWindow() {
   log.initialize();
   log.info("Initializing app...");
 
   win = new BrowserWindow({
-    icon: path.join(iconPath, 'img.png'),
+    icon: path.join(iconPath, "img.png"),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.mjs'),
+      preload: path.join(__dirname, "preload.mjs"),
     },
-  })
+  });
 
-  ipcMain.handle('list-versions', (_, dir: string) => tdMgr.listVersions(dir));
-  ipcMain.handle('create-version',(_, title: string, description:string, path: string) => tdMgr.createNewVersion(title, description, path));
-  ipcMain.handle('current-version', (_, path: string) => tdMgr.getCurrentVersion(path));
-  ipcMain.handle('file-picker', (_) => tdMgr.filePicker());
-  ipcMain.handle('recent-projects', (_) => userDataMgr.getRecentProjects());
-  ipcMain.handle('save-project', (_, project: Project) => userDataMgr.addRecentProject(project));
-  ipcMain.handle('delete-project', (_, path: string) => userDataMgr.removeRecentProject(path));
-  ipcMain.handle('save-td-path', (_, path: string) => userDataMgr.setTouchDesignerBinPath(path));
-  ipcMain.handle('get-td-path', (_) => userDataMgr.getTouchDesignerBinPath());
-  ipcMain.handle('open-toe', (_, path: string) => tdMgr.openToeFile(path));
-  ipcMain.handle('create-project', (_, path: string, template: string) => tdMgr.createProjectFromTemplate(path, template));
-  ipcMain.handle('checkout-version', (_, versionName: string, path: string) => tdMgr.checkoutVersion(versionName, path));
-  ipcMain.handle('watch-project', (_, path: string) => watcherMgr.registerWatcher(path, () => {
-    // Registrar los callbacks que necesitemos acá
-    // yo creo que los callbacks van a ser mensajes hacia el Render process que va a usar para
-    // mostrar en pantalla algo cuando se detectó un cambio, por ejemplo "queres crear una nueva version?"
-    log.debug("Project "+ path + " changed.")
-  }));
-  ipcMain.handle('unwatch-project', (_, path: string) => watcherMgr.removeWatcher(path));
-  ipcMain.handle('get-templates', (_) => tdMgr.getTemplates());
+  // TODO: get user correctly
+  const tracker = new SimpleGitTracker("tduser", "tduser@example.com");
+  const processor = new TDProcessor();
+  const projectManager = new TDProjectManager(processor, tracker, ".mar");
+
+  setupProject(projectManager);
 
   // Test active push message to Renderer-process.
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', (new Date).toLocaleString())
-  })
+  win.webContents.on("did-finish-load", () => {
+    win?.webContents.send("main-process-message", new Date().toLocaleString());
+  });
 
   if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL)
+    win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-    win = null
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+    win = null;
   }
-})
+});
 
-app.on('activate', () => {
+app.on("activate", () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
+    createWindow();
   }
-})
+});
 
-app.whenReady().then(createWindow)
+app.whenReady().then(createWindow);
+
+const setupProject = (projectManager: ProjectManager): void => {
+  ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
+    projectManager.listVersions(dir)
+  );
+
+  ipcMain.handle(
+    API_METHODS.CREATE_VERSION,
+    (_, dir: string, name: string, description: string) =>
+      projectManager.createVersion(dir, name, description)
+  );
+
+  ipcMain.handle(API_METHODS.CURRENT_VERSION, (_, dir: string) =>
+    projectManager.currentVersion(dir)
+  );
+
+  ipcMain.handle(API_METHODS.FILE_PICKER, (_) => tdMgr.filePicker());
+
+  ipcMain.handle(API_METHODS.RECENT_PROJECTS, (_) => userDataMgr.getRecentProjects());
+
+  ipcMain.handle(API_METHODS.SAVE_PROJECT, (_, project: Project) =>
+    userDataMgr.addRecentProject(project)
+  );
+
+  ipcMain.handle(API_METHODS.DELETE_PROJECT, (_, path: string) =>
+    userDataMgr.removeRecentProject(path)
+  );
+
+  ipcMain.handle(API_METHODS.SAVE_TD_PATH, (_, path: string) =>
+    userDataMgr.setTouchDesignerBinPath(path)
+  );
+
+  ipcMain.handle(API_METHODS.GET_TD_PATH, (_) => userDataMgr.getTouchDesignerBinPath());
+
+  ipcMain.handle(API_METHODS.OPEN_TD, (_, path: string) => tdMgr.openToeFile(path));
+
+  ipcMain.handle(API_METHODS.CREATE_PROJECT, (_, dir: string, src?: string) =>
+    projectManager.init(dir, src)
+  );
+
+  ipcMain.handle(API_METHODS.GO_TO_VERSION, (_, dir: string, versionId: string) =>
+    projectManager.goToVersion(dir, versionId)
+  );
+
+  ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => tdMgr.getTemplates());
+
+  ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
+    watcherMgr.registerWatcher(path, () => {
+      // Registrar los callbacks que necesitemos acá
+      // yo creo que los callbacks van a ser mensajes hacia el Render process que va a usar para
+      // mostrar en pantalla algo cuando se detectó un cambio, por ejemplo "queres crear una nueva version?"
+      log.debug("Project " + path + " changed.");
+    })
+  );
+
+  ipcMain.on(API_METHODS.UNWATCH_PROJECT, (_, path: string) =>
+    watcherMgr.removeWatcher(path)
+  );
+};

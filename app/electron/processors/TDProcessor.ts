@@ -24,10 +24,11 @@ export class TDProcessor implements Processor {
 
         try {
             execSync(`toeexpand.exe ${toePath}`, { stdio: ['ignore', 'ignore', 'inherit']});
+            return Promise.reject();
         } catch (error) {
-            log.error(`Error expanding ${toePath}.`);
-            Promise.reject(error);
-        }
+            // This is not a mistake. toeexpand is implemented in a way such that it returns
+            // failure when suceeds.
+        }    
         log.debug(`Expanded ${toePath} to ${dir}`);
 
         const tocPath = `${toePath}.toc`;
@@ -38,12 +39,12 @@ export class TDProcessor implements Processor {
             log.error(`Missing ${tocPath} or ${dirPath} in ${dir}`);
             return Promise.reject(new MissingFileError(`Could not find ${tocPath} or ${dirPath}`));
         }
-        
+
         if (outDir) {
             try {
                 await Promise.all([
-                    fs.move(tocPath, outDir),
-                    fs.move(dirPath, outDir),
+                    fs.move(tocPath, path.join(outDir, tocPath)),
+                    fs.move(dirPath, path.join(outDir, dirPath)),
                 ]);
             } catch(error) {
                 log.error(`Error moving ${tocPath} and ${dirPath} to ${outDir}`);

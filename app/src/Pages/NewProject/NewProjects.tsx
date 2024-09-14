@@ -8,6 +8,7 @@ import { localPaths } from "../../const";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineCheckCircle, AiOutlineCloseCircle } from "react-icons/ai";
 import Spinner from "../../components/ui/Spinner";
+import { Version } from "../../../electron/models/Version";
 
 const NewProject: React.FC = () => {
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -44,27 +45,23 @@ const NewProject: React.FC = () => {
         
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.createProjectFromTemplate(formData.location, selectedTemplate?.id).then((created) => {
+        window.api.createProject(formData.location, selectedTemplate?.dir).then((initialVersion: Version) => {
             setLoading(false);
-            if (created) {
-                const newProject: Project = {
-                    name: formData.title,
-                    author: "Unknown Author",
-                    lastModified: new Date().toLocaleDateString(),
-                    lastVersion: "0.0.1",
-                    path: formData.location,
-                };
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                window.api.saveProject(newProject).then(() => {
-                    setSuccess(true);
-                    setTimeout(() => {
-                        navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: newProject.path, projectName: newProject.name } });
-                    }, 1500);
-                });
-            } else {
-                setError("Project creation failed. Please try again.");
-            }
+            const newProject: Project = {
+                name: formData.title,
+                author: initialVersion.author,
+                lastModified: new Date().toLocaleDateString(),
+                lastVersion: initialVersion.name,
+                path: formData.location,
+            };
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api.saveProject(newProject).then(() => {
+                setSuccess(true);
+                setTimeout(() => {
+                    navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: newProject.path, projectName: newProject.name } });
+                }, 1500);
+            });
         }).catch((err) => {
             setLoading(false);
             setError(`Error: ${err.message}`);

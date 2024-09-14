@@ -14,12 +14,16 @@ export class TDProjectManager implements ProjectManager {
     private descriptionMax = 1024;
 
 
-    constructor(processor: Processor, hiddenDir: string, tracker: Tracker) {
+    constructor(processor: Processor, tracker: Tracker, hiddenDir: string) {
         this.processor = processor;
         this.hiddenDir = hiddenDir;
         this.tracker = tracker;
     }
 
+
+    private hiddenDirPath = (dir: string): string => {
+        return path.join(dir, this.hiddenDir);
+    }
 
     async init(dir: string, src?: string): Promise<Version> {
         await this.validateDirectory(dir);
@@ -35,13 +39,12 @@ export class TDProjectManager implements ProjectManager {
             }
         }
         
-        const hiddenDirPath = path.join(dir, this.hiddenDir);
+        const hiddenDirPath = this.hiddenDirPath(dir);
 
         try {
             fs.mkdirSync(hiddenDirPath);
-            await this.tracker.init(hiddenDirPath);
         } catch(error) {
-            log.error(`Error initializing repository at ${hiddenDirPath}. Cause:`, error);
+            log.error(`Error creating directory ${hiddenDirPath}. Cause:`, error);
             return Promise.reject(error);
         }
         
@@ -49,22 +52,25 @@ export class TDProjectManager implements ProjectManager {
         try{
             output = await this.processor.preprocess(dir, hiddenDirPath);
         } catch(error) {
-            Promise.reject(error);
+            return Promise.reject(error);
         }
         log.debug(`Created ${output} at ${hiddenDirPath}`);
-        return this.createVersion(dir, 'Initial version');
+        try {
+            return await this.tracker.init(hiddenDirPath);
+        } catch (error) {
+            log.error(`Error initializing tracker at ${hiddenDirPath}. Cause:`, error);
+            return Promise.reject(error);
+        }
     }
 
     async currentVersion(dir: string): Promise<Version> {
         await this.validateDirectory(dir);
-
-        return this.tracker.currentVersion(dir);
+        return this.tracker.currentVersion(this.hiddenDirPath(dir));
     }
 
     async listVersions(dir: string): Promise<Version[]> {
         await this.validateDirectory(dir);
-
-        return this.tracker.listVersions(dir);
+        return this.tracker.listVersions(this.hiddenDirPath(dir));
     }
 
     async createVersion(dir: string, versionName: string, description?: string): Promise<Version> {
@@ -79,11 +85,9 @@ export class TDProjectManager implements ProjectManager {
             log.error(msg);
             return Promise.reject(new RangeError(msg));
         }
-
+        
         await this.validateDirectory(dir);
-
-        const hiddenDirPath = path.join(dir, this.hiddenDir);
-
+        const hiddenDirPath = this.hiddenDirPath(dir);
         try {
             const createdVersion = await this.tracker.createVersion(hiddenDirPath, versionName, description);
             return Promise.resolve(createdVersion);
@@ -93,15 +97,14 @@ export class TDProjectManager implements ProjectManager {
         }
     }
 
-    async goToVersion(dir: string, versionName: string): Promise<Version> {
+    async goToVersion(dir: string, versionId: string): Promise<Version> {
         await this.validateDirectory(dir);
-        return this.tracker.goToVersion(dir, versionName);
+        return this.tracker.goToVersion(this.hiddenDirPath(dir), versionId);
     }
 
     async compare(dir: string, to?: string): Promise<unknown> {
         await this.validateDirectory(dir);
-        
-        return this.tracker.compare(dir, to);
+        return this.tracker.compare(this.hiddenDirPath(dir), to);
     }
 
     private async validateDirectory(dir: string): Promise<void> {

@@ -2,10 +2,10 @@ import React, { useState, useEffect, MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { FaFolderOpen, FaPlay, FaTrashAlt } from "react-icons/fa";
-import Project from "../../models/Project.ts";
 import { Dialog, DialogFooter, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog.tsx";
 import {localPaths} from "../../const";
 import log from 'electron-log/renderer';
+import Project from "../../../electron/models/Project.ts";
 
 const Projects: React.FC = () => {
     const [projects, setProjects] = useState<Project[]>([]);

@@ -63,7 +63,7 @@ export class SimpleGitTracker implements Tracker {
     }
 
     async createVersion(dir: string, versionName: string, description?: string): Promise<Version> {
-        log.debug(`Creating version ${versionName} (${description})`)
+        log.info(`Creating version ${versionName} (${description})`)
         await this.git.cwd(dir);
         await this.git.add('.');
         const message = `${versionName}${this.separator}${description || ''}`;

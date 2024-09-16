@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Button } from "../../components/ui/button";
 import TemplateSelector from "../../components/ui/TemplateSelector";
-import Template from "../../models/Template";
 import ProjectDetailsForm from "../../components/ui/ProjectDetailsForm";
-import Project from "../../models/Project";
 import { localPaths } from "../../const";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineCheckCircle, AiOutlineCloseCircle } from "react-icons/ai";
 import Spinner from "../../components/ui/Spinner";
 import { Version } from "../../../electron/models/Version";
+import Template from "../../../electron/models/Template";
+import Project from "../../../electron/models/Project";
 
 const NewProject: React.FC = () => {
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);

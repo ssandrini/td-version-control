@@ -32,7 +32,7 @@ export class TDProjectManager implements ProjectManager {
             try {
                 await this.validateDirectory(src);
                 fs.copySync(src, dir, { recursive: true });
-                log.debug(`Copied ${src} into ${dir}`);
+                log.info(`Copied ${src} into ${dir}`);
             } catch (error) {
                 log.error(`Error copying ${src} into ${dir}. Cause:`, error);
                 return Promise.reject(error);
@@ -54,7 +54,7 @@ export class TDProjectManager implements ProjectManager {
         } catch(error) {
             return Promise.reject(error);
         }
-        log.debug(`Created ${output} at ${hiddenDirPath}`);
+        log.info(`Created ${output} at ${hiddenDirPath}`);
         try {
             return await this.tracker.init(hiddenDirPath);
         } catch (error) {

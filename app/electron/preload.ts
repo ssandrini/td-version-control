@@ -1,5 +1,5 @@
 import { ipcRenderer, contextBridge } from 'electron'
-import Project from '../src/models/Project'
+import Project from './models/Project'
 import { API_METHODS } from './apiMethods'
 
 // --------- Expose some API to the Renderer process ---------

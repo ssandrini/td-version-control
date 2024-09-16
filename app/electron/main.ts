@@ -3,16 +3,16 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import userDataMgr from "./user-data-mgr/user-data-mgr";
-import Project from "../src/models/Project";
-import tdMgr from "./td-mgr/td-mgr";
-import watcherMgr from "./watcher-mgr/watcher-mgr";
+import userDataMgr from "./managers/UserDataManager";
+import Project from "./models/Project";
+import watcherMgr from "./managers/WatcherManager"
 import log from "electron-log/main";
 import { ProjectManager } from "./managers/interfaces/ProjectManager";
 import { TDProjectManager } from "./managers/TDProjectManager";
 import { SimpleGitTracker } from "./trackers/SimpleGitTracker";
 import { TDProcessor } from "./processors/TDProcessor";
 import { API_METHODS } from "./apiMethods";
+import { filePicker, openToeFile, getTemplates } from "./utils/utils";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -95,7 +95,7 @@ const setupProject = (projectManager: ProjectManager): void => {
     projectManager.currentVersion(dir)
   );
 
-  ipcMain.handle(API_METHODS.FILE_PICKER, (_) => tdMgr.filePicker());
+  ipcMain.handle(API_METHODS.FILE_PICKER, (_) => filePicker());
 
   ipcMain.handle(API_METHODS.RECENT_PROJECTS, (_) => userDataMgr.getRecentProjects());
 
@@ -113,7 +113,7 @@ const setupProject = (projectManager: ProjectManager): void => {
 
   ipcMain.handle(API_METHODS.GET_TD_PATH, (_) => userDataMgr.getTouchDesignerBinPath());
 
-  ipcMain.handle(API_METHODS.OPEN_TD, (_, path: string) => tdMgr.openToeFile(path));
+  ipcMain.handle(API_METHODS.OPEN_TD, (_, path: string) => openToeFile(path));
 
   ipcMain.handle(API_METHODS.CREATE_PROJECT, (_, dir: string, src?: string) =>
     projectManager.init(dir, src)
@@ -123,7 +123,7 @@ const setupProject = (projectManager: ProjectManager): void => {
     projectManager.goToVersion(dir, versionId)
   );
 
-  ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => tdMgr.getTemplates());
+  ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
   ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
     watcherMgr.registerWatcher(path, () => {

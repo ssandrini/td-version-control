@@ -14,7 +14,7 @@ export class TDProcessor implements Processor {
             log.error(`Error changing directory to ${dir}.`)
             Promise.reject(error);
         }
-        log.debug('Current dir:', process.cwd());
+        log.info('Current dir:', process.cwd());
         const toePath = findFileByExt('toe');
         if (toePath === undefined) {
             const msg = `No toe file found in project dir (${dir}).`;
@@ -29,7 +29,7 @@ export class TDProcessor implements Processor {
             // This is not a mistake. toeexpand is implemented in a way such that it returns
             // failure when suceeds.
         }    
-        log.debug(`Expanded ${toePath} to ${dir}`);
+        log.info(`Expanded ${toePath} to ${dir}`);
 
         const tocPath = `${toePath}.toc`;
         const dirPath = `${toePath}.dir`;
@@ -51,7 +51,7 @@ export class TDProcessor implements Processor {
                 return Promise.reject(error);
             }
         }
-        log.debug(`${toePath} expanded and moved to ${path.join(dir, outDir!)} succesfully.`);
+        log.info(`${toePath} expanded and moved to ${path.join(dir, outDir!)} succesfully.`);
         return Promise.resolve([tocPath, dirPath]);
     }
 
@@ -62,7 +62,7 @@ export class TDProcessor implements Processor {
             log.error(`Error changing directory to ${dir}.`)
             return Promise.reject(error);
         }
-        log.debug(`Current dir: ${dir}`);
+        log.info(`Current dir: ${dir}`);
 
         const tocPath = findFileByExt('toc');
         if(!tocPath) {

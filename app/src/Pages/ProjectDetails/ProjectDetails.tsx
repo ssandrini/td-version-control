@@ -1,78 +1,68 @@
 import React, {useEffect, useState} from 'react';
 import {useLocation} from 'react-router-dom';
 import History from '../../components/ui/history';
-import {Version} from '../../../electron/td-mgr/td-mgr';
+import {Version} from '../../../electron/models/Version.ts'
 import {Label} from "../../components/ui/label.tsx";
 import {Input} from "../../components/ui/input.tsx";
 import log from 'electron-log/renderer';
 
 const ProjectDetail: React.FC = () => {
     const location = useLocation();
-    const path = location.state?.path;
+    const dir = location.state?.path;
     const projectName = location.state?.projectName;
-    const [currentVersion, setCurrentVersion] = useState<string>('');
-    const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
-    const [selectedVersionName, setSelectedVersionName] = useState<string>('');
+    const [currentVersion, setCurrentVersion] = useState<Version|null>(null);
+    const [selectedVersion, setSelectedVersion] = useState<Version|null>(null);
     const [versions, setVersions] = useState<Version[]>([]);
 
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.getCurrentVersion(path).then((version: Version) => {
-            setCurrentVersion(version.name);
+        window.api.getCurrentVersion(dir).then((version: Version) => {
+            setCurrentVersion(version);
         });
-    }, [path]);
+    }, [dir]);
 
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.listVersions(path).then((versions: Version[]) => {
+        window.api.listVersions(dir).then((versions: Version[]) => {
             setVersions(versions);
         }).catch(() => {
             setVersions([]);
         });
-    }, [path, currentVersion]);
+    }, [dir, currentVersion]);
 
 
-    const [title, setTitle] = useState('');
+    const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const handleAddVersion = () => {
-        log.info('version a crear:', {title, description});
+        log.info('version a crear:', {title: name, description});
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.createNewVersion(title, description, path).then((created) => {
-            if (created) {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                window.api.listVersions(path).then((versions: Version[]) => {
-                    setVersions(versions);
-                    setSelectedVersion(versions[0]);
-                    setCurrentVersion(versions[0]?.name ?? "");
-                });
-            } else {
-                log.info("no pudo crear");
-            }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        window.api.createNewVersion(dir, name, description).then((_) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api.listVersions(dir).then((versions: Version[]) => {
+                setVersions(versions);
+                setSelectedVersion(versions[0]);
+                setCurrentVersion(versions[0]);
+            });
         });
     };
 
     const handleVersionSelect = (version: Version) => {
         setSelectedVersion(version);
-        setSelectedVersionName(version.name);
     };
 
-    const handleCheckoutVersion = () => {
+    const handleGoToVersion = () => {
         if (selectedVersion) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            window.api.checkoutVersion(selectedVersion.name, path).then((changed) => {
-                if (changed) {
-                    log.info('Log from the renderer');
-                    setCurrentVersion(selectedVersion.name);
-                } else {
-                    log.info("fallo el checkout");
-                }
+            window.api.goToVersion(dir, selectedVersion.id).then((newVersion) => {
+                setCurrentVersion(newVersion);
             });
         }
     };
@@ -86,11 +76,11 @@ const ProjectDetail: React.FC = () => {
                 </div>
                 <div className="flex flex-col text-xl">
                     Current Version:
-                    <div className="font-semibold">{currentVersion}</div>
+                    <div className="font-semibold">{currentVersion?.name}</div>
                 </div>
             </div>
 
-            {versions[0] && versions[0].name === currentVersion && (
+            {versions[0] && versions[0].name === currentVersion?.name && (
                 <div className="p-8 flex-1">
                     <h2 className="text-2xl font-semibold mb-4">Create New Version</h2>
                     <div className="bg-white rounded-lg p-4 shadow text-gray-700">
@@ -99,8 +89,8 @@ const ProjectDetail: React.FC = () => {
                             <Input
                                 type="text"
                                 id="title"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
                                 className="w-full p-2 border border-gray-300 rounded"
                                 onKeyDown={(e) => {
                                     if (e.key === ' ') {  // jaja que queres? poner un espacio? no.
@@ -157,18 +147,18 @@ const ProjectDetail: React.FC = () => {
             <div className="bg-gray-800 rounded-lg p-4 flex w-full overflow-auto">
                 <div className="w-1/3">
                     <h2 className="text-2xl font-semibold mb-2">Version History</h2>
-                    <History versions={versions} path={path} onVersionSelect={handleVersionSelect}
+                    <History versions={versions} path={dir} onVersionSelect={handleVersionSelect}
                              currentVersion={currentVersion}
-                             selectedVersion={selectedVersionName}/>
+                             selectedVersion={selectedVersion}/>
                 </div>
                 <div className="w-2/3 ml-4 bg-gray-700 text-white p-4 rounded-lg">
                     {selectedVersion ? (<>
                         <h3 className="text-xl font-semibold mb-2">Details</h3>
                         <p><strong>Author:</strong> {selectedVersion.author}</p>
-                        <p><strong>Date:</strong> {selectedVersion.date}</p>
+                        <p><strong>Date:</strong> {selectedVersion.date.toDateString()}</p>
                         <p><strong>Description:</strong> {selectedVersion.description}</p>
                         <button
-                            onClick={handleCheckoutVersion}
+                            onClick={handleGoToVersion}
                             className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mt-4"
                         >
                             Checkout this version

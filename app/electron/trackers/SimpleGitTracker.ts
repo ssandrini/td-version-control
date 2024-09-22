@@ -89,16 +89,20 @@ export class SimpleGitTracker implements Tracker {
         );
     }
 
-    async compare(dir: string, to?: string): Promise<string> {
+    async compare(dir: string, to?: string, file?: string): Promise<string> {
         await this.git.cwd(dir);
         if (!to) {
-            return this.git.diff();
+            return file ? this.git.diff([file]) : this.git.diff();
         }
-        const log = await this.git.log();
+    
+        const log = await this.git.log(); 
         const commit = log.all.find(c => c.hash === to);
+    
         if (!commit) {
             throw new TrackerError(`Commit "${to}" not found.`);
         }
-        return this.git.diff([commit.hash]);
+
+        return file ? this.git.diff([commit.hash, file]) : this.git.diff([commit.hash]);
     }
+    
 }

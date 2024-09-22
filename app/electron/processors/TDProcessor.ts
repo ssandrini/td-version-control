@@ -14,7 +14,6 @@ export class TDProcessor implements Processor {
             log.error(`Error changing directory to ${dir}.`)
             Promise.reject(error);
         }
-        log.info('Current dir:', process.cwd());
         const toePath = findFileByExt('toe');
         if (toePath === undefined) {
             const msg = `No toe file found in project dir (${dir}).`;
@@ -62,7 +61,6 @@ export class TDProcessor implements Processor {
             log.error(`Error changing directory to ${dir}.`)
             return Promise.reject(error);
         }
-        log.info(`Current dir: ${dir}`);
 
         const tocPath = findFileByExt('toc');
         if(!tocPath) {

@@ -125,6 +125,11 @@ const setupProject = (projectManager: ProjectManager): void => {
 
   ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
+  ipcMain.handle(API_METHODS.COMPARE, (_, dir: string, to?: string) => {
+    console.debug('Compare main handler');
+    return projectManager.compare(dir, to);
+  });
+
   ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
     watcherMgr.registerWatcher(path, () => {
       // Registrar los callbacks que necesitemos acá

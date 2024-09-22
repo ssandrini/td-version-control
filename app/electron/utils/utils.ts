@@ -9,8 +9,8 @@ import path from 'node:path'
  * @param {string} ext - The file extension to search for (e.g., 'txt', 'json').
  * @returns {string | undefined} - The first matching file's name if found, otherwise undefined.
  */
-export const findFileByExt = (ext: string): string | undefined => {
-    const files = fs.readdirSync('.');
+export const findFileByExt = (ext: string, dir?: string): string | undefined => {
+    const files = fs.readdirSync(dir? dir! : '.');
     const fileRegex = new RegExp(`^[^.]+\\.${ext}$`);
     const foundFile = files.find(file => fileRegex.test(file));
     
@@ -136,5 +136,37 @@ export const openToeFile = async(projectFolderPath: string): Promise<void> => {
     } catch (error) {
         log.error('Unexpected error:', error);
         return Promise.reject(new Error('Unexpected Error.'))
+    }
+}
+
+/**
+ * Extracts the name of the node, given a diff line of the toc file.
+ * 
+ * @param {string} projectFolderPath - A diffline from the toc file.
+ * @returns {string} - The name of the node that changed.
+ */
+export const extractNodeName = (diffLine: string): string => {
+    const lineContent = diffLine.slice(1).trim();
+    const parts = lineContent.split('/');
+    const fileNameWithExtension = parts[parts.length - 1];
+    const fileName = fileNameWithExtension.split('.')[0];
+    return fileName; 
+}
+
+/**
+ * Gets the information of a given node
+ * 
+ * @param {string} toeDir - The path to the dir, as returned by toeexpand.
+ * @param {string} node - The name of the node.
+ * @returns {string} - Returns the type of the node. 
+ */
+export const getNodeInfo = async (toeDir: string, node: string): Promise<string | undefined> => {
+    try {
+        const nodePath = path.join(toeDir, `${node}.n`);
+        const fileContent = await fs.readFile(nodePath, 'utf-8');
+        const firstLine = fileContent.split('\n')[0];
+        return firstLine;
+    } catch (error) {
+        return undefined;
     }
 }

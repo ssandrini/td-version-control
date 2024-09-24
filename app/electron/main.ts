@@ -25,7 +25,6 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, "resources")
   : RENDERER_DIST;
-const iconPath = path.join(process.env.VITE_PUBLIC, "img.png");
 let win: BrowserWindow | null;
 
 function createWindow() {
@@ -33,7 +32,7 @@ function createWindow() {
   log.info("Initializing app...");
 
   win = new BrowserWindow({
-    icon: path.join(iconPath, "img.png"),
+    icon: "public/img.png",
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,

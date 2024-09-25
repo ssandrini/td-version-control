@@ -1,19 +1,24 @@
 import React from 'react';
 import { FaPlus, FaMinus, FaEdit } from 'react-icons/fa';
+import { TD_OPERATOR_TYPES } from '../../const';
 
 const OperatorCard = ({ change, icon: Icon, iconColor }) => {
-  const getFileImage = (fileType) => {
-    switch (fileType) {
-        // HAY QUE REEMPLAZAR ACA LOS FILETYPE CON LOS TIPOS DE DATOS DE TD
-      case 'txt':
-        return '/path/to/textfile-icon.png';
-      case 'pdf':
-        return '/path/to/pdffile-icon.png';
-      case 'jpg':
-      case 'png':
-        return '/path/to/imagefile-icon.png';
+  const getFileImage = (type) => {
+    switch (type) {
+      case TD_OPERATOR_TYPES.COMPONENT_OPERATOR:
+        return '/public/COMP.png'
+      case TD_OPERATOR_TYPES.CHANNEL_OPERATOR:
+        return '/public/CHOP.png'
+      case TD_OPERATOR_TYPES.TEXTURE_OPERATOR:
+        return '/public/TOP.png'
+      case TD_OPERATOR_TYPES.SURFACE_OPERATOR:
+        return '/public/SOP.png'
+      case TD_OPERATOR_TYPES.MATERIAL_OPERATOR:
+        return '/public/MAT.png'
+      case TD_OPERATOR_TYPES.DATA_OPERATOR:
+        return '/public/DAT.png'
       default:
-        return 'public/geo.png';
+        return '/public/geo.png' // TO DO
     }
   };
 

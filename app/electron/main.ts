@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, screen } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -31,6 +31,14 @@ function createWindow() {
   log.initialize();
   log.info("Initializing app...");
 
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+
+  const minWidth = 1000;
+  const minHeight = 700;
+
+  const finalWidth = Math.min(screenWidth, minWidth);
+  const finalHeight = Math.min(screenHeight, minHeight);
+
   win = new BrowserWindow({
     icon: "public/img.png",
     webPreferences: {
@@ -38,8 +46,13 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, "preload.mjs"),
     },
+    width: finalWidth,
+    height: finalHeight,
+    minWidth: finalWidth,
+    minHeight: finalHeight,
   });
 
+  win.maximize();
   // TODO: get user correctly
   const tracker = new SimpleGitTracker("tduser", "tduser@example.com");
   const processor = new TDProcessor();

@@ -10,10 +10,10 @@ import path from 'node:path'
  * @returns {string | undefined} - The first matching file's name if found, otherwise undefined.
  */
 export const findFileByExt = (ext: string, dir?: string): string | undefined => {
-    const files = fs.readdirSync(dir? dir! : '.');
-    const fileRegex = new RegExp(`^[^.]+\\.${ext}$`);
+    const files = fs.readdirSync(dir ? dir : '.');
+    const fileRegex = new RegExp(`\\.${ext}$`);
     const foundFile = files.find(file => fileRegex.test(file));
-    
+
     return foundFile;
 }
 
@@ -90,7 +90,7 @@ const getImagePath = async (templatePath: string): Promise<string> => {
     for (const ext of imageExtensions) {
         const imagePath = path.join(templatePath, `image${ext}`);
         const imageExists = await fs.promises.access(imagePath).then(() => true).catch(() => false);
-        
+
         if (imageExists) {
             log.info(`Image found: ${imagePath}`);
             return Promise.resolve(imagePath);
@@ -108,7 +108,7 @@ const getImagePath = async (templatePath: string): Promise<string> => {
  * @returns {Promise<void>} - A promise that resolves if the file opens successfully or rejects if an error occurs.
  * @throws {Error} - Throws an error if no .toe file is found or if the file fails to open.
  */
-export const openToeFile = async(projectFolderPath: string): Promise<void> => {
+export const openToeFile = async (projectFolderPath: string): Promise<void> => {
     try {
         const files = await fs.readdir(projectFolderPath);
 
@@ -128,10 +128,10 @@ export const openToeFile = async(projectFolderPath: string): Promise<void> => {
         }
 
         log.info('.toe file opened successfully');
-        
+
         // TO DO: delete?
         await new Promise(resolve => setTimeout(resolve, 4000));
-        
+
         return Promise.resolve();
     } catch (error) {
         log.error('Unexpected error:', error);
@@ -148,9 +148,11 @@ export const openToeFile = async(projectFolderPath: string): Promise<void> => {
 export const extractNodeName = (diffLine: string): string => {
     const lineContent = diffLine.slice(1).trim();
     const parts = lineContent.split('/');
-    const fileNameWithExtension = parts[parts.length - 1];
+    const fileNameWithExtension = parts[1];
+    if (fileNameWithExtension == undefined)
+        return ""
     const fileName = fileNameWithExtension.split('.')[0];
-    return fileName; 
+    return fileName;
 }
 
 /**

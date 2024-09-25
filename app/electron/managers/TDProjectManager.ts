@@ -98,6 +98,7 @@ export class TDProjectManager implements ProjectManager {
     await this.validateDirectory(dir);
     const hiddenDirPath = this.hiddenDirPath(dir);
     try {
+      await this.processor.preprocess(dir, this.hiddenDir);
       const createdVersion = await this.tracker.createVersion(
         hiddenDirPath,
         versionName,
@@ -115,59 +116,61 @@ export class TDProjectManager implements ProjectManager {
     return this.tracker.goToVersion(this.hiddenDirPath(dir), versionId);
   }
 
-  async compare(dir: string, to?: string): Promise<ChangeSet<TDNode>> {
-    // console.debug("Starting compare...");
-    // await this.validateDirectory(dir);
-    // await this.processor.preprocess(dir, this.hiddenDir);
+  async compare(dir: string, versionId?: string): Promise<ChangeSet<TDNode>> {
+    log.debug("Starting compare...");
+    await this.validateDirectory(dir);
 
-    // const managementDir = path.join(dir, this.hiddenDir);
+    if (!versionId) {
+      await this.processor.preprocess(dir, this.hiddenDir);
+    }
 
-    // const tocFile = findFileByExt('.toc', managementDir);
-    // if (!tocFile) {
-    //   return Promise.reject(new MissingFileError('Could not finde toc file'))
-    // }
+    const managementDir = path.join(dir, this.hiddenDir);
 
-    // const diff = (
-    //   await this.tracker.compare(this.hiddenDirPath(dir), to, tocFile)
-    // ).split('\n');
+    const tocFile = findFileByExt('toc', managementDir);
+    if (!tocFile) {
+      return Promise.reject(new MissingFileError('Could not find toc file'));
+    }
 
-    // const toeDir = findFileByExt('.dir');
-    // if (!toeDir) {
-    //   return Promise.reject(new MissingFileError('Could not find dir'))
-    // }
-    // const toeDirAbsPath = path.join(dir, toeDir!);
+    let diff = await this.tracker.compare(managementDir, versionId, tocFile);
+    if (!diff || diff == "") {
+      return ChangeSet.fromValues([], [], [])
+    }
 
-    // const added = await Promise.all(
-    //   diff
-    //     .filter((line) => {
-    //       return line.startsWith('+') && !line.startsWith('+++');
-    //     })
-    //     .map(async (line) => {
-    //       const nodeName = extractNodeName(line);
-    //       return new TDNode(
-    //         nodeName,
-    //         await getNodeInfo(toeDirAbsPath, nodeName)
-    //       );
-    //     })
-    // );
+    diff = diff.split('\n');
 
-    // const deleted = await Promise.all(
-    //   diff
-    //     .filter((line) => {
-    //       return line.startsWith('-') && !line.startsWith('---');
-    //     })
-    //     .map(async (line) => {
-    //       const nodeName = extractNodeName(line);
-    //       return new TDNode(nodeName, undefined);
-    //     })
-    // );
+    const toeDir = findFileByExt('dir', managementDir);
+    if (!toeDir) {
+      return Promise.reject(new MissingFileError('Could not find dir'));
+    }
 
-    // return ChangeSet.fromValues(added, [], deleted);
-    return ChangeSet.fromValues(
-      [new TDNode("a1", "t1")],
-      [new TDNode("a2", "t2")],
-      [new TDNode("a3", "t3")]
-    )
+    const toeDirAbsPath = path.join(dir, toeDir);
+
+    const added = await Promise.all(
+      diff
+        .filter((line) => {
+          return line.startsWith('+') && !line.startsWith('+++');
+        })
+        .map(async (line) => {
+          const nodeName = extractNodeName(line);
+          return new TDNode(
+            nodeName,
+            await getNodeInfo(toeDirAbsPath, nodeName)
+          );
+        })
+    );
+
+    const deleted = await Promise.all(
+      diff
+        .filter((line) => {
+          return line.startsWith('-') && !line.startsWith('---');
+        })
+        .map(async (line) => {
+          const nodeName = extractNodeName(line);
+          return new TDNode(nodeName, undefined);
+        })
+    );
+
+    return ChangeSet.fromValues(added, [], deleted);
   }
 
   private async validateDirectory(dir: string): Promise<void> {

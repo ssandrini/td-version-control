@@ -22,12 +22,12 @@ export class TDProcessor implements Processor {
         }
 
         try {
-            execSync(`toeexpand.exe ${toePath}`, { stdio: ['ignore', 'ignore', 'inherit']});
+            execSync(`toeexpand.exe ${toePath}`, { stdio: ['ignore', 'ignore', 'inherit'] });
             return Promise.reject();
         } catch (error) {
             // This is not a mistake. toeexpand is implemented in a way such that it returns
             // failure when suceeds.
-        }    
+        }
         log.info(`Expanded ${toePath} to ${dir}`);
 
         const tocPath = `${toePath}.toc`;
@@ -41,11 +41,10 @@ export class TDProcessor implements Processor {
 
         if (outDir) {
             try {
-                await Promise.all([
-                    fs.move(tocPath, path.join(outDir, tocPath)),
-                    fs.move(dirPath, path.join(outDir, dirPath)),
-                ]);
-            } catch(error) {
+                await fs.move(tocPath, path.join(outDir, tocPath), { overwrite: true })
+                await fs.rm(path.join(outDir, dirPath), { recursive: true, force: true })
+                await fs.move(dirPath, path.join(outDir, dirPath), { overwrite: true })
+            } catch (error) {
                 log.error(`Error moving ${tocPath} and ${dirPath} to ${outDir}`);
                 return Promise.reject(error);
             }
@@ -63,7 +62,7 @@ export class TDProcessor implements Processor {
         }
 
         const tocPath = findFileByExt('toc');
-        if(!tocPath) {
+        if (!tocPath) {
             const msg = `Could not find toc file at ${dir}`;
             log.error(msg);
             return Promise.reject(new MissingFileError(msg));
@@ -72,7 +71,7 @@ export class TDProcessor implements Processor {
         const toePath = tocPath.replace(/\.toc$/, '');
 
         try {
-            execSync(`toecollapse.exe ${toePath}`, { stdio: ['ignore', 'ignore', 'inherit']});
+            execSync(`toecollapse.exe ${toePath}`, { stdio: ['ignore', 'ignore', 'inherit'] });
         } catch (error) {
             log.error(`Error collapsing ${tocPath}.`);
             Promise.reject(error);
@@ -85,13 +84,13 @@ export class TDProcessor implements Processor {
             return Promise.reject(new MissingFileError(msg));
         }
 
-        if(!outDir) {
+        if (!outDir) {
             return Promise.resolve([toePath]);
         }
 
         try {
-            fs.moveSync(toePath, outDir);
-        } catch(error) {
+            fs.moveSync(toePath, outDir, { overwrite: true });
+        } catch (error) {
             log.error(`Error moving ${toePath} to ${outDir}`);
             return Promise.reject(error);
         }

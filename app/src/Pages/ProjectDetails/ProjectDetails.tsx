@@ -50,12 +50,12 @@ const ProjectDetail: React.FC = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
-            .compareVersions(dir)
+            .compareVersions(dir, selectedVersion?.id)
             .then((changes: ChangeSet<TDNode>) => {
-                console.log("Change set:", changes);
-                console.log("Added:", changes.added);
-                console.log("Deleted:", changes.modified);
-                console.log("Modified:", changes.deleted);
+                log.debug("Change set:", changes);
+                log.debug("Added:", changes.added.items);
+                log.debug("Deleted:", changes.modified.items);
+                log.debug("Modified:", changes.deleted.items);
                 setChanges(changes);
             })
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,7 +63,7 @@ const ProjectDetail: React.FC = () => {
                 log.error("Error retrieving changeset due to", error);
                 // TODO handle error
             });
-    }, [dir]);
+    }, [dir, selectedVersion]);
 
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -203,7 +203,7 @@ const ProjectDetail: React.FC = () => {
                             <strong>Description:</strong> {selectedVersion.description}
                         </p>
                         <div className="flex flex-row gap-3 py-4 flex-wrap">
-                            {changes.added.map((change, index) => (
+                            {changes.added.items.map((change, index) => (
                                 <div
                                     key={index}
                                     className={cn("w-20 h-20 rounded-md bg-white text-black p-2 flex flex-row items-center relative")}
@@ -214,7 +214,7 @@ const ProjectDetail: React.FC = () => {
                                     <FaPlus className="flex items-center justify-center text-green-500 absolute bottom-3 right-3 transform translate-x-1/2 translate-y-1/2"/>
                                 </div>
                             ))}
-                            {changes.deleted.map((change, index) => (
+                            {changes.deleted.items.map((change, index) => (
                                 <div
                                     key={index}
                                     className={cn("w-20 h-20 rounded-md bg-white text-black p-2 flex flex-row items-center relative")}
@@ -225,7 +225,7 @@ const ProjectDetail: React.FC = () => {
                                     <FaMinus className="flex items-center justify-center text-red-600 absolute bottom-3 right-3 transform translate-x-1/2 translate-y-1/2"/>
                                 </div>
                             ))}
-                            {changes.modified.map((change, index) => (
+                            {changes.modified.items.map((change, index) => (
                                 <div
                                     key={index}
                                     className={cn("w-20 h-20 rounded-md bg-white text-black p-2 flex flex-row items-center relative")}

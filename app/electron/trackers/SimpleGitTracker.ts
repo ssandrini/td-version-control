@@ -89,20 +89,40 @@ export class SimpleGitTracker implements Tracker {
         );
     }
 
-    async compare(dir: string, to?: string, file?: string): Promise<string> {
+    async compare(dir: string, versionId?: string, file?: string): Promise<string> {
         await this.git.cwd(dir);
-        if (!to) {
-            return file ? this.git.diff([file]) : this.git.diff();
+        file = file? file : '.';
+    
+        if (!versionId) {
+            return await this.git.diff([file])
         }
     
-        const log = await this.git.log(); 
-        const commit = log.all.find(c => c.hash === to);
+        const gitLog = await this.git.log();
+        const commit = gitLog.all.find(c => c.hash === versionId);
     
         if (!commit) {
-            throw new TrackerError(`Commit "${to}" not found.`);
+            throw new TrackerError(`Commit "${versionId}" not found.`);
         }
-
-        return file ? this.git.diff([commit.hash, file]) : this.git.diff([commit.hash]);
-    }
     
+        let hasParent: string | undefined;
+        try {
+            hasParent = await this.git.raw(['rev-list', '--parents', '-n', '1', commit.hash]);
+    
+            if (!hasParent || typeof hasParent !== 'string') {
+                throw new TrackerError(`Invalid response from git rev-list for commit "${commit.hash}".`);
+            }
+        } catch (error) {
+            throw new TrackerError(`Failed to check parents for commit "${commit.hash}": ${error.message}`);
+        }
+    
+        const parents = hasParent.trim().split(' ');
+    
+        if (parents.length === 1) {
+            const emptyTreeHash = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+            return await this.git.diff([emptyTreeHash, commit.hash, file])
+        }
+    
+        return await this.git.diff([`${commit.hash}^`, commit.hash, file])
+    }        
+
 }

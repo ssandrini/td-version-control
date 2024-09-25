@@ -24,9 +24,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
 contextBridge.exposeInMainWorld('api', {
   listVersions:       async (dir: string) => ipcRenderer.invoke(API_METHODS.LIST_VERSIONS, dir),
-  compareVersions:    async (dir: string, to?: string) => {
-    console.debug('Preload compare')
-    return ipcRenderer.invoke(API_METHODS.COMPARE, dir, to);
+  compareVersions:    async (dir: string, versionId?: string) => {
+    return ipcRenderer.invoke(API_METHODS.COMPARE, dir, versionId);
   },
   filePicker:         async () => ipcRenderer.invoke(API_METHODS.FILE_PICKER),
   getRecentProjects:  async () => ipcRenderer.invoke(API_METHODS.RECENT_PROJECTS),

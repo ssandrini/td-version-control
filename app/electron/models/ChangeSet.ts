@@ -1,31 +1,21 @@
-export class ChangeSet<T> {
-    public added: T[];
-    public modified: T[];
-    public deleted: T[];
-  
+import { HasKey, Set } from "../utils/Set";
+
+export class ChangeSet<T extends HasKey> {
+    public added: Set<T>;
+    public modified: Set<T>;
+    public deleted: Set<T>;
+
     constructor() {
-      this.added = [];
-      this.modified = [];
-      this.deleted = [];
+        this.added = new Set<T>();
+        this.modified = new Set<T>();
+        this.deleted = new Set<T>();
     }
 
-    static fromValues<T>(added: T[], modified: T[], deleted: T[]): ChangeSet<T> {
+    static fromValues<T extends HasKey>(added: T[], modified: T[], deleted: T[]): ChangeSet<T> {
         const changeset = new ChangeSet<T>();
-        changeset.added = added;
-        changeset.modified = modified;
-        changeset.deleted = deleted;
+        added.forEach(item => changeset.added.add(item));
+        modified.forEach(item => changeset.modified.add(item));
+        deleted.forEach(item => changeset.deleted.add(item));
         return changeset;
-    }
-
-    public addToAdded(change: T): void {
-        this.added.push(change);
-    }
-
-    public addToModified(change: T): void {
-        this.modified.push(change);
-    }
-
-    public addToDeleted(change: T): void {
-        this.deleted.push(change);
     }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaPlus, FaMinus, FaEdit } from 'react-icons/fa';
 
-const FileCard = ({ change, icon: Icon, iconColor }) => {
+const OperatorCard = ({ change, icon: Icon, iconColor }) => {
   const getFileImage = (fileType) => {
     switch (fileType) {
         // HAY QUE REEMPLAZAR ACA LOS FILETYPE CON LOS TIPOS DE DATOS DE TD
@@ -19,7 +19,7 @@ const FileCard = ({ change, icon: Icon, iconColor }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="w-32 h-40 bg-gray-800 text-white rounded-md p-2 relative flex justify-center items-center">
+      <div className="w-28 h-32 bg-gray-700 text-white rounded-md p-2 relative flex justify-center items-center">
         <img
           src={getFileImage(change.type)}
           alt={change.type}
@@ -38,4 +38,4 @@ const FileCard = ({ change, icon: Icon, iconColor }) => {
   );
 };
 
-export default FileCard;
+export default OperatorCard;

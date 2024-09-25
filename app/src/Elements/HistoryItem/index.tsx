@@ -14,10 +14,10 @@ const HistoryItem: React.FC<HistoryItemProps> = ({version, isCurrent, onClick, i
             onClick={onClick}
         >
             <div className="flex flex-col h-full items-center">
-                <div className={`w-6 h-8 ${isCurrent ? 'bg-yellow-400' : 'bg-blue-500'} rounded-full`}/>
+                <div className={`w-6 h-8 ${isCurrent ? 'bg-gray-200' : 'bg-blue-500'} rounded-full`}/>
                 <div className={"w-1 h-full bg-blue-500"}/>
             </div>
-            <div className="text-gray-100 font-bold px-2">
+            <div className="text-gray-100 px-2">
                 {version.name}
             </div>
         </div>);

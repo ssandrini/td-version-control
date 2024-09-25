@@ -3,12 +3,7 @@ import {useVariableContext} from "../../hooks/Variables/useVariableContext.tsx";
 import Sidebar from "../../components/ui/Sidebar.tsx";
 import {Outlet} from "react-router-dom";
 import {
-    Dialog,
-    DialogFooter,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription
+    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
 } from "../../components/ui/dialog.tsx";
 import {Button} from "../../components/ui/button.tsx";
 import log from 'electron-log/renderer';

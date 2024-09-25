@@ -11,6 +11,8 @@ import {
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
 } from "../../components/ui/dialog";
 import {Button} from "../../components/ui/button";
+import {cn} from "../../lib/utils";
+import {FaEdit, FaMinus, FaPlus} from "react-icons/fa";
 
 const ProjectDetail: React.FC = () => {
     const location = useLocation();
@@ -200,8 +202,41 @@ const ProjectDetail: React.FC = () => {
                         <p>
                             <strong>Description:</strong> {selectedVersion.description}
                         </p>
-                        {changes.added.concat(changes.deleted).concat(changes.modified).map((change, index) => (
-                            <div key={index}>{change.name} {change.type}</div>))}
+                        <div className="flex flex-row gap-3 py-4 flex-wrap">
+                            {changes.added.map((change, index) => (
+                                <div
+                                    key={index}
+                                    className={cn("w-20 h-20 rounded-md bg-white text-black p-2 flex flex-row items-center relative")}
+                                >
+                                    <div>
+                                        {change.name} {change.type}
+                                    </div>
+                                    <FaPlus className="flex items-center justify-center text-green-500 absolute bottom-3 right-3 transform translate-x-1/2 translate-y-1/2"/>
+                                </div>
+                            ))}
+                            {changes.deleted.map((change, index) => (
+                                <div
+                                    key={index}
+                                    className={cn("w-20 h-20 rounded-md bg-white text-black p-2 flex flex-row items-center relative")}
+                                >
+                                    <div>
+                                        {change.name} {change.type}
+                                    </div>
+                                    <FaMinus className="flex items-center justify-center text-red-600 absolute bottom-3 right-3 transform translate-x-1/2 translate-y-1/2"/>
+                                </div>
+                            ))}
+                            {changes.modified.map((change, index) => (
+                                <div
+                                    key={index}
+                                    className={cn("w-20 h-20 rounded-md bg-white text-black p-2 flex flex-row items-center relative")}
+                                >
+                                    <div>
+                                        {change.name} {change.type}
+                                    </div>
+                                    <FaEdit className="flex items-center justify-center text-blue-800 absolute bottom-3 right-3 transform translate-x-1/2 translate-y-1/2"/>
+                                </div>
+                            ))}
+                        </div>
                         <button
                             onClick={handleGoToVersion}
                             className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mt-4"

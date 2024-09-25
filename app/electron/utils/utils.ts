@@ -140,35 +140,63 @@ export const openToeFile = async (projectFolderPath: string): Promise<void> => {
 }
 
 /**
- * Extracts the name of the node, given a diff line of the toc file.
+ * Extracts the name of the node, given a diff line of the toc file, ensuring it's within the specified container.
  * 
- * @param {string} projectFolderPath - A diffline from the toc file.
- * @returns {string} - The name of the node that changed.
+ * @param {string} container - The name of the container to filter nodes.
+ * @param {string} diffLine - A diff line from the toc file.
+ * @returns {string | null} - The name of the node that changed, or empty string if not applicable.
  */
-export const extractNodeName = (diffLine: string): string => {
+export const extractNodeName = (container: string, diffLine: string): string => {
     const lineContent = diffLine.slice(1).trim();
     const parts = lineContent.split('/');
-    const fileNameWithExtension = parts[1];
-    if (fileNameWithExtension == undefined)
-        return ""
-    const fileName = fileNameWithExtension.split('.')[0];
-    return fileName;
+    if (parts.length > 1 && parts[0] === container) {
+        let nodeName = ""
+        if (parts[1])
+            nodeName = parts[1].split('.')[0];
+        return nodeName;
+    }
+
+    return "";
 }
 
 /**
  * Gets the information of a given node
  * 
- * @param {string} toeDir - The path to the dir, as returned by toeexpand.
+ * @param {string} toeDir - The path to the base directory, as returned by toeexpand.
+ * @param {string} container - The name of the container to search within.
  * @param {string} node - The name of the node.
- * @returns {string} - Returns the type of the node. 
+ * @returns {Promise<string | undefined>} - Returns the first line of the node file or undefined if not found.
  */
-export const getNodeInfo = async (toeDir: string, node: string): Promise<string | undefined> => {
+export const getNodeInfo = async (toeDir: string, container: string, node: string): Promise<[string, string] | undefined> => {
     try {
-        const nodePath = path.join(toeDir, `${node}.n`);
+        const containerDir = path.join(toeDir, container);
+        const nodePath = path.join(containerDir, `${node}.n`);        
         const fileContent = await fs.readFile(nodePath, 'utf-8');
-        const firstLine = fileContent.split('\n')[0];
-        return firstLine;
+        const firstLine = fileContent.split('\n')[0].trim();
+
+        const [type, subtype] = firstLine.split(':');
+        return [type.trim(), subtype.trim()];
     } catch (error) {
         return undefined;
     }
+}
+
+export const findContainers = async (toeDir: string): Promise<string[]> => {
+    const files = fs.readdirSync(toeDir);
+    const containers: string[] = [];
+
+    for (const file of files) {
+        if (file.endsWith('.n')) {
+            const filePath = path.join(toeDir, file);
+            const fileContent = await fs.readFile(filePath, 'utf-8');
+            const firstLine = fileContent.split('\n')[0];
+
+            if (firstLine.includes('COMP:container')) {
+                const nodeName = file.replace(/\.n$/, '');
+                containers.push(nodeName);
+            }
+        }
+    }
+    
+    return containers;
 }

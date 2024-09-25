@@ -49,7 +49,7 @@ const NewProject: React.FC = () => {
             setLoading(false);
             const newProject: Project = {
                 name: formData.title,
-                author: initialVersion.author,
+                author: initialVersion.author.name,
                 lastModified: new Date().toLocaleDateString(),
                 lastVersion: initialVersion.name,
                 path: formData.location,

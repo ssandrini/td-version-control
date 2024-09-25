@@ -6,7 +6,7 @@ export class Set<T extends HasKey> {
     public items: T[] = [];
 
     add(item: T): void {
-        if (!this.items.some(existing => existing.getKey() === item.getKey())) {
+        if (item.getKey() != "" && !this.items.some(existing => existing.getKey() === item.getKey())) {
             this.items.push(item);
         }
     }

@@ -3,6 +3,7 @@ import { Tracker } from '../trackers/interfaces/Tracker';
 import { Version } from '../models/Version';
 import { TrackerError } from '../errors/TrackerError';
 import log from 'electron-log/main';
+import { Author } from '../models/Author';
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
@@ -40,7 +41,7 @@ export class SimpleGitTracker implements Tracker {
         const [name, ...description] = latestCommit.message.split(this.separator);
         return new Version(
             name,
-            latestCommit.author_name,
+            new Author(latestCommit.author_name, latestCommit.author_email),
             latestCommit.hash,
             new Date(latestCommit.date),
             description.join(this.separator)
@@ -54,7 +55,7 @@ export class SimpleGitTracker implements Tracker {
             const [name, ...description] = commit.message.split(this.separator);
             return new Version(
                 name,
-                commit.author_name,
+                new Author(commit.author_name, commit.author_email),
                 commit.hash,
                 new Date(commit.date),
                 description.join(this.separator)
@@ -82,7 +83,7 @@ export class SimpleGitTracker implements Tracker {
         const [name, ...description] = commit.message.split(this.separator);
         return new Version(
             name,
-            commit.author_name,
+            new Author(commit.author_name, commit.author_email),
             commit.hash,
             new Date(commit.date),
             description.join('\n')

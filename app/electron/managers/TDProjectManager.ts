@@ -7,7 +7,7 @@ import path from 'node:path';
 import { Tracker } from '../trackers/interfaces/Tracker';
 import { ChangeSet } from '../models/ChangeSet';
 import { TDNode } from '../models/TDNode';
-import { extractNodeName, findFileByExt, getNodeInfo } from '../utils/utils';
+import { extractNodeName, findContainers, findFileByExt, getNodeInfo } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 
 export class TDProjectManager implements ProjectManager {
@@ -143,7 +143,9 @@ export class TDProjectManager implements ProjectManager {
       return Promise.reject(new MissingFileError('Could not find dir'));
     }
 
-    const toeDirAbsPath = path.join(dir, toeDir);
+    const toeDirAbsPath = path.join(managementDir, toeDir);
+    const containers = await findContainers(toeDirAbsPath);
+    // TO DO: más de 1 container?
 
     const added = await Promise.all(
       diff
@@ -151,11 +153,13 @@ export class TDProjectManager implements ProjectManager {
           return line.startsWith('+') && !line.startsWith('+++');
         })
         .map(async (line) => {
-          const nodeName = extractNodeName(line);
-          return new TDNode(
-            nodeName,
-            await getNodeInfo(toeDirAbsPath, nodeName)
-          );
+          const nodeName = extractNodeName(containers[0], line);
+          let result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName)
+          if (result) {
+            const [nodeType, nodeSubtype] = result;
+            return new TDNode(nodeName, nodeType, nodeSubtype);
+          }
+          return new TDNode(nodeName, undefined, undefined);
         })
     );
 
@@ -165,8 +169,13 @@ export class TDProjectManager implements ProjectManager {
           return line.startsWith('-') && !line.startsWith('---');
         })
         .map(async (line) => {
-          const nodeName = extractNodeName(line);
-          return new TDNode(nodeName, undefined);
+          const nodeName = extractNodeName(containers[0], line);
+          let result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName)
+          if (result) {
+            const [nodeType, nodeSubtype] = result;
+            return new TDNode(nodeName, nodeType, nodeSubtype);
+          }
+          return new TDNode(nodeName, undefined, undefined);
         })
     );
 

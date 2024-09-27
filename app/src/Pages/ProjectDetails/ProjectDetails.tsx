@@ -156,6 +156,68 @@ const ProjectDetail: React.FC = () => {
                                 Move
                             </button>
                         </div>
+                        {versions[0] && versions[0].name === currentVersion?.name && (<div className="flex my-5">
+                            <Button variant="outline" className="text-black" onClick={() => setShowNewVersionModal(true)}>Create New
+                                Version</Button>
+                            {showNewVersionModal && (<Dialog open>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Create a new version</DialogTitle>
+                                        <DialogDescription>
+                                            Changes detected, commit a new version.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="mb-4">
+                                        <Label
+                                            className="block text-gray-700 font-semibold mb-2"
+                                            htmlFor="title"
+                                        >
+                                            Title
+                                        </Label>
+                                        <Input
+                                            type="text"
+                                            id="title"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            className="w-full p-2 border border-gray-300 rounded"
+                                            onKeyDown={(e) => {
+                                                if (e.key === " ") {
+                                                    // jaja que queres? poner un espacio? no.
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <Label
+                                            className="block text-gray-700 font-semibold mb-2"
+                                            htmlFor="description"
+                                        >
+                                            Description
+                                        </Label>
+                                        <Input
+                                            id="description"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            className="w-full p-2 border border-gray-300 rounded"
+                                        />
+                                    </div>
+                                    <DialogFooter>
+                                        <Button type="button"
+                                            disabled={isLoadingNewVersion}
+                                            onClick={() => setShowNewVersionModal(false)}>Cancelar</Button>
+                                        <Button
+                                            onClick={handleAddVersion}
+                                            disabled={isLoadingNewVersion || name.length === 0 || description.length === 0}
+                                            className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                                        >
+                                            Create Version
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>)}
+                        </div>)}
 
 
                         <hr className="border-white opacity-50 my-4" />
@@ -210,7 +272,7 @@ const ProjectDetail: React.FC = () => {
                     <p>Select a version to see details.</p>
                 )}
             </div>
-        </div>
+        </div >
 
     );
 };

@@ -13,9 +13,9 @@ export class ChangeSet<T extends HasKey> {
 
     static fromValues<T extends HasKey>(added: T[], modified: T[], deleted: T[]): ChangeSet<T> {
         const changeset = new ChangeSet<T>();
-        added.forEach(item => changeset.added.add(item));
-        modified.forEach(item => changeset.modified.add(item));
-        deleted.forEach(item => changeset.deleted.add(item));
+        added?.forEach(item => changeset.added.add(item));
+        modified?.forEach(item => changeset.modified.add(item));
+        deleted?.forEach(item => changeset.deleted.add(item));
         return changeset;
     }
 }

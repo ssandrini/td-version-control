@@ -131,30 +131,59 @@ export class TDProjectManager implements ProjectManager {
       return Promise.reject(new MissingFileError('Could not find toc file'));
     }
 
-    let diff = await this.tracker.compare(managementDir, versionId, tocFile);
-    if (!diff || diff == "") {
-      return ChangeSet.fromValues([], [], [])
-    }
-
-    diff = diff.split('\n');
-
     const toeDir = findFileByExt('dir', managementDir);
     if (!toeDir) {
       return Promise.reject(new MissingFileError('Could not find dir'));
     }
-
     const toeDirAbsPath = path.join(managementDir, toeDir);
     const containers = await findContainers(toeDirAbsPath);
-    // TO DO: más de 1 container?
+    var added, deleted
 
-    const added = await Promise.all(
+    let tocDiff = false;
+    let diff = await this.tracker.compare(managementDir, versionId, tocFile);
+    if (diff && diff != "") {
+      diff = diff.split('\n');
+      added = await Promise.all(
+        diff
+          .filter((line) => line.startsWith('+') && !line.startsWith('+++'))
+          .map(async (line) => {
+            const nodeName = extractNodeName(containers[0], line);
+            const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
+            if (result) {
+              const [nodeType, nodeSubtype] = result;
+              return new TDNode(nodeName, nodeType, nodeSubtype);
+            }
+            return new TDNode(nodeName, undefined, undefined);
+          })
+      );
+
+      deleted = await Promise.all(
+        diff
+          .filter((line) => line.startsWith('-') && !line.startsWith('---'))
+          .map(async (line) => {
+            const nodeName = extractNodeName(containers[0], line);
+            const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
+            if (result) {
+              const [nodeType, nodeSubtype] = result;
+              return new TDNode(nodeName, nodeType, nodeSubtype);
+            }
+            return new TDNode(nodeName, undefined, undefined);
+          })
+      );
+    }
+
+    diff = await this.tracker.compare(managementDir, versionId);
+    if (!diff || diff === "") {
+      return ChangeSet.fromValues(added, [], deleted);
+    }
+
+    diff = diff.split('\n');
+    const modified = await Promise.all(
       diff
-        .filter((line) => {
-          return line.startsWith('+') && !line.startsWith('+++');
-        })
+        .filter((line) => line.startsWith('diff --git'))
         .map(async (line) => {
           const nodeName = extractNodeName(containers[0], line);
-          let result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName)
+          let result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
           if (result) {
             const [nodeType, nodeSubtype] = result;
             return new TDNode(nodeName, nodeType, nodeSubtype);
@@ -163,23 +192,7 @@ export class TDProjectManager implements ProjectManager {
         })
     );
 
-    const deleted = await Promise.all(
-      diff
-        .filter((line) => {
-          return line.startsWith('-') && !line.startsWith('---');
-        })
-        .map(async (line) => {
-          const nodeName = extractNodeName(containers[0], line);
-          let result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName)
-          if (result) {
-            const [nodeType, nodeSubtype] = result;
-            return new TDNode(nodeName, nodeType, nodeSubtype);
-          }
-          return new TDNode(nodeName, undefined, undefined);
-        })
-    );
-
-    return ChangeSet.fromValues(added, [], deleted);
+    return ChangeSet.fromValues(added, modified, deleted);
   }
 
   private async validateDirectory(dir: string): Promise<void> {

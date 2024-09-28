@@ -9,6 +9,7 @@ import { ChangeSet } from '../models/ChangeSet';
 import { TDNode } from '../models/TDNode';
 import { extractNodeName, findContainers, findFileByExt, getNodeInfo } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
+import hidefile from 'hidefile';
 
 export class TDProjectManager implements ProjectManager {
   readonly processor: Processor;
@@ -45,6 +46,7 @@ export class TDProjectManager implements ProjectManager {
 
     try {
       fs.mkdirSync(hiddenDirPath);
+      hidefile.hideSync(hiddenDirPath);
     } catch (error) {
       log.error(`Error creating directory ${hiddenDirPath}. Cause:`, error);
       return Promise.reject(error);
@@ -137,53 +139,46 @@ export class TDProjectManager implements ProjectManager {
     }
     const toeDirAbsPath = path.join(managementDir, toeDir);
     const containers = await findContainers(toeDirAbsPath);
-    var added, deleted
 
-    let tocDiff = false;
-    let diff = await this.tracker.compare(managementDir, versionId, tocFile);
-    if (diff && diff != "") {
-      diff = diff.split('\n');
-      added = await Promise.all(
-        diff
-          .filter((line) => line.startsWith('+') && !line.startsWith('+++'))
-          .map(async (line) => {
-            const nodeName = extractNodeName(containers[0], line);
-            const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
-            if (result) {
-              const [nodeType, nodeSubtype] = result;
-              return new TDNode(nodeName, nodeType, nodeSubtype);
-            }
-            return new TDNode(nodeName, undefined, undefined);
-          })
-      );
+    const tocDiff = (await this.tracker.compare(managementDir, versionId, tocFile)).split('\n');
+    log.debug('Toc diff', tocDiff.join('\n'));
 
-      deleted = await Promise.all(
-        diff
-          .filter((line) => line.startsWith('-') && !line.startsWith('---'))
-          .map(async (line) => {
-            const nodeName = extractNodeName(containers[0], line);
-            const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
-            if (result) {
-              const [nodeType, nodeSubtype] = result;
-              return new TDNode(nodeName, nodeType, nodeSubtype);
-            }
-            return new TDNode(nodeName, undefined, undefined);
-          })
-      );
-    }
+    const added = await Promise.all(
+      tocDiff
+        .filter((line) => line.startsWith('+') && !line.startsWith('+++'))
+        .map(async (line) => {
+          const nodeName = extractNodeName(containers[0], line);
+          const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
+          if (result) {
+            const [nodeType, nodeSubtype] = result;
+            return new TDNode(nodeName, nodeType, nodeSubtype);
+          }
+          return new TDNode(nodeName, undefined, undefined);
+        })
+    );
 
-    diff = await this.tracker.compare(managementDir, versionId);
-    if (!diff || diff === "") {
-      return ChangeSet.fromValues(added, [], deleted);
-    }
+    const deleted = await Promise.all(
+      tocDiff
+        .filter((line) => line.startsWith('-') && !line.startsWith('---'))
+        .map(async (line) => {
+          const nodeName = extractNodeName(containers[0], line);
+          const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
+          if (result) {
+            const [nodeType, nodeSubtype] = result;
+            return new TDNode(nodeName, nodeType, nodeSubtype);
+          }
+          return new TDNode(nodeName, undefined, undefined);
+        })
+    );
 
-    diff = diff.split('\n');
+    const modifiedDiff = (await this.tracker.compare(managementDir, versionId, undefined, true)).split('\n');
+    log.debug('Diff', modifiedDiff.join('\n'));
     const modified = await Promise.all(
-      diff
+      modifiedDiff
         .filter((line) => line.startsWith('diff --git'))
         .map(async (line) => {
           const nodeName = extractNodeName(containers[0], line);
-          let result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
+          const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
           if (result) {
             const [nodeType, nodeSubtype] = result;
             return new TDNode(nodeName, nodeType, nodeSubtype);

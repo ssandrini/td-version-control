@@ -11,7 +11,7 @@ export class SimpleGitTracker implements Tracker {
     readonly username: string;
     readonly email: string;
     readonly separator = '//';
-
+    readonly EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 
     constructor(username: string, email: string) {
         this.git = simpleGit();
@@ -90,12 +90,19 @@ export class SimpleGitTracker implements Tracker {
         );
     }
 
-    async compare(dir: string, versionId?: string, file?: string): Promise<string> {
+    async compare(dir: string, versionId?: string, file?: string, modified = false): Promise<string> {
         await this.git.cwd(dir);
+
+        const diffParams = ['--unified=0'];
+        if (modified) {
+            diffParams.push('--diff-filter=M');
+        }
         file = file? file : '.';
     
         if (!versionId) {
-            return await this.git.diff([file])
+            diffParams.push(file);
+            log.debug('git diff', diffParams.join(' '));
+            return await this.git.diff(diffParams);
         }
     
         const gitLog = await this.git.log();
@@ -117,13 +124,9 @@ export class SimpleGitTracker implements Tracker {
         }
     
         const parents = hasParent.trim().split(' ');
-    
-        if (parents.length === 1) {
-            const emptyTreeHash = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
-            return await this.git.diff([emptyTreeHash, commit.hash, file])
-        }
-    
-        return await this.git.diff([`${commit.hash}^`, commit.hash, file])
+        diffParams.push(parents.length === 1? this.EMPTY_TREE_HASH : `${commit.hash}^`, commit.hash, file);
+        log.debug('git diff', diffParams.join(' '));
+        return await this.git.diff(diffParams);
     }        
 
 }

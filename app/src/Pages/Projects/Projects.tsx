@@ -61,14 +61,10 @@ const Projects: React.FC = () => {
     const handlePlayProject = async (project: Project) => {
         setLoadingProject(true);
         try {
-            const success = await // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                window.api.openToe(project.path);
-            if (success) {
-                navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: project.path, projectName: project.name } }); // Navegar a la página del proyecto
-            } else {
-                alert('Error: No se pudo abrir el proyecto debido a un problema con el archivo.');
-            }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            await window.api.openToe(project.path);
+            navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: project.path, projectName: project.name } });
         } catch (error) {
             log.error('Unexpected error:', error);
             alert('Error: Ocurrió un problema inesperado al intentar abrir el proyecto.');

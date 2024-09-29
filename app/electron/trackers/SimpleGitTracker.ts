@@ -127,6 +127,21 @@ export class SimpleGitTracker implements Tracker {
         diffParams.push(parents.length === 1? this.EMPTY_TREE_HASH : `${commit.hash}^`, commit.hash, file);
         log.debug('git diff', diffParams.join(' '));
         return await this.git.diff(diffParams);
-    }        
+    }   
 
+    async readFile(dir: string, versionId?: string, filePath: string): Promise<string> {
+        await this.git.cwd(dir);
+    
+        const gitLog = await this.git.log();
+        const commit = gitLog.all.find(c => c.hash === versionId);
+    
+        const commitHash = versionId ? versionId : 'HEAD';
+    
+        try {
+            const fileContent = await this.git.show([`${commitHash}:${filePath}`]);
+            return fileContent;
+        } catch (error) {
+            throw new TrackerError(`Failed to read file "${filePath}" at commit "${commitHash}": ${error.message}`);
+        }
+    }
 }

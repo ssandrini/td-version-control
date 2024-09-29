@@ -7,12 +7,12 @@ import path from 'node:path';
 import { Tracker } from '../trackers/interfaces/Tracker';
 import { ChangeSet } from '../models/ChangeSet';
 import { TDNode } from '../models/TDNode';
-import { extractNodeName, findContainers, findFileByExt, getNodeInfo, extractNodeNameFromDiffLine } from '../utils/utils';
+import { extractNodeNameFromToc, findContainers, findFileByExt, getNodeInfo, extractNodeNameFromDiffLine } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 import hidefile from 'hidefile';
 import { PropertyRule } from '../models/Rule';
 
-export class TDProjectManager implements ProjectManager {
+export class TDProjectManager implements ProjectManager<TDNode> {
   readonly processor: Processor;
   readonly hiddenDir: string;
   readonly tracker: Tracker;
@@ -150,7 +150,8 @@ export class TDProjectManager implements ProjectManager {
       tocDiff
         .filter((line) => line.startsWith('+') && !line.startsWith('+++'))
         .map(async (line) => {
-          const nodeName = extractNodeName(containers[0], line);
+          const lineContent = line.slice(1).trim();
+          const nodeName = extractNodeNameFromToc(containers[0], lineContent);
           const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
           if (result) {
             const [nodeType, nodeSubtype] = result;
@@ -164,7 +165,8 @@ export class TDProjectManager implements ProjectManager {
       tocDiff
         .filter((line) => line.startsWith('-') && !line.startsWith('---'))
         .map(async (line) => {
-          const nodeName = extractNodeName(containers[0], line);
+          const lineContent = line.slice(1).trim();
+          const nodeName = extractNodeNameFromToc(containers[0], lineContent);
           const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
           if (result) {
             const [nodeType, nodeSubtype] = result;
@@ -177,7 +179,63 @@ export class TDProjectManager implements ProjectManager {
     const modifiedDiff = (await this.tracker.compare(managementDir, versionId, undefined, true));
     log.debug('Diff', modifiedDiff);
     const modified = await this.getModified(modifiedDiff, containers[0], toeDirAbsPath);
+
+    // DEBUG
+    log.debug("ACTUAL VERSION");
+    const nodes = await this.getVersionStructure(dir, versionId, containers[0]);
+    log.debug(nodes);
     return ChangeSet.fromValues(added, modified, deleted);
+  }
+
+  async getVersionStructure(dir: string, versionId?: string, container: string): Promise<TDNode[]> {
+    await this.validateDirectory(dir);
+    const hiddenDirPath = this.hiddenDirPath(dir);
+
+    const tocFile = findFileByExt('toc', hiddenDirPath);
+    if (!tocFile) {
+      return Promise.reject(new MissingFileError('Could not find toc file'));
+    }
+
+    const tocContent = await this.tracker.readFile(hiddenDirPath, versionId, tocFile);
+    const nodeNames: string[] = [];
+    const nodes: TDNode[] = [];
+
+    tocContent.split('\n').forEach(line => {
+      log.debug("Reading line:", line);
+      const trimmedLine = line.trim();
+
+      const nodeName = extractNodeNameFromToc(container, trimmedLine);
+      if (nodeName) {
+        log.debug("nodename: ", nodeName)
+        nodeNames.push(nodeName);
+      }
+    });
+
+    const toeDir = findFileByExt('dir', hiddenDirPath);
+    if (!toeDir) {
+      return Promise.reject(new MissingFileError('Could not find dir'));
+    }
+
+    const toeDirAbsPath = path.join(hiddenDirPath, toeDir);
+
+    for (const nodeName of nodeNames) {
+      const nodeFilePath = path.join(toeDirAbsPath, `${nodeName}.n`);
+      if (await fs.pathExists(nodeFilePath)) {
+        const nodeContent = await this.tracker.readFile(hiddenDirPath, versionId, nodeFilePath);
+        const properties: Map<string, string> = new Map();
+
+        nodeContent.split('\n').forEach(line => {
+          this.parseProperty(line, properties); // TO DO: solo usar la regla de tile.
+        });
+
+        // TO DO: get node info
+        nodes.push(new TDNode(nodeName, undefined, undefined, properties));
+      } else {
+        log.error(`Node .n file not found: ${nodeFilePath}`);
+      }
+    }
+
+    return Promise.resolve(nodes);
   }
 
   private async getModified(diff: string, container: string, toeDirAbsPath: string): Promise<TDNode[]> {

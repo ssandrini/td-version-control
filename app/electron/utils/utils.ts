@@ -146,9 +146,8 @@ export const openToeFile = async (projectFolderPath: string): Promise<void> => {
  * @param {string} diffLine - A diff line from the toc file.
  * @returns {string | null} - The name of the node that changed, or empty string if not applicable.
  */
-export const extractNodeName = (container: string, diffLine: string): string => {
-    const lineContent = diffLine.slice(1).trim();
-    const parts = lineContent.split('/');
+export const extractNodeNameFromToc = (container: string, diffLine: string): string => {
+    const parts = diffLine.split('/');
     if (parts.length > 1 && parts[0] === container) {
         let nodeName = ""
         if (parts[1])

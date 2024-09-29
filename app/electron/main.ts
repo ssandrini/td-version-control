@@ -137,10 +137,11 @@ const setupProject = (projectManager: ProjectManager): void => {
 
   ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
-  ipcMain.handle(API_METHODS.COMPARE, (_, dir: string, versionId: string) => {
+  ipcMain.handle(API_METHODS.COMPARE, async (_, dir: string, versionId: string) => {
     log.debug('Compare main handler');
-    return projectManager.compare(dir, versionId);
-  });
+    const changeSet = await projectManager.compare(dir, versionId);
+    return changeSet.serialize();
+});
 
   ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
     watcherMgr.registerWatcher(path, () => {

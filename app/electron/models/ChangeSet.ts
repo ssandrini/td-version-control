@@ -18,4 +18,20 @@ export class ChangeSet<T extends HasKey> {
         deleted?.forEach(item => changeset.deleted.add(item));
         return changeset;
     }
+
+    serialize(): object {
+        return {
+            added: this.added.serialize(),
+            modified: this.modified.serialize(),
+            deleted: this.deleted.serialize(),
+        };
+    }
+
+    static deserialize<T extends HasKey>(data: any, itemDeserializer: (data: any) => T): ChangeSet<T> {
+        const changeSet = new ChangeSet<T>();
+        changeSet.added = Set.deserialize(data.added, itemDeserializer);
+        changeSet.modified = Set.deserialize(data.modified, itemDeserializer);
+        changeSet.deleted = Set.deserialize(data.deleted, itemDeserializer);
+        return changeSet;
+    }
 }

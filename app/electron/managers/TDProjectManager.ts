@@ -7,9 +7,10 @@ import path from 'node:path';
 import { Tracker } from '../trackers/interfaces/Tracker';
 import { ChangeSet } from '../models/ChangeSet';
 import { TDNode } from '../models/TDNode';
-import { extractNodeName, findContainers, findFileByExt, getNodeInfo } from '../utils/utils';
+import { extractNodeName, findContainers, findFileByExt, getNodeInfo, extractNodeNameFromDiffLine } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 import hidefile from 'hidefile';
+import { PropertyRule } from '../models/Rule';
 
 export class TDProjectManager implements ProjectManager {
   readonly processor: Processor;
@@ -17,11 +18,13 @@ export class TDProjectManager implements ProjectManager {
   readonly tracker: Tracker;
   private versionNameMax = 256;
   private descriptionMax = 1024;
+  private rules: PropertyRule[] = [];
 
   constructor(processor: Processor, tracker: Tracker, hiddenDir: string) {
     this.processor = processor;
     this.hiddenDir = hiddenDir;
     this.tracker = tracker;
+    this.buildRules();
   }
 
   private hiddenDirPath = (dir: string): string => {
@@ -171,23 +174,54 @@ export class TDProjectManager implements ProjectManager {
         })
     );
 
-    const modifiedDiff = (await this.tracker.compare(managementDir, versionId, undefined, true)).split('\n');
-    log.debug('Diff', modifiedDiff.join('\n'));
-    const modified = await Promise.all(
-      modifiedDiff
-        .filter((line) => line.startsWith('diff --git'))
-        .map(async (line) => {
-          const nodeName = extractNodeName(containers[0], line);
-          const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
-          if (result) {
-            const [nodeType, nodeSubtype] = result;
-            return new TDNode(nodeName, nodeType, nodeSubtype);
-          }
-          return new TDNode(nodeName, undefined, undefined);
-        })
-    );
-
+    const modifiedDiff = (await this.tracker.compare(managementDir, versionId, undefined, true));
+    log.debug('Diff', modifiedDiff);
+    const modified = await this.getModified(modifiedDiff, containers[0], toeDirAbsPath);
     return ChangeSet.fromValues(added, modified, deleted);
+  }
+
+  private async getModified(diff: string, container: string, toeDirAbsPath: string): Promise<TDNode[]> {
+    const modifiedObjects = diff.split('diff --git');
+    const modifiedNodes: TDNode[] = [];
+    for (const obj of modifiedObjects) {
+      const nodeName = extractNodeNameFromDiffLine(container, 'diff --git' + obj.split('\n')[0].trim())
+      if (nodeName == "") {
+        continue;
+      }
+
+      const nodeProperties = new Map<string, string>();
+      const lines = obj.split('\n');
+      for (const line of obj.split('\n')) {
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('+') && !trimmedLine.startsWith('+++')) {
+          this.parseProperty(trimmedLine.substring(1).trim(), nodeProperties);
+        }
+      }
+      if (nodeProperties.size > 0) {
+        const result = await getNodeInfo(toeDirAbsPath, container, nodeName);
+        let tdNode;
+        if (result) {
+          const [nodeType, nodeSubtype] = result;
+          tdNode = new TDNode(nodeName, nodeType, nodeSubtype, nodeProperties);
+        } else {
+          tdNode = new TDNode(nodeName, undefined, undefined, nodeProperties); // no debería pasar
+        }
+        log.debug("Modified ", tdNode.toString());
+        modifiedNodes.push(tdNode);
+      }
+    }
+    return Promise.resolve(modifiedNodes);
+  }
+
+  private parseProperty(line: string, nodeProperties: Map<string, string>): void {
+    log.debug("parseProperty: ", line);
+    for (const rule of this.rules) {
+      if (rule.match(line)) {
+        log.debug("Rule matched: ", rule.name)
+        rule.extract(line, nodeProperties);
+        return;
+      }
+    }
   }
 
   private async validateDirectory(dir: string): Promise<void> {
@@ -207,5 +241,59 @@ export class TDProjectManager implements ProjectManager {
       log.error(`Error validating directory ${dir}. Cause:`, error);
       return Promise.reject(error);
     }
+  }
+
+  private buildRules(): void {
+    this.rules = [
+      /*----------------------IGNORE RULES-------------------*/
+      new PropertyRule(
+        '[IGNORE] flags',
+        'ignore flags property',
+        (line: string) => { line.startsWith('flags') },
+        () => { /* No action for ignored properties */ }
+      ),
+      new PropertyRule(
+        '[IGNORE] view',
+        'ignore view property',
+        (line: string) => line.startsWith('view'),
+        () => { /* No action for ignored properties */ }
+      ),
+      new PropertyRule(
+        '[IGNORE] pageindex',
+        'ignore pageindex property',
+        (line: string) => line.startsWith('pageindex'),
+        () => { /* No action for ignored properties */ }
+      ),
+      /*-----------------------------------------------------*/
+
+      /*---------------------KNOWN PROPERTIES----------------*/
+      new PropertyRule(
+        'tile',
+        'tile property, format: tile <tileX> <tileY> <sizeX> <sizeY>',
+        (line: string) => line.startsWith('tile'),
+        (line: string, nodeProperties: Map<string, string>) => {
+          const parts = line.split(' ').slice(1);
+          if (parts.length === 4) {
+            nodeProperties.set('tileX', parts[0].trim());
+            nodeProperties.set('tileY', parts[1].trim());
+            nodeProperties.set('sizeX', parts[2].trim());
+            nodeProperties.set('sizeY', parts[3].trim());
+          }
+        }
+      ),
+      /*-----------------------------------------------------*/
+
+      /*-----------------------DEFAULT-----------------------*/
+      new PropertyRule(
+        'default',
+        'default property, format: <propertyName> <???> <value>',
+        (line: string) => line.split(' ').length >= 3,
+        (line: string, nodeProperties: Map<string, string>) => {
+          const parts = line.split(' ');
+          nodeProperties.set(parts[0].trim(), parts[2].trim());
+        }
+      )
+      /*-----------------------------------------------------*/
+    ];
   }
 }

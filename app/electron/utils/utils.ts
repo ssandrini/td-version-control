@@ -147,21 +147,6 @@ export const openToeFile = async (projectFolderPath: string): Promise<void> => {
  * @returns {string | null} - The name of the node that changed, or empty string if not applicable.
  */
 export const extractNodeName = (container: string, diffLine: string): string => {
-    if (diffLine.startsWith('diff --git')) {
-        const parts = diffLine.split(' ');
-        if (parts.length > 2) {
-            const pathA = parts[2];
-            const pathParts = pathA.split('/');
-            const containerIndex = pathParts.indexOf(container);
-            if (containerIndex !== -1 && containerIndex + 1 < pathParts.length) {
-                const nodeNameWithExt = pathParts[containerIndex + 1];
-                return nodeNameWithExt.split('.')[0];
-            }
-            return "";
-        } else {
-            return ""
-        }
-    }
     const lineContent = diffLine.slice(1).trim();
     const parts = lineContent.split('/');
     if (parts.length > 1 && parts[0] === container) {
@@ -171,6 +156,21 @@ export const extractNodeName = (container: string, diffLine: string): string => 
         return nodeName;
     }
 
+    return "";
+}
+
+export const extractNodeNameFromDiffLine = (container: string, diffLine: string): string => {
+    //log.debug("extractnodenamefromdiffline: ", container, diffLine)
+    const parts = diffLine.split(' ');
+    if (parts.length > 2) {
+        const pathA = parts[2];
+        const pathParts = pathA.split('/');
+        const containerIndex = pathParts.indexOf(container);
+        if (containerIndex !== -1 && containerIndex + 1 < pathParts.length) {
+            const nodeNameWithExt = pathParts[containerIndex + 1];
+            return nodeNameWithExt.split('.')[0];
+        }
+    }
     return "";
 }
 

@@ -3,12 +3,7 @@ import {useVariableContext} from "../../hooks/Variables/useVariableContext.tsx";
 import Sidebar from "../../components/ui/Sidebar.tsx";
 import {Outlet} from "react-router-dom";
 import {
-    Dialog,
-    DialogFooter,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription
+    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
 } from "../../components/ui/dialog.tsx";
 import {Button} from "../../components/ui/button.tsx";
 import log from 'electron-log/renderer';
@@ -64,7 +59,7 @@ const Layout: React.FC = () => {
             </Dialog>
         </div>)}
         <div className="flex h-screen">
-            <div className="min-w-40 max-w-40 h-full">
+            <div className="min-w-60 max-w-60 h-full">
                 <Sidebar/>
             </div>
             <div className="w-full h-screen overflow-auto">

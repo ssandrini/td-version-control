@@ -1,6 +1,6 @@
 import { ipcRenderer, contextBridge } from 'electron'
-import Project from '../src/models/Project'
-import { version } from 'react'
+import Project from './models/Project'
+import { API_METHODS } from './apiMethods'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -23,17 +23,20 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 })
 
 contextBridge.exposeInMainWorld('api', {
-  listVersions: async (dir: string) => ipcRenderer.invoke('list-versions', dir),
-  filePicker: async () => ipcRenderer.invoke('file-picker'),
-  getRecentProjects: async () => ipcRenderer.invoke('recent-projects'),
-  saveProject: async (project: Project) => ipcRenderer.invoke('save-project', project),
-  deleteProject: async (path: string) => ipcRenderer.invoke('delete-project', path),
-  saveTDBinPath: async (path: string) => ipcRenderer.invoke('save-td-path', path),
-  getTDBinPath: async() => ipcRenderer.invoke('get-td-path'),
-  openToe: async(path: string) => ipcRenderer.invoke('open-toe', path),
-  createProjectFromTemplate: async(path: string, template: string) => ipcRenderer.invoke('create-project', path, template),
-  createNewVersion: async(title: string, description:string, path: string) => ipcRenderer.invoke('create-version', title, description, path),
-  getCurrentVersion: async(path: string) => ipcRenderer.invoke('current-version', path),
-  checkoutVersion: async(versionName: string, path: string) => ipcRenderer.invoke('checkout-version', versionName, path),
-  getTemplates: async() => ipcRenderer.invoke('get-templates'),
+  listVersions:       async (dir: string) => ipcRenderer.invoke(API_METHODS.LIST_VERSIONS, dir),
+  compareVersions:    async (dir: string, versionId?: string) => {
+    return ipcRenderer.invoke(API_METHODS.COMPARE, dir, versionId);
+  },
+  filePicker:         async () => ipcRenderer.invoke(API_METHODS.FILE_PICKER),
+  getRecentProjects:  async () => ipcRenderer.invoke(API_METHODS.RECENT_PROJECTS),
+  saveProject:        async (project: Project) => ipcRenderer.invoke(API_METHODS.SAVE_PROJECT, project),
+  deleteProject:      async (path: string) => ipcRenderer.invoke(API_METHODS.DELETE_PROJECT, path),
+  saveTDBinPath:      async (path: string) => ipcRenderer.invoke(API_METHODS.SAVE_TD_PATH, path),
+  getTDBinPath:       async() => ipcRenderer.invoke(API_METHODS.GET_TD_PATH),
+  openToe:            async(path: string) => ipcRenderer.invoke(API_METHODS.OPEN_TD, path),
+  createProject:      async(dir: string, src?: string) => ipcRenderer.invoke(API_METHODS.CREATE_PROJECT, dir, src),
+  createNewVersion:   async(dir: string, name:string, description: string) => ipcRenderer.invoke(API_METHODS.CREATE_VERSION, dir, name, description),
+  getCurrentVersion:  async(path: string) => ipcRenderer.invoke(API_METHODS.CURRENT_VERSION, path),
+  goToVersion:        async(dir: string, versionId: string) => ipcRenderer.invoke(API_METHODS.GO_TO_VERSION, dir, versionId),
+  getTemplates:       async() => ipcRenderer.invoke(API_METHODS.GET_TEMPLATES),
 });

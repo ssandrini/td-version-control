@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaExclamationCircle } from "react-icons/fa";
 import { ImSpinner2 } from "react-icons/im";
-import Template from "../../models/Template";
+import Template from "../../../electron/models/Template";
 
 interface TemplateSelectorProps {
   onTemplateSelect: (template: Template) => void;

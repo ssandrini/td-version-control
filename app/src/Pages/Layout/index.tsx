@@ -59,9 +59,7 @@ const Layout: React.FC = () => {
             </Dialog>
         </div>)}
         <div className="flex h-screen">
-            <div className="min-w-60 max-w-60 h-full">
-                <Sidebar/>
-            </div>
+            <Sidebar/>
             <div className="w-full h-screen overflow-auto">
                 <Outlet/>
             </div>

@@ -1,11 +1,3 @@
-import React, {useEffect, useState} from 'react';
-import {useLocation} from 'react-router-dom';
-import History from '../../components/ui/history';
-import {Version} from '../../../electron/td-mgr/td-mgr';
-import {Label} from "../../components/ui/label.tsx";
-import {Input} from "../../components/ui/input.tsx";
-import log from 'electron-log/renderer';
-import NodeViz from "./NodeViz";
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import History from "../../components/ui/history";
@@ -19,33 +11,12 @@ import {
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
 } from "../../components/ui/dialog";
 import { Button } from "../../components/ui/button";
-import { cn } from "../../lib/utils";
 import { FaEdit, FaMinus, FaPlus, FaUserCircle } from "react-icons/fa";
 import OperatorCard from "../../components/ui/OperatorCard.tsx";
 
 const ProjectDetail: React.FC = () => {
-    const handleResizeMouseDown = (e) => {
-        const textarea = e.target.previousSibling;
-        let startY = e.clientY;
-        let startHeight = textarea.offsetHeight;
-
-        const handleMouseMove = (event) => {
-            const newHeight = startHeight + (event.clientY - startY);
-            textarea.style.height = `${newHeight}px`;
-        };
-
-        const handleMouseUp = () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-            window.removeEventListener("mouseup", handleMouseUp);
-        };
-
-        window.addEventListener("mousemove", handleMouseMove);
-        window.addEventListener("mouseup", handleMouseUp);
-    };
-
     const location = useLocation();
     const dir = location.state?.path;
-    const projectName = location.state?.projectName;
     const [currentVersion, setCurrentVersion] = useState<Version | null>(null);
     const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
     const [versions, setVersions] = useState<Version[]>([]);
@@ -85,7 +56,7 @@ const ProjectDetail: React.FC = () => {
                 // log.debug("Added:", changeSet.added.items.map(node => node.toString()));
                 // log.debug("Deleted:", changeSet.deleted.items.map(node => node.toString()));
                 // log.debug("Modified:", changeSet.modified.items.map(node => node.toString()));
-                // const modifiedNode = changeSet.modified.items[0]; 
+                // const modifiedNode = changeSet.modified.items[0];
                 // // JERO TE DEJO UN EJEMPLO DE COMO ACCEDER A LAS PROPERTIES
                 // if (modifiedNode && modifiedNode.properties) {
                 //     modifiedNode.properties.forEach((value, key) => {
@@ -221,8 +192,8 @@ const ProjectDetail: React.FC = () => {
                                     </div>
                                     <DialogFooter>
                                         <Button type="button"
-                                            disabled={isLoadingNewVersion}
-                                            onClick={() => setShowNewVersionModal(false)}>Cancelar</Button>
+                                                disabled={isLoadingNewVersion}
+                                                onClick={() => setShowNewVersionModal(false)}>Cancelar</Button>
                                         <Button
                                             onClick={handleAddVersion}
                                             disabled={isLoadingNewVersion || name.length === 0 || description.length === 0}
@@ -253,10 +224,6 @@ const ProjectDetail: React.FC = () => {
                             style={{ minHeight: "80px", maxHeight: "150px" }}
                         />
 
-                        <div>
-                            {/* Poner elementos en la diagonal rompe el diagrama :thumbs_up: */}
-                            <NodeViz matrix={[[false, false, false], [true, false, false], [false, true, false]]}/>
-                        </div>
 
                         <div className="mt-4 bg-gray-800 p-4 rounded-lg h-[280px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700">
                             <div className="flex flex-row gap-3 py-4 flex-wrap">

@@ -50,7 +50,7 @@ const NodeViz: React.FC<NodeVizProps> = ({ matrix }) => {
     }, [matrix, setNodes, setEdges]);
 
     return (
-        <div style={{ width: '50vw', height: '50vh' }}>
+        <div style={{ width: '50vw', height: '10vh' }}>
             <ReactFlow
                 className="text-black"
                 nodes={nodes}

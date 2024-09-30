@@ -1,3 +1,11 @@
+import React, {useEffect, useState} from 'react';
+import {useLocation} from 'react-router-dom';
+import History from '../../components/ui/history';
+import {Version} from '../../../electron/td-mgr/td-mgr';
+import {Label} from "../../components/ui/label.tsx";
+import {Input} from "../../components/ui/input.tsx";
+import log from 'electron-log/renderer';
+import NodeViz from "./NodeViz";
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import History from "../../components/ui/history";
@@ -245,7 +253,10 @@ const ProjectDetail: React.FC = () => {
                             style={{ minHeight: "80px", maxHeight: "150px" }}
                         />
 
-
+                        <div>
+                            {/* Poner elementos en la diagonal rompe el diagrama :thumbs_up: */}
+                            <NodeViz matrix={[[false, false, false], [true, false, false], [false, true, false]]}/>
+                        </div>
 
                         <div className="mt-4 bg-gray-800 p-4 rounded-lg h-[280px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700">
                             <div className="flex flex-row gap-3 py-4 flex-wrap">

@@ -69,6 +69,11 @@ const NewProject: React.FC = () => {
                 // @ts-expect-error
                 setError(`Error: ${err.message}`);
             }
+        }).catch((err: any) => {
+            setLoading(false);
+            if (Object.prototype.hasOwnProperty.call(err, "message")) {
+                setError(`Error: ${err.message}`);
+            }
         });
     };
 

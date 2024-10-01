@@ -186,14 +186,18 @@ export const getNodeInfo = async (toeDir: string, container: string, node: strin
         const containerDir = path.join(toeDir, container);
         const nodePath = path.join(containerDir, `${node}.n`);
         const fileContent = await fs.readFile(nodePath, 'utf-8');
-        const firstLine = fileContent.split('\n')[0].trim();
-
-        const [type, subtype] = firstLine.split(':');
-        return [type.trim(), subtype.trim()];
+        return getNodeInfoFromContent(fileContent);
     } catch (error) {
         return undefined;
     }
 }
+
+export const getNodeInfoFromContent = (content: string): [string, string] | undefined => {
+    const firstLine = content.split('\n')[0].trim();
+    const [type, subtype] = firstLine.split(':');
+    return [type.trim(), subtype.trim()];
+}
+
 
 export const findContainers = async (toeDir: string): Promise<string[]> => {
     const files = fs.readdirSync(toeDir);

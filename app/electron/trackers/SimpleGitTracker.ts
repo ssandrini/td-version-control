@@ -129,12 +129,8 @@ export class SimpleGitTracker implements Tracker {
         return await this.git.diff(diffParams);
     }   
 
-    async readFile(dir: string, versionId?: string, filePath: string): Promise<string> {
+    async readFile(dir: string, filePath: string, versionId?: string): Promise<string> {
         await this.git.cwd(dir);
-    
-        const gitLog = await this.git.log();
-        const commit = gitLog.all.find(c => c.hash === versionId);
-    
         const commitHash = versionId ? versionId : 'HEAD';
     
         try {

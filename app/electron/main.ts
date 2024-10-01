@@ -13,6 +13,7 @@ import { SimpleGitTracker } from "./trackers/SimpleGitTracker";
 import { TDProcessor } from "./processors/TDProcessor";
 import { API_METHODS } from "./apiMethods";
 import { filePicker, openToeFile, getTemplates } from "./utils/utils";
+import { HasKey } from "./utils/Set";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -92,7 +93,7 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-const setupProject = (projectManager: ProjectManager): void => {
+const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>): void => {
   ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
     projectManager.listVersions(dir)
   );

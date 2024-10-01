@@ -7,12 +7,13 @@ import path from 'node:path';
 import { Tracker } from '../trackers/interfaces/Tracker';
 import { ChangeSet } from '../models/ChangeSet';
 import { TDNode } from '../models/TDNode';
-import { extractNodeNameFromToc, findContainers, findFileByExt, getNodeInfo, extractNodeNameFromDiffLine } from '../utils/utils';
+import { extractNodeNameFromToc, findContainers, findFileByExt, getNodeInfo, extractNodeNameFromDiffLine, getNodeInfoFromContent } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 import hidefile from 'hidefile';
 import { PropertyRule } from '../models/Rule';
+import { TDState } from '../models/TDState';
 
-export class TDProjectManager implements ProjectManager<TDNode> {
+export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   readonly processor: Processor;
   readonly hiddenDir: string;
   readonly tracker: Tracker;
@@ -182,12 +183,12 @@ export class TDProjectManager implements ProjectManager<TDNode> {
 
     // DEBUG
     log.debug("ACTUAL VERSION");
-    const nodes = await this.getVersionStructure(dir, versionId, containers[0]);
+    const nodes = await this.getVersionState(dir, containers[0], versionId);
     log.debug(nodes);
     return ChangeSet.fromValues(added, modified, deleted);
   }
 
-  async getVersionStructure(dir: string, versionId?: string, container: string): Promise<TDNode[]> {
+  async getVersionState(dir: string,  container: string, versionId?: string): Promise<TDState> {
     await this.validateDirectory(dir);
     const hiddenDirPath = this.hiddenDirPath(dir);
 
@@ -196,9 +197,9 @@ export class TDProjectManager implements ProjectManager<TDNode> {
       return Promise.reject(new MissingFileError('Could not find toc file'));
     }
 
-    const tocContent = await this.tracker.readFile(hiddenDirPath, versionId, tocFile);
+    const tocContent = await this.tracker.readFile(hiddenDirPath, tocFile, versionId);
     const nodeNames: string[] = [];
-    const nodes: TDNode[] = [];
+    const state = new TDState();
 
     tocContent.split('\n').forEach(line => {
       log.debug("Reading line:", line);
@@ -216,26 +217,42 @@ export class TDProjectManager implements ProjectManager<TDNode> {
       return Promise.reject(new MissingFileError('Could not find dir'));
     }
 
-    const toeDirAbsPath = path.join(hiddenDirPath, toeDir);
-
     for (const nodeName of nodeNames) {
-      const nodeFilePath = path.join(toeDirAbsPath, `${nodeName}.n`);
-      if (await fs.pathExists(nodeFilePath)) {
-        const nodeContent = await this.tracker.readFile(hiddenDirPath, versionId, nodeFilePath);
+      const nodeFilePath = path.join(toeDir, container, `${nodeName}.n`).replace('\\', '/').replace('\\', '/');
+      try {
+        log.debug("PARSING NODE:", nodeName);
+        const nodeContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
         const properties: Map<string, string> = new Map();
 
         nodeContent.split('\n').forEach(line => {
-          this.parseProperty(line, properties); // TO DO: solo usar la regla de tile.
+          this.parseProperty(line, properties); // TODO: solo usar la regla de tile.
         });
+        const res = getNodeInfoFromContent(nodeContent);
 
-        // TO DO: get node info
-        nodes.push(new TDNode(nodeName, undefined, undefined, properties));
-      } else {
-        log.error(`Node .n file not found: ${nodeFilePath}`);
+        if (res) {
+          const [type, subtype] = res;
+          const node = new TDNode(nodeName, type, subtype, properties);
+          state.nodes.push(node);
+          log.debug("PARSED: ", node);
+
+          if (type === 'TOP') {
+            state.inputs.set(node, this.parseConnectionsTOP(nodeContent));
+          }
+
+        } else {
+          state.nodes.push(new TDNode(nodeName, undefined, undefined, properties));
+        }
+
+      } catch (error) {
+        log.error(`Could not parse information for node ${nodeName} due toe ${error}. Continuing...`);
       }
     }
 
-    return Promise.resolve(nodes);
+    for (const k of state.inputs.keys()) {
+      log.debug("Entry:", k);
+      log.debug("Inputs: ", state.inputs.get(k));
+    }
+    return Promise.resolve(state);
   }
 
   private async getModified(diff: string, container: string, toeDirAbsPath: string): Promise<TDNode[]> {
@@ -248,7 +265,6 @@ export class TDProjectManager implements ProjectManager<TDNode> {
       }
 
       const nodeProperties = new Map<string, string>();
-      const lines = obj.split('\n');
       for (const line of obj.split('\n')) {
         const trimmedLine = line.trim();
         if (trimmedLine.startsWith('+') && !trimmedLine.startsWith('+++')) {
@@ -282,6 +298,22 @@ export class TDProjectManager implements ProjectManager<TDNode> {
     }
   }
 
+  private parseConnectionsTOP(content: string): string[] {
+    const inputsSection = content.match(/inputs\s*\{([^}]*)\}/);
+    if (!inputsSection) {
+        return [];
+    }
+
+    return inputsSection[1].trim()
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line)
+      .map(line => {
+          const parts = line.split(/\s+/);
+          return parts[1];
+      });
+  }
+
   private async validateDirectory(dir: string): Promise<void> {
     try {
       const stats = await fs.promises.stat(dir);
@@ -307,7 +339,7 @@ export class TDProjectManager implements ProjectManager<TDNode> {
       new PropertyRule(
         '[IGNORE] flags',
         'ignore flags property',
-        (line: string) => { line.startsWith('flags') },
+        (line: string) => line.startsWith('flags'),
         () => { /* No action for ignored properties */ }
       ),
       new PropertyRule(

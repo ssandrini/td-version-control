@@ -101,7 +101,6 @@ export class SimpleGitTracker implements Tracker {
     
         if (!versionId) {
             diffParams.push(file);
-            log.debug('git diff', diffParams.join(' '));
             return await this.git.diff(diffParams);
         }
     
@@ -125,7 +124,6 @@ export class SimpleGitTracker implements Tracker {
     
         const parents = hasParent.trim().split(' ');
         diffParams.push(parents.length === 1? this.EMPTY_TREE_HASH : `${commit.hash}^`, commit.hash, file);
-        log.debug('git diff', diffParams.join(' '));
         return await this.git.diff(diffParams);
     }   
 

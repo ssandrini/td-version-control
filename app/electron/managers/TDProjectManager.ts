@@ -145,7 +145,6 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     const containers = await findContainers(toeDirAbsPath);
 
     const tocDiff = (await this.tracker.compare(managementDir, versionId, tocFile)).split('\n');
-    log.debug('Toc diff', tocDiff.join('\n'));
 
     const added = await Promise.all(
       tocDiff
@@ -178,17 +177,24 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     );
 
     const modifiedDiff = (await this.tracker.compare(managementDir, versionId, undefined, true));
-    log.debug('Diff', modifiedDiff);
     const modified = await this.getModified(modifiedDiff, containers[0], toeDirAbsPath);
 
     // DEBUG
     log.debug("ACTUAL VERSION");
-    const nodes = await this.getVersionState(dir, containers[0], versionId);
-    log.debug(nodes);
+    const tdState = await this.getVersionState(dir, containers[0], versionId);
+    // log.debug(tdState.toString())
+    log.debug("node size: ", tdState.nodes.length);
+    log.debug("aristas: ", tdState.inputs.keys.length);
+    let totalAristas = 0;
+    tdState.inputs.forEach(value => {
+      totalAristas += value.length;
+    });
+
+    log.debug("Total aristas: ", totalAristas);
     return ChangeSet.fromValues(added, modified, deleted);
   }
 
-  async getVersionState(dir: string,  container: string, versionId?: string): Promise<TDState> {
+  async getVersionState(dir: string, container: string, versionId?: string): Promise<TDState> {
     await this.validateDirectory(dir);
     const hiddenDirPath = this.hiddenDirPath(dir);
 
@@ -202,12 +208,10 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     const state = new TDState();
 
     tocContent.split('\n').forEach(line => {
-      log.debug("Reading line:", line);
       const trimmedLine = line.trim();
 
       const nodeName = extractNodeNameFromToc(container, trimmedLine);
-      if (nodeName) {
-        log.debug("nodename: ", nodeName)
+      if (nodeName && !nodeNames.includes(nodeName)) {
         nodeNames.push(nodeName);
       }
     });
@@ -218,9 +222,8 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     }
 
     for (const nodeName of nodeNames) {
-      const nodeFilePath = path.join(toeDir, container, `${nodeName}.n`).replace('\\', '/').replace('\\', '/');
+      const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.n`);
       try {
-        log.debug("PARSING NODE:", nodeName);
         const nodeContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
         const properties: Map<string, string> = new Map();
 
@@ -233,10 +236,41 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
           const [type, subtype] = res;
           const node = new TDNode(nodeName, type, subtype, properties);
           state.nodes.push(node);
-          log.debug("PARSED: ", node);
 
+          // TO DO: generalizar mejor esto que es un asco
           if (type === 'TOP') {
-            state.inputs.set(node, this.parseConnectionsTOP(nodeContent));
+            const connections = this.parseConnectionsTOP(nodeContent);
+            if (connections.length > 0) {
+              state.inputs.set(node.name, this.parseConnectionsTOP(nodeContent));
+            } else {
+              // TO DO: al final esto no es de un chop sino de un top
+              const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.parm`);
+              const nodeContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
+              const connections = this.parseConnectionsCHOP(nodeContent);
+              if (connections.length > 0) {
+                state.inputs.set(node.name, this.parseConnectionsCHOP(nodeContent));
+              }
+            }
+          } else if (type === 'CHOP') {
+
+            const connections = this.parseConnectionsTOP(nodeContent);
+            if (connections.length > 0) {
+              state.inputs.set(node.name, this.parseConnectionsTOP(nodeContent));
+            } else {
+              const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.parm`);
+              const nodeContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
+              const connections = this.parseConnectionsCHOP(nodeContent);
+              if (connections.length > 0) {
+                state.inputs.set(node.name, this.parseConnectionsCHOP(nodeContent));
+              }
+            }
+          } else if (type === 'COMP') {
+            const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.network`);
+            const nodeContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
+            const connections = this.parseConnectionsCOMP(nodeContent);
+            if (connections.length > 0) {
+              state.inputs.set(node.name, this.parseConnectionsCOMP(nodeContent));
+            }
           }
 
         } else {
@@ -248,10 +282,6 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       }
     }
 
-    for (const k of state.inputs.keys()) {
-      log.debug("Entry:", k);
-      log.debug("Inputs: ", state.inputs.get(k));
-    }
     return Promise.resolve(state);
   }
 
@@ -280,7 +310,6 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
         } else {
           tdNode = new TDNode(nodeName, undefined, undefined, nodeProperties); // no debería pasar
         }
-        log.debug("Modified ", tdNode.toString());
         modifiedNodes.push(tdNode);
       }
     }
@@ -288,10 +317,8 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   }
 
   private parseProperty(line: string, nodeProperties: Map<string, string>): void {
-    log.debug("parseProperty: ", line);
     for (const rule of this.rules) {
       if (rule.match(line)) {
-        log.debug("Rule matched: ", rule.name)
         rule.extract(line, nodeProperties);
         return;
       }
@@ -301,7 +328,7 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   private parseConnectionsTOP(content: string): string[] {
     const inputsSection = content.match(/inputs\s*\{([^}]*)\}/);
     if (!inputsSection) {
-        return [];
+      return [];
     }
 
     return inputsSection[1].trim()
@@ -309,8 +336,35 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       .map(line => line.trim())
       .filter(line => line)
       .map(line => {
-          const parts = line.split(/\s+/);
-          return parts[1];
+        const parts = line.split(/\s+/);
+        return parts[1];
+      });
+  }
+
+  private parseConnectionsCHOP(content: string): string[] {
+    const chopLine = content.split('\n').find(line => line.trim().startsWith('chop'));
+
+    if (!chopLine) {
+      return [];
+    }
+
+    const parts = chopLine.trim().split(/\s+/);
+    return parts.length >= 3 ? [parts[2]] : [];
+  }
+
+  private parseConnectionsCOMP(content: string): string[] {
+    const compInputsSection = content.match(/compinputs\s*\{([^}]*)\}/);
+    if (!compInputsSection) {
+      return [];
+    }
+
+    return compInputsSection[1].trim()
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line && /^\d/.test(line))
+      .map(line => {
+        const parts = line.split(/\s+/);
+        return parts[1];
       });
   }
 

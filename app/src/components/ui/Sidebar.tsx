@@ -18,9 +18,9 @@ const Sidebar: React.FC = () => {
             {expanded && (
                 <h1 className="text-xl font-semibold ml-2 transition-all duration-600 ease-in-out">Mariana</h1>)}
         </div>
-        <div className={cn(expanded ? "" : "", "flex p-2 flex-col space-y-4 items-center justify-center w-full")}>
+        <div className={cn("flex p-2 flex-col space-y-4 items-center justify-center w-full")}>
             <div
-                className={cn(!expanded ? "flex items-center justify-center" : "", "rounded hover:bg-gray-700 w-full", selected == '/' ? "bg-gray-600" : "")}>
+                className={cn(!expanded ? "h-10 flex items-center justify-center" : "", "rounded hover:bg-gray-700 w-full", selected == '/' ? "bg-gray-600" : "")}>
                 <Link to="/" onClick={() => setSelected('/')}
                       className={cn("flex items-center py-2", expanded ? "px-4" : "justify-center")}>
                     <FaHome className={cn("text-xl", expanded ? "mr-3" : "")}/>
@@ -28,7 +28,7 @@ const Sidebar: React.FC = () => {
                 </Link>
             </div>
             <div
-                className={cn(!expanded ? "flex items-center justify-center" : "", "rounded hover:bg-gray-700 w-full", selected == '/projects' ? "bg-gray-600" : "")}>
+                className={cn(!expanded ? "h-10 flex items-center justify-center" : "", "rounded hover:bg-gray-700 w-full", selected == '/projects' ? "bg-gray-600" : "")}>
                 <Link to="/projects" onClick={() => setSelected('/projects')}
                       className={cn("flex items-center py-2", expanded ? "px-4" : "justify-center")}>
                     <FaFolderOpen className={cn("text-xl", expanded ? "mr-3" : "")}/>
@@ -36,7 +36,7 @@ const Sidebar: React.FC = () => {
                 </Link>
             </div>
             <div
-                className={cn(!expanded ? "flex items-center justify-center" : "", "rounded hover:bg-gray-700 w-full", selected == '/settings' ? "bg-gray-600" : "")}>
+                className={cn(!expanded ? "h-10 flex items-center justify-center" : "", "rounded hover:bg-gray-700 w-full", selected == '/settings' ? "bg-gray-600" : "")}>
                 <Link to="/settings" onClick={() => setSelected('/settings')}
                       className={cn("flex items-center py-2", expanded ? "px-4" : "justify-center")}>
                     <FaCog className={cn("text-xl", expanded ? "mr-3" : "")}/>

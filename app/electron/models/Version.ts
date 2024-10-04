@@ -1,3 +1,5 @@
+import {Author} from "./Author";
+
 export class Version {
     name: string;
     author: Author;

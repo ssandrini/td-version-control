@@ -13,6 +13,7 @@ import {
 import {Button} from "../../components/ui/button";
 import {FaArrowDown, FaUserCircle} from "react-icons/fa";
 import Nodes from "./Nodes/Nodes";
+import { TDState } from "../../../electron/models/TDState.ts"
 
 const ProjectDetail: React.FC = () => {
     const location = useLocation();
@@ -74,6 +75,29 @@ const ProjectDetail: React.FC = () => {
                 log.error("Error retrieving changeset due to", error);
                 // TODO handle error
             });
+
+
+        // JERO ACÁ EL EJEMPLO DEL GET STATE DE UNA VERSION
+        window.api
+            .getState(dir, selectedVersion?.id)
+            .then((serializedState) => {
+                const tdstate = TDState.deserialize(serializedState);
+                log.debug('Lista de Nodos con sus props (tileX, tileY, sizeX, sizeY):');
+                tdstate.nodes.forEach((node, index) => {
+                    log.debug(`Nodo ${index + 1}: ${node.toString()}`);
+                });
+
+                log.debug('Inputs de los Nodos:');
+                tdstate.inputs.forEach((inputs, key) => {
+                    log.debug(`${key}: [${inputs.join(', ')}]`);
+                });
+            })
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .catch((error: any) => {
+                log.error("Error retrieving TDSTATE due to", error);
+                // TODO handle error
+            });
+
     }, [selectedVersion]);
 
     const [name, setName] = useState("");

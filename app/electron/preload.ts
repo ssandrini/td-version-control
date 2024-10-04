@@ -39,4 +39,5 @@ contextBridge.exposeInMainWorld('api', {
   getCurrentVersion:  async(path: string) => ipcRenderer.invoke(API_METHODS.CURRENT_VERSION, path),
   goToVersion:        async(dir: string, versionId: string) => ipcRenderer.invoke(API_METHODS.GO_TO_VERSION, dir, versionId),
   getTemplates:       async() => ipcRenderer.invoke(API_METHODS.GET_TEMPLATES),
+  getState:           async(path: string, versionId?: string) => ipcRenderer.invoke(API_METHODS.GET_STATE, path, versionId),
 });

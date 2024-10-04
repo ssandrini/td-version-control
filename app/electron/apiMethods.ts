@@ -14,5 +14,6 @@ export const API_METHODS = {
     WATCH_PROJECT: 'watch-project',
     UNWATCH_PROJECT: 'unwatch-project',
     GET_TEMPLATES: 'get-templates',
-    COMPARE: 'compare-versions'
+    COMPARE: 'compare-versions',
+    GET_STATE: 'get-state'
 }

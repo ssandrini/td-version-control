@@ -50,7 +50,7 @@ export class SimpleGitTracker implements Tracker {
 
     async listVersions(dir: string): Promise<Version[]> {
         await this.git.cwd(dir);
-        const log = await this.git.log();
+        const log = await this.git.log({ '--all': true });
         return log.all.map(commit => {
             const [name, ...description] = commit.message.split(this.separator);
             return new Version(
@@ -61,7 +61,7 @@ export class SimpleGitTracker implements Tracker {
                 description.join(this.separator)
             );
         });
-    }
+    }    
 
     async createVersion(dir: string, versionName: string, description?: string): Promise<Version> {
         log.info(`Creating version ${versionName} (${description})`)

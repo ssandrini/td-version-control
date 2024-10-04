@@ -179,22 +179,10 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     const modifiedDiff = (await this.tracker.compare(managementDir, versionId, undefined, true));
     const modified = await this.getModified(modifiedDiff, containers[0], toeDirAbsPath);
 
-    // DEBUG
-    log.debug("ACTUAL VERSION");
-    const tdState = await this.getVersionState(dir, containers[0], versionId);
-    // log.debug(tdState.toString())
-    log.debug("node size: ", tdState.nodes.length);
-    log.debug("aristas: ", tdState.inputs.keys.length);
-    let totalAristas = 0;
-    tdState.inputs.forEach(value => {
-      totalAristas += value.length;
-    });
-
-    log.debug("Total aristas: ", totalAristas);
     return ChangeSet.fromValues(added, modified, deleted);
   }
 
-  async getVersionState(dir: string, container: string, versionId?: string): Promise<TDState> {
+  async getVersionState(dir: string, versionId?: string): Promise<TDState> {
     await this.validateDirectory(dir);
     const hiddenDirPath = this.hiddenDirPath(dir);
 
@@ -202,6 +190,15 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     if (!tocFile) {
       return Promise.reject(new MissingFileError('Could not find toc file'));
     }
+
+    const toeDir = findFileByExt('dir', hiddenDirPath);
+    if (!toeDir) {
+      return Promise.reject(new MissingFileError('Could not find dir'));
+    }
+
+    const toeDirAbsPath = path.join(hiddenDirPath, toeDir);
+    const containers = await findContainers(toeDirAbsPath);
+    const container = containers[0];
 
     const tocContent = await this.tracker.readFile(hiddenDirPath, tocFile, versionId);
     const nodeNames: string[] = [];
@@ -216,10 +213,7 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       }
     });
 
-    const toeDir = findFileByExt('dir', hiddenDirPath);
-    if (!toeDir) {
-      return Promise.reject(new MissingFileError('Could not find dir'));
-    }
+    
 
     for (const nodeName of nodeNames) {
       const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.n`);

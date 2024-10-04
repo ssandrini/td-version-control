@@ -142,7 +142,7 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
     log.debug('Compare main handler');
     const changeSet = await projectManager.compare(dir, versionId);
     return changeSet.serialize();
-});
+  });
 
   ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
     watcherMgr.registerWatcher(path, () => {
@@ -156,4 +156,10 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
   ipcMain.on(API_METHODS.UNWATCH_PROJECT, (_, path: string) =>
     watcherMgr.removeWatcher(path)
   );
+
+  ipcMain.handle(API_METHODS.GET_STATE, async (_, path: string, versionId?: string) => {
+    log.debug('get state main handler');
+    const state = await projectManager.getVersionState(path, versionId);
+    return state.serialize();
+  });
 };

@@ -9,5 +9,5 @@ export interface ProjectManager<T extends HasKey, S> {
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;
     goToVersion(dir: string, versionId: string): Promise<Version>;
     compare(dir: string, versionId?: string): Promise<ChangeSet<T>>;
-    getVersionState(dir: string, container: string, versionId?: string): Promise<S>; 
+    getVersionState(dir: string, versionId?: string): Promise<S>; 
 }

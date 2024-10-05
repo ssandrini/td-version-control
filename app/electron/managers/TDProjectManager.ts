@@ -7,11 +7,19 @@ import path from 'node:path';
 import { Tracker } from '../trackers/interfaces/Tracker';
 import { ChangeSet } from '../models/ChangeSet';
 import { TDNode } from '../models/TDNode';
-import { extractNodeNameFromToc, findContainers, findFileByExt, getNodeInfo, extractNodeNameFromDiffLine, getNodeInfoFromContent } from '../utils/utils';
+import {
+  extractNodeNameFromToc,
+  findContainers,
+  findFileByExt,
+  getNodeInfo,
+  extractNodeNameFromDiffLine,
+  getNodeInfoFromNFile
+} from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 import hidefile from 'hidefile';
 import { PropertyRule } from '../models/Rule';
 import { TDState } from '../models/TDState';
+import { TDError } from '../errors/TDError';
 
 export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   readonly processor: Processor;
@@ -197,6 +205,7 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     }
 
     const toeDirAbsPath = path.join(hiddenDirPath, toeDir);
+    // TODO: read container from version
     const containers = await findContainers(toeDirAbsPath);
     const container = containers[0];
 
@@ -213,70 +222,60 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       }
     });
 
-    
-
     for (const nodeName of nodeNames) {
-      const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.n`);
       try {
-        const nodeContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
-        const properties: Map<string, string> = new Map();
-
-        nodeContent.split('\n').forEach(line => {
-          this.parseProperty(line, properties); // TODO: solo usar la regla de tile.
-        });
-        const res = getNodeInfoFromContent(nodeContent);
-
-        if (res) {
-          const [type, subtype] = res;
-          const node = new TDNode(nodeName, type, subtype, properties);
-          state.nodes.push(node);
-
-          // TO DO: generalizar mejor esto que es un asco
-          if (type === 'TOP') {
-            const connections = this.parseConnectionsTOP(nodeContent);
-            if (connections.length > 0) {
-              state.inputs.set(node.name, this.parseConnectionsTOP(nodeContent));
-            } else {
-              // TO DO: al final esto no es de un chop sino de un top
-              const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.parm`);
-              const nodeContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
-              const connections = this.parseConnectionsCHOP(nodeContent);
-              if (connections.length > 0) {
-                state.inputs.set(node.name, this.parseConnectionsCHOP(nodeContent));
-              }
-            }
-          } else if (type === 'CHOP') {
-
-            const connections = this.parseConnectionsTOP(nodeContent);
-            if (connections.length > 0) {
-              state.inputs.set(node.name, this.parseConnectionsTOP(nodeContent));
-            } else {
-              const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.parm`);
-              const nodeContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
-              const connections = this.parseConnectionsCHOP(nodeContent);
-              if (connections.length > 0) {
-                state.inputs.set(node.name, this.parseConnectionsCHOP(nodeContent));
-              }
-            }
-          } else if (type === 'COMP') {
-            const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.network`);
-            const nodeContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
-            const connections = this.parseConnectionsCOMP(nodeContent);
-            if (connections.length > 0) {
-              state.inputs.set(node.name, this.parseConnectionsCOMP(nodeContent));
-            }
-          }
-
-        } else {
-          state.nodes.push(new TDNode(nodeName, undefined, undefined, properties));
-        }
-
+        const [node, nodeInputs] = await this.getInputs(dir, toeDir, nodeName, container, versionId);
+        state.nodes.push(node);
+        state.inputs.set(node.name, nodeInputs);
       } catch (error) {
-        log.error(`Could not parse information for node ${nodeName} due toe ${error}. Continuing...`);
+        log.error(`Could not parse information for node ${nodeName} due toe ${error}.`);
+        return Promise.reject(new TDError(`Error getting state from ${dir}`));
       }
     }
 
     return Promise.resolve(state);
+  }
+
+  /*---------------------------- HELPER METHODS --------------------------*/
+
+  private async getInputs(dir: string, toeDir: string, nodeName: string, container: string, versionId?: string): Promise<[TDNode, string[]]> {
+    const hiddenDirPath = this.hiddenDirPath(dir);
+    const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.n`);
+    const nFileContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
+    const properties: Map<string, string> = new Map();
+
+    nFileContent.split('\n').forEach(line => {
+      this.parseProperty(line, properties); // TODO: solo usar la regla de tile.
+    });
+    const [type, subtype] = getNodeInfoFromNFile(nFileContent)!;
+    const node = new TDNode(nodeName, type, subtype, properties);
+
+    const nodeInputs: string[] = [];
+
+    // N file inputs
+    nodeInputs.push(...this.parseInputsNFile(nFileContent));
+
+    // Parm file inputs
+    if (subtype.endsWith('to')) { // chopto, sopto, topto, etc
+      const parmFilePath = path.posix.join(toeDir, container, `${nodeName}.parm`);
+      try {
+        const parmFileContent = await this.tracker.readFile(hiddenDirPath, parmFilePath, versionId);
+        nodeInputs.push(...this.parseInputsParmFile(parmFileContent, subtype.substring(0, subtype.length - 2)));
+      } catch (error) {
+        // Do nothing on purpose: parm file not found
+      }
+    }
+
+    // Network file inputs
+    const networkFilePath = path.posix.join(toeDir, container, `${nodeName}.network`);
+    try {
+      const networkFileContent = await this.tracker.readFile(hiddenDirPath, networkFilePath, versionId);
+      nodeInputs.push(...this.parseInputsNetworkFile(networkFileContent));
+    } catch (error) {
+      // Do nothing on purpose: network file was not found
+    }
+
+    return [node, nodeInputs];
   }
 
   private async getModified(diff: string, container: string, toeDirAbsPath: string): Promise<TDNode[]> {
@@ -319,7 +318,7 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     }
   }
 
-  private parseConnectionsTOP(content: string): string[] {
+  private parseInputsNFile(content: string): string[] {
     const inputsSection = content.match(/inputs\s*\{([^}]*)\}/);
     if (!inputsSection) {
       return [];
@@ -335,18 +334,18 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       });
   }
 
-  private parseConnectionsCHOP(content: string): string[] {
-    const chopLine = content.split('\n').find(line => line.trim().startsWith('chop'));
+  private parseInputsParmFile(content: string, type: string): string[] {
+    const connectionLine = content.split('\n').find(line => line.trim().startsWith(type.toLowerCase()));
 
-    if (!chopLine) {
+    if (!connectionLine) {
       return [];
     }
 
-    const parts = chopLine.trim().split(/\s+/);
+    const parts = connectionLine.trim().split(/\s+/);
     return parts.length >= 3 ? [parts[2]] : [];
   }
 
-  private parseConnectionsCOMP(content: string): string[] {
+  private parseInputsNetworkFile(content: string): string[] {
     const compInputsSection = content.match(/compinputs\s*\{([^}]*)\}/);
     if (!compInputsSection) {
       return [];
@@ -380,6 +379,8 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       return Promise.reject(error);
     }
   }
+
+  /*---------------------------- RULES --------------------------*/
 
   private buildRules(): void {
     this.rules = [

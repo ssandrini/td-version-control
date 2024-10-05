@@ -14,6 +14,7 @@ import { TDProcessor } from "./processors/TDProcessor";
 import { API_METHODS } from "./apiMethods";
 import { filePicker, openToeFile, getTemplates } from "./utils/utils";
 import { HasKey } from "./utils/Set";
+import { TDState } from "./models/TDState";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -159,7 +160,7 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
 
   ipcMain.handle(API_METHODS.GET_STATE, async (_, path: string, versionId?: string) => {
     log.debug('get state main handler');
-    const state = await projectManager.getVersionState(path, versionId);
+    const state = await projectManager.getVersionState(path, versionId) as TDState;
     return state.serialize();
   });
 };

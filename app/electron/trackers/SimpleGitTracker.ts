@@ -50,7 +50,7 @@ export class SimpleGitTracker implements Tracker {
 
     async listVersions(dir: string): Promise<Version[]> {
         await this.git.cwd(dir);
-        const log = await this.git.log({ '--all': true });
+        const log = await this.git.log(['--all']);
         return log.all.map(commit => {
             const [name, ...description] = commit.message.split(this.separator);
             return new Version(
@@ -74,7 +74,7 @@ export class SimpleGitTracker implements Tracker {
 
     async goToVersion(dir: string, versionId: string): Promise<Version> {
         await this.git.cwd(dir);
-        const log = await this.git.log({ '--all': true });
+        const log = await this.git.log(['--all']);
         const commit = log.all.find(c => c.hash === versionId);
         if (!commit) {
             throw new TrackerError(`Version with id "${versionId}" not found.`);
@@ -104,7 +104,7 @@ export class SimpleGitTracker implements Tracker {
             return await this.git.diff(diffParams);
         }
     
-        const gitLog = await this.git.log({ '--all': true });
+        const gitLog = await this.git.log(['--all']);
         const commit = gitLog.all.find(c => c.hash === versionId);
     
         if (!commit) {

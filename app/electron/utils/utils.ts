@@ -186,13 +186,13 @@ export const getNodeInfo = async (toeDir: string, container: string, node: strin
         const containerDir = path.join(toeDir, container);
         const nodePath = path.join(containerDir, `${node}.n`);
         const fileContent = await fs.readFile(nodePath, 'utf-8');
-        return getNodeInfoFromContent(fileContent);
+        return getNodeInfoFromNFile(fileContent);
     } catch (error) {
         return undefined;
     }
 }
 
-export const getNodeInfoFromContent = (content: string): [string, string] | undefined => {
+export const getNodeInfoFromNFile = (content: string): [string, string] | undefined => {
     const firstLine = content.split('\n')[0].trim();
     const [type, subtype] = firstLine.split(':');
     return [type.trim(), subtype.trim()];

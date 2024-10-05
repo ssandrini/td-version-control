@@ -2,6 +2,7 @@ import { ChangeSet } from '../../models/ChangeSet';
 import { Version } from '../../models/Version';
 import { HasKey } from '../../utils/Set';
 
+// TODO: S type musy be serializable
 export interface ProjectManager<T extends HasKey, S> {
     init(dir: string, src?: string): Promise<Version>;
     currentVersion(dir: string): Promise<Version>;

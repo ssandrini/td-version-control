@@ -1,3 +1,5 @@
+import {HasKey} from "../utils/Set";
+
 export class TDNode implements HasKey {
     readonly name: string;
     readonly type?: string;

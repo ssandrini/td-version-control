@@ -1,18 +1,21 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
     addEdge, Background, BackgroundVariant, Controls, ReactFlow, useEdgesState, useNodesState,
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
+import {TDState} from "../../../../../electron/models/TDState";
+import OperatorNode from "./OperatorNode/OperatorNode";
 
-interface NodeVizProps {
-    matrix: boolean[][];
+interface NodeGraphProps {
+    current: TDState | undefined
 }
 
-const NodeViz: React.FC<NodeVizProps> = ({ matrix }) => {
+const NodeGraph: React.FC<NodeGraphProps> = ({current}) => {
     const createNodesAndEdgesFromMatrix = (matrix: boolean[][]) => {
         const nodes = matrix.map((_, index) => ({
             id: `${index + 1}`,
+            type: "operator",
             position: { x: Math.random() * 400, y: Math.random() * 400 },  // TODO: poner posiciones despues
             data: { label: `${index + 1}` }, // TODO: poner nombres sigificativos
         }));
@@ -33,30 +36,27 @@ const NodeViz: React.FC<NodeVizProps> = ({ matrix }) => {
         return { nodes, edges };
     };
 
-    const { nodes: initialNodes, edges: initialEdges } = createNodesAndEdgesFromMatrix(matrix);
+    const { nodes: initialNodes, edges: initialEdges } = createNodesAndEdgesFromMatrix([[false, true, false], [false, false, false], [false, false, false]]);
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+    const nodeTypes = { operator: OperatorNode };
 
     const onConnect = useCallback(
         (params: any) => setEdges((eds) => addEdge(params, eds)),
         [setEdges],
     );
 
-    useEffect(() => {
-        const { nodes, edges } = createNodesAndEdgesFromMatrix(matrix);
-        setNodes(nodes);
-        setEdges(edges);
-    }, [matrix, setNodes, setEdges]);
-
     return (
-        <div style={{ width: '50vw', height: '10vh' }}>
+        <div className="w-full h-full py-5">
             <ReactFlow
                 className="text-black"
                 nodes={nodes}
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}
                 onConnect={onConnect}
             >
                 <Controls className="text-black" />
@@ -66,4 +66,4 @@ const NodeViz: React.FC<NodeVizProps> = ({ matrix }) => {
     );
 }
 
-export default NodeViz;
+export default NodeGraph;

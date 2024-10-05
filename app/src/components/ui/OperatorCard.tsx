@@ -1,46 +1,53 @@
 import React from 'react';
-import { FaPlus, FaMinus, FaEdit } from 'react-icons/fa';
-import { TD_OPERATOR_TYPES } from '../../const';
+import {TD_OPERATOR_TYPES} from '../../const';
+import {TDNode} from "../../../electron/models/TDNode";
+import {IconType} from "react-icons";
 
-const OperatorCard = ({ change, icon: Icon, iconColor }) => {
-  const getFileImage = (type) => {
-    switch (type) {
-      case TD_OPERATOR_TYPES.COMPONENT_OPERATOR:
-        return '/public/COMP.png'
-      case TD_OPERATOR_TYPES.CHANNEL_OPERATOR:
-        return '/public/CHOP.png'
-      case TD_OPERATOR_TYPES.TEXTURE_OPERATOR:
-        return '/public/TOP.png'
-      case TD_OPERATOR_TYPES.SURFACE_OPERATOR:
-        return '/public/SOP.png'
-      case TD_OPERATOR_TYPES.MATERIAL_OPERATOR:
-        return '/public/MAT.png'
-      case TD_OPERATOR_TYPES.DATA_OPERATOR:
-        return '/public/DAT.png'
-      default:
-        return '/public/geo.png' // TO DO
-    }
-  };
+interface OperatorCardProps {
+  node: TDNode;
+  Icon?: IconType;
+  iconColor?: string;
+}
 
-  return (
-    <div className="flex flex-col items-center">
-      <div className="w-28 h-32 bg-gray-700 text-white rounded-md p-2 relative flex justify-center items-center">
-        <img
-          src={getFileImage(change.type)}
-          alt={change.type}
-          className="w-24 h-28 object-contain"
-        />
+const OperatorCard: React.FC<OperatorCardProps> = ({node, Icon, iconColor}) => {
+    const getFileImage = (type?: string) => {
+        switch (type) {
+            case TD_OPERATOR_TYPES.COMPONENT_OPERATOR:
+                return '/public/COMP.png'
+            case TD_OPERATOR_TYPES.CHANNEL_OPERATOR:
+                return '/public/CHOP.png'
+            case TD_OPERATOR_TYPES.TEXTURE_OPERATOR:
+                return '/public/TOP.png'
+            case TD_OPERATOR_TYPES.SURFACE_OPERATOR:
+                return '/public/SOP.png'
+            case TD_OPERATOR_TYPES.MATERIAL_OPERATOR:
+                return '/public/MAT.png'
+            case TD_OPERATOR_TYPES.DATA_OPERATOR:
+                return '/public/DAT.png'
+            default:
+                return '/public/geo.png' // TODO: Add all remaining supported operators.
+        }
+    };
 
-        <Icon className={`absolute bottom-2 left-2 ${iconColor}`} />
+    return (<div className="flex flex-col items-center">
+            <div className="w-28 h-32 bg-gray-700 text-white rounded-md p-2 relative flex justify-center items-center">
+                <img
+                    src={getFileImage(node.type)}
+                    alt={node.type}
+                    className="w-24 h-28 object-contain"
+                />
 
-        <div className="absolute bottom-2 right-2 bg-gray-700 text-xs px-1 py-0.5 rounded text-yellow-500">
-          {change.type || 'geo'}
-        </div>
-      </div>
+                {(Icon && iconColor) && (
+                    <Icon className={`absolute bottom-2 left-2 ${iconColor}`}/>
+                )}
 
-      <p className="text-white mt-2 text-center">{change.name}</p>
-    </div>
-  );
+                <div className="absolute bottom-2 right-2 bg-gray-700 text-xs px-1 py-0.5 rounded text-yellow-500">
+                    {node.type || 'geo'}
+                </div>
+            </div>
+
+            <p className="text-white mt-2 text-center">{node.name}</p>
+        </div>);
 };
 
 export default OperatorCard;

@@ -1,5 +1,5 @@
 import React from 'react';
-import HistoryItem from "../../Elements/HistoryItem";
+import HistoryItem from "./HistoryItem";
 import {Version} from '../../../electron/models/Version.ts'
 import {cn} from "../../lib/utils";
 

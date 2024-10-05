@@ -4,14 +4,12 @@ import {FaCog, FaFolderOpen, FaHome} from 'react-icons/fa';
 import {cn} from "../../lib/utils";
 
 const Sidebar: React.FC = () => {
-    const [expanded, setExpanded] = useState(false);
+    const [expanded] = useState(false);
 
     const [selected, setSelected] = useState<string>('/');
 
     return (<div
         className={cn(expanded ? "w-60" : "w-16", "transition-all overflow-hidden duration-600 ease-in-out h-full bg-gray-900 text-white flex flex-col shadow-lg border-r border-gray-700 overflow-y-auto sticky items-top")}
-        onMouseEnter={() => setExpanded(true)}
-        onMouseLeave={() => setExpanded(false)}
     >
         <div className="flex items-center pl-2.5 h-16 border-b border-gray-700">
             <img src="public/img.png" alt="" className="w-11 h-11 rounded-full"/>

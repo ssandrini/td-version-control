@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, screen } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -13,6 +13,8 @@ import { SimpleGitTracker } from "./trackers/SimpleGitTracker";
 import { TDProcessor } from "./processors/TDProcessor";
 import { API_METHODS } from "./apiMethods";
 import { filePicker, openToeFile, getTemplates } from "./utils/utils";
+import { HasKey } from "./utils/Set";
+import { TDState } from "./models/TDState";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -25,22 +27,34 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, "resources")
   : RENDERER_DIST;
-const iconPath = path.join(process.env.VITE_PUBLIC, "img.png");
 let win: BrowserWindow | null;
 
 function createWindow() {
   log.initialize();
   log.info("Initializing app...");
 
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+
+  const minWidth = 1400;
+  const minHeight = 750;
+
+  const finalWidth = Math.min(screenWidth, minWidth);
+  const finalHeight = Math.min(screenHeight, minHeight);
+
   win = new BrowserWindow({
-    icon: path.join(iconPath, "img.png"),
+    icon: "public/img.png",
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
       preload: path.join(__dirname, "preload.mjs"),
     },
+    width: finalWidth,
+    height: finalHeight,
+    minWidth: finalWidth,
+    minHeight: finalHeight,
   });
 
+  win.maximize();
   // TODO: get user correctly
   const tracker = new SimpleGitTracker("tduser", "tduser@example.com");
   const processor = new TDProcessor();
@@ -80,7 +94,7 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-const setupProject = (projectManager: ProjectManager): void => {
+const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>): void => {
   ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
     projectManager.listVersions(dir)
   );
@@ -125,6 +139,12 @@ const setupProject = (projectManager: ProjectManager): void => {
 
   ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
+  ipcMain.handle(API_METHODS.COMPARE, async (_, dir: string, versionId: string) => {
+    log.debug('Compare main handler');
+    const changeSet = await projectManager.compare(dir, versionId);
+    return changeSet.serialize();
+  });
+
   ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
     watcherMgr.registerWatcher(path, () => {
       // Registrar los callbacks que necesitemos acá
@@ -137,4 +157,10 @@ const setupProject = (projectManager: ProjectManager): void => {
   ipcMain.on(API_METHODS.UNWATCH_PROJECT, (_, path: string) =>
     watcherMgr.removeWatcher(path)
   );
+
+  ipcMain.handle(API_METHODS.GET_STATE, async (_, path: string, versionId?: string) => {
+    log.debug('get state main handler');
+    const state = await projectManager.getVersionState(path, versionId) as TDState;
+    return state.serialize();
+  });
 };

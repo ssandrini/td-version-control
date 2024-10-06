@@ -7,9 +7,7 @@ import "@fontsource/montserrat/700.css"
 import log from 'electron-log/renderer';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  <App />
 )
 
 // Use contextBridge

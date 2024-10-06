@@ -9,11 +9,11 @@ import path from 'node:path'
  * @param {string} ext - The file extension to search for (e.g., 'txt', 'json').
  * @returns {string | undefined} - The first matching file's name if found, otherwise undefined.
  */
-export const findFileByExt = (ext: string): string | undefined => {
-    const files = fs.readdirSync('.');
-    const fileRegex = new RegExp(`^[^.]+\\.${ext}$`);
+export const findFileByExt = (ext: string, dir?: string): string | undefined => {
+    const files = fs.readdirSync(dir ? dir : '.');
+    const fileRegex = new RegExp(`\\.${ext}$`);
     const foundFile = files.find(file => fileRegex.test(file));
-    
+
     return foundFile;
 }
 
@@ -90,7 +90,7 @@ const getImagePath = async (templatePath: string): Promise<string> => {
     for (const ext of imageExtensions) {
         const imagePath = path.join(templatePath, `image${ext}`);
         const imageExists = await fs.promises.access(imagePath).then(() => true).catch(() => false);
-        
+
         if (imageExists) {
             log.info(`Image found: ${imagePath}`);
             return Promise.resolve(imagePath);
@@ -108,7 +108,7 @@ const getImagePath = async (templatePath: string): Promise<string> => {
  * @returns {Promise<void>} - A promise that resolves if the file opens successfully or rejects if an error occurs.
  * @throws {Error} - Throws an error if no .toe file is found or if the file fails to open.
  */
-export const openToeFile = async(projectFolderPath: string): Promise<void> => {
+export const openToeFile = async (projectFolderPath: string): Promise<void> => {
     try {
         const files = await fs.readdir(projectFolderPath);
 
@@ -128,13 +128,93 @@ export const openToeFile = async(projectFolderPath: string): Promise<void> => {
         }
 
         log.info('.toe file opened successfully');
-        
+
         // TO DO: delete?
         await new Promise(resolve => setTimeout(resolve, 4000));
-        
+
         return Promise.resolve();
     } catch (error) {
         log.error('Unexpected error:', error);
         return Promise.reject(new Error('Unexpected Error.'))
     }
+}
+
+/**
+ * Extracts the name of the node, given a diff line of the toc file, ensuring it's within the specified container.
+ * 
+ * @param {string} container - The name of the container to filter nodes.
+ * @param {string} diffLine - A diff line from the toc file.
+ * @returns {string | null} - The name of the node that changed, or empty string if not applicable.
+ */
+export const extractNodeNameFromToc = (container: string, diffLine: string): string => {
+    const parts = diffLine.split('/');
+    if (parts.length > 1 && parts[0] === container) {
+        let nodeName = ""
+        if (parts[1])
+            nodeName = parts[1].split('.')[0];
+        return nodeName;
+    }
+
+    return "";
+}
+
+export const extractNodeNameFromDiffLine = (container: string, diffLine: string): string => {
+    //log.debug("extractnodenamefromdiffline: ", container, diffLine)
+    const parts = diffLine.split(' ');
+    if (parts.length > 2) {
+        const pathA = parts[2];
+        const pathParts = pathA.split('/');
+        const containerIndex = pathParts.indexOf(container);
+        if (containerIndex !== -1 && containerIndex + 1 < pathParts.length) {
+            const nodeNameWithExt = pathParts[containerIndex + 1];
+            return nodeNameWithExt.split('.')[0];
+        }
+    }
+    return "";
+}
+
+/**
+ * Gets the information of a given node
+ * 
+ * @param {string} toeDir - The path to the base directory, as returned by toeexpand.
+ * @param {string} container - The name of the container to search within.
+ * @param {string} node - The name of the node.
+ * @returns {Promise<string | undefined>} - Returns the first line of the node file or undefined if not found.
+ */
+export const getNodeInfo = async (toeDir: string, container: string, node: string): Promise<[string, string] | undefined> => {
+    try {
+        const containerDir = path.join(toeDir, container);
+        const nodePath = path.join(containerDir, `${node}.n`);
+        const fileContent = await fs.readFile(nodePath, 'utf-8');
+        return getNodeInfoFromNFile(fileContent);
+    } catch (error) {
+        return undefined;
+    }
+}
+
+export const getNodeInfoFromNFile = (content: string): [string, string] | undefined => {
+    const firstLine = content.split('\n')[0].trim();
+    const [type, subtype] = firstLine.split(':');
+    return [type.trim(), subtype.trim()];
+}
+
+
+export const findContainers = async (toeDir: string): Promise<string[]> => {
+    const files = fs.readdirSync(toeDir);
+    const containers: string[] = [];
+
+    for (const file of files) {
+        if (file.endsWith('.n')) {
+            const filePath = path.join(toeDir, file);
+            const fileContent = await fs.readFile(filePath, 'utf-8');
+            const firstLine = fileContent.split('\n')[0];
+
+            if (firstLine.includes('COMP:container')) {
+                const nodeName = file.replace(/\.n$/, '');
+                containers.push(nodeName);
+            }
+        }
+    }
+
+    return containers;
 }

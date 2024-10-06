@@ -49,7 +49,7 @@ const NewProject: React.FC = () => {
             setLoading(false);
             const newProject: Project = {
                 name: formData.title,
-                author: initialVersion.author,
+                author: initialVersion.author.name,
                 lastModified: new Date().toLocaleDateString(),
                 lastVersion: initialVersion.name,
                 path: formData.location,
@@ -62,9 +62,13 @@ const NewProject: React.FC = () => {
                     navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: newProject.path, projectName: newProject.name } });
                 }, 1500);
             });
-        }).catch((err) => {
+        }).catch((err: unknown) => {
             setLoading(false);
-            setError(`Error: ${err.message}`);
+            if (Object.prototype.hasOwnProperty.call(err, "message")) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                setError(`Error: ${err.message}`);
+            }
         });
     };
 

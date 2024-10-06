@@ -36,7 +36,7 @@ export class TDNode implements HasKey {
             name: this.name,
             type: this.type,
             subtype: this.subtype,
-            properties: this.properties ? Array.from(this.properties.entries()) : []
+            properties: this.properties
         };
     }
 

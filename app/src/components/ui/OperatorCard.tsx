@@ -29,12 +29,12 @@ const OperatorCard: React.FC<OperatorCardProps> = ({node, Icon, iconColor}) => {
         }
     };
 
-    return (<div className="flex flex-col items-center">
-            <div className="w-28 h-32 bg-gray-700 text-white rounded-md p-2 relative flex justify-center items-center">
+    return (<div className="flex bg-gray-700 rounded-md w-full h-full flex-col items-center">
+            <div className="w-full h-full text-white rounded-md p-2 relative flex justify-center items-center">
                 <img
                     src={getFileImage(node.type)}
                     alt={node.type}
-                    className="w-24 h-28 object-contain"
+                    className="w-full h-full object-contain"
                 />
 
                 {(Icon && iconColor) && (
@@ -45,7 +45,6 @@ const OperatorCard: React.FC<OperatorCardProps> = ({node, Icon, iconColor}) => {
                     {node.type || 'geo'}
                 </div>
             </div>
-
             <p className="text-white mt-2 text-center">{node.name}</p>
         </div>);
 };

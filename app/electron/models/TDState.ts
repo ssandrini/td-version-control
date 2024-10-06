@@ -9,10 +9,7 @@ export class TDState {
     public serialize(): object {
         return {
             nodes: this.nodes.map(node => node.serialize()),
-            inputs: Array.from(this.inputs.entries()).reduce((acc, [key, value]) => {
-                acc[key] = value;
-                return acc;
-            }, {} as { [key: string]: string[] })
+            inputs: this.inputs
         };
     }
 
@@ -20,7 +17,7 @@ export class TDState {
         const state = new TDState();
         
         state.nodes = data.nodes.map((nodeData: any) => TDNode.deserialize(nodeData));
-        state.inputs = new Map(Object.entries(data.inputs));
+        state.inputs = data.inputs;
 
         return state;
     }

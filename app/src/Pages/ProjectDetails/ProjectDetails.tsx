@@ -116,7 +116,7 @@ const ProjectDetail: React.FC = () => {
                 versions={versions}
             />)}
         </div>) : (<p>Select a version to see details.</p>)}
-        <div className="h-[70%]">
+        <div className="h-[90%]">
             <Nodes changes={changes} current={currentState}/>
         </div>
     </div>);

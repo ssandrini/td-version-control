@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
-    addEdge, Background, BackgroundVariant, Controls, ReactFlow, useEdgesState, useNodesState,
+    addEdge, Background, BackgroundVariant, Controls, Edge, ReactFlow, ReactFlowInstance, useEdgesState, useNodesState,
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
@@ -12,58 +12,81 @@ interface NodeGraphProps {
 }
 
 const NodeGraph: React.FC<NodeGraphProps> = ({current}) => {
-    const createNodesAndEdgesFromMatrix = (matrix: boolean[][]) => {
-        const nodes = matrix.map((_, index) => ({
-            id: `${index + 1}`,
-            type: "operator",
-            position: { x: Math.random() * 400, y: Math.random() * 400 },  // TODO: poner posiciones despues
-            data: { label: `${index + 1}` }, // TODO: poner nombres sigificativos
+    const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | undefined>(undefined);
+
+    const createNodesAndEdgesFromState = (currentState: TDState | undefined): { nodes: Node[], edges: Edge[] } => {
+        if (!currentState) return {nodes: [], edges: []}
+
+        const nodes: Node[] = currentState.nodes.map((currentNode) => ({
+            id: currentNode.name, type: "operator", position: {
+                x: currentNode.properties?.get('tileX') ?? Math.random() * 400,
+                y: -1 * (currentNode.properties?.get('tileY') ?? Math.random() * 400)
+            }, data: {label: currentNode.name, operator: currentNode},
         }));
 
-        const edges = matrix.flatMap((row, sourceIndex) =>
-            row.map((cell, targetIndex) => {
-                if (cell) {
-                    return {
-                        id: `e${sourceIndex + 1}-${targetIndex + 1}`,
-                        source: `${sourceIndex + 1}`,
-                        target: `${targetIndex + 1}`,
-                    };
-                }
-                return null;
-            })
-        ).filter(edge => edge !== null);
+        console.log(currentState.inputs);
+        console.log(currentState.nodes);
 
-        return { nodes, edges };
+        const edges: Edge[] = []
+        currentState.inputs.forEach((value, key) => {
+            value.map((input) => {
+                edges.push({
+                    id: `e${key}-${input}`, source: input, target: key
+                })
+            })
+        })
+        // const edges = currentState.inputs.((row, sourceIndex) =>
+        //     row.map((cell, targetIndex) => {
+        //         if (cell) {
+        //             return {
+        //                 id: `e${sourceIndex + 1}-${targetIndex + 1}`,
+        //                 source: `${sourceIndex + 1}`,
+        //                 target: `${targetIndex + 1}`,
+        //             };
+        //         }
+        //         return null;
+        //     })
+        // ).filter(edge => edge !== null);
+
+        return {nodes, edges};
     };
 
-    const { nodes: initialNodes, edges: initialEdges } = createNodesAndEdgesFromMatrix([[false, true, false], [false, false, false], [false, false, false]]);
+    const {nodes: initialNodes, edges: initialEdges} = createNodesAndEdgesFromState(current);
+
+    useEffect(() => {
+        if (current != undefined) {
+            const {nodes: newNodes, edges: newEdges} = createNodesAndEdgesFromState(current);
+            setNodes(newNodes)
+            setEdges(newEdges)
+            reactFlowInstance?.fitView()
+        }
+    }, [current]);
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-    const nodeTypes = { operator: OperatorNode };
+    const nodeTypes = {operator: OperatorNode};
 
-    const onConnect = useCallback(
-        (params: any) => setEdges((eds) => addEdge(params, eds)),
-        [setEdges],
-    );
+    const onConnect = useCallback((params: any) => setEdges((eds) => addEdge(params, eds)), [setEdges],);
 
-    return (
-        <div className="w-full h-full py-5">
-            <ReactFlow
-                className="text-black"
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                nodeTypes={nodeTypes}
-                onConnect={onConnect}
-            >
-                <Controls className="text-black" />
-                <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-            </ReactFlow>
-        </div>
-    );
+    return (<div className="w-full h-full rounded-lg my-5">
+        <ReactFlow
+            className="text-black"
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            nodeTypes={nodeTypes}
+            onInit={(instance) => {
+                setReactFlowInstance(instance);
+                instance.fitView();
+            }}
+            onConnect={onConnect}
+        >
+            <Controls className="text-black"/>
+            <Background variant={BackgroundVariant.Dots} gap={12} size={0.5}/>
+        </ReactFlow>
+    </div>);
 }
 
 export default NodeGraph;

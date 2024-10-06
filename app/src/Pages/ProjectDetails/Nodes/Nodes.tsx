@@ -14,7 +14,7 @@ interface NodesProps {
 }
 
 const Nodes: React.FC<NodesProps> = ({changes, current}) => {
-    const [graphViz, setGraphViz] = useState<boolean>(false);
+    const [graphViz, setGraphViz] = useState<boolean>(true);
 
     return (<div
         className="flex flex-col bg-gray-800 py-4 rounded-lg h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700">

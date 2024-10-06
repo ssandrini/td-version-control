@@ -1,4 +1,4 @@
-import { dialog, shell } from 'electron';
+import {dialog, shell} from 'electron';
 import log from 'electron-log/main';
 import fs from 'fs-extra';
 import Template from '../models/Template';
@@ -12,9 +12,7 @@ import path from 'node:path'
 export const findFileByExt = (ext: string, dir?: string): string | undefined => {
     const files = fs.readdirSync(dir ? dir : '.');
     const fileRegex = new RegExp(`\\.${ext}$`);
-    const foundFile = files.find(file => fileRegex.test(file));
-
-    return foundFile;
+    return files.find(file => fileRegex.test(file));
 }
 
 /**
@@ -217,4 +215,23 @@ export const findContainers = async (toeDir: string): Promise<string[]> => {
     }
 
     return containers;
+}
+
+export const validateDirectory = async (dir: string): Promise<void> => {
+    try {
+        const stats = await fs.promises.stat(dir);
+        if (!stats.isDirectory()) {
+            const msg = `The path ${dir} is not a directory.`;
+            log.error(msg);
+            return Promise.reject(new TypeError(msg));
+        }
+    } catch (error) {
+        if (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+            const msg = `The path ${dir} does not exist.`;
+            log.error(msg);
+            return Promise.reject(new TypeError(msg));
+        }
+        log.error(`Error validating directory ${dir}. Cause:`, error);
+        return Promise.reject(error);
+    }
 }

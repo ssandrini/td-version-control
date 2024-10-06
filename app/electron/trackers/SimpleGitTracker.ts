@@ -7,7 +7,6 @@ import { Author } from '../models/Author';
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
-    readonly setupErrorMessage = 'Tracker not setup. Use method setup()';
     readonly username: string;
     readonly email: string;
     readonly separator = '//';
@@ -27,8 +26,8 @@ export class SimpleGitTracker implements Tracker {
         return this.createVersion(
             dir,
             'Initial version',
-            'This is the inital version of your project!'
-        )
+            'This is the initial version of your project!'
+        );
     }
 
     async currentVersion(dir: string): Promise<Version> {
@@ -61,10 +60,10 @@ export class SimpleGitTracker implements Tracker {
                 description.join(this.separator)
             );
         });
-    }    
+    }
 
     async createVersion(dir: string, versionName: string, description?: string): Promise<Version> {
-        log.info(`Creating version ${versionName} (${description})`)
+        log.info(`Creating version ${versionName} (${description})`);
         await this.git.cwd(dir);
         await this.git.add('.');
         const message = `${versionName}${this.separator}${description || ''}`;
@@ -97,45 +96,46 @@ export class SimpleGitTracker implements Tracker {
         if (modified) {
             diffParams.push('--diff-filter=M');
         }
-        file = file? file : '.';
-    
+        file = file ? file : '.';
+
         if (!versionId) {
             diffParams.push(file);
-            return await this.git.diff(diffParams);
+            return this.git.diff(diffParams);
         }
-    
+
         const gitLog = await this.git.log(['--all']);
         const commit = gitLog.all.find(c => c.hash === versionId);
-    
+
         if (!commit) {
             throw new TrackerError(`Commit "${versionId}" not found.`);
         }
-    
+
         let hasParent: string | undefined;
         try {
             hasParent = await this.git.raw(['rev-list', '--parents', '-n', '1', commit.hash]);
-    
+
             if (!hasParent || typeof hasParent !== 'string') {
-                throw new TrackerError(`Invalid response from git rev-list for commit "${commit.hash}".`);
+                log.error(`Invalid response from git rev-list for commit "${commit.hash}".`);
             }
         } catch (error) {
-            throw new TrackerError(`Failed to check parents for commit "${commit.hash}": ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new TrackerError(`Failed to check parents for commit "${commit.hash}": ${errorMessage}`);
         }
-    
+
         const parents = hasParent.trim().split(' ');
-        diffParams.push(parents.length === 1? this.EMPTY_TREE_HASH : `${commit.hash}^`, commit.hash, file);
-        return await this.git.diff(diffParams);
-    }   
+        diffParams.push(parents.length === 1 ? this.EMPTY_TREE_HASH : `${commit.hash}^`, commit.hash, file);
+        return this.git.diff(diffParams);
+    }
 
     async readFile(dir: string, filePath: string, versionId?: string): Promise<string> {
         await this.git.cwd(dir);
         const commitHash = versionId ? versionId : 'HEAD';
-    
+
         try {
-            const fileContent = await this.git.show([`${commitHash}:${filePath}`]);
-            return fileContent;
+            return await this.git.show([`${commitHash}:${filePath}`]);
         } catch (error) {
-            throw new TrackerError(`Failed to read file "${filePath}" at commit "${commitHash}": ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new TrackerError(`Failed to read file "${filePath}" at commit "${commitHash}": ${errorMessage}`);
         }
     }
 }

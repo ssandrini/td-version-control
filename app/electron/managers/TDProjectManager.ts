@@ -13,27 +13,30 @@ import {
   findFileByExt,
   getNodeInfo,
   extractNodeNameFromDiffLine,
-  getNodeInfoFromNFile
+  getNodeInfoFromNFile, validateDirectory
 } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
-import hidefile from 'hidefile';
-import { PropertyRule } from '../models/Rule';
 import { TDState } from '../models/TDState';
 import { TDError } from '../errors/TDError';
+import { PropertyRuleEngine } from '../rules/properties/PropertyRuleEngine';
+import hidefile from "hidefile"
+import {InputRuleEngine} from "../rules/inputs/InputRuleEngine";
 
 export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   readonly processor: Processor;
   readonly hiddenDir: string;
   readonly tracker: Tracker;
+  readonly propertyRuleEngine: PropertyRuleEngine;
+  readonly inputRuleEngine: InputRuleEngine;
   private versionNameMax = 256;
   private descriptionMax = 1024;
-  private rules: PropertyRule[] = [];
 
   constructor(processor: Processor, tracker: Tracker, hiddenDir: string) {
     this.processor = processor;
     this.hiddenDir = hiddenDir;
     this.tracker = tracker;
-    this.buildRules();
+    this.propertyRuleEngine = new PropertyRuleEngine();
+    this.inputRuleEngine = new InputRuleEngine();
   }
 
   private hiddenDirPath = (dir: string): string => {
@@ -41,11 +44,11 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   };
 
   async init(dir: string, src?: string): Promise<Version> {
-    await this.validateDirectory(dir);
+    await validateDirectory(dir);
 
     if (src) {
       try {
-        await this.validateDirectory(src);
+        await validateDirectory(src);
         fs.copySync(src, dir, { recursive: true });
         log.info(`Copied ${src} into ${dir}`);
       } catch (error) {
@@ -83,12 +86,12 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   }
 
   async currentVersion(dir: string): Promise<Version> {
-    await this.validateDirectory(dir);
+    await validateDirectory(dir);
     return this.tracker.currentVersion(this.hiddenDirPath(dir));
   }
 
   async listVersions(dir: string): Promise<Version[]> {
-    await this.validateDirectory(dir);
+    await validateDirectory(dir);
     return this.tracker.listVersions(this.hiddenDirPath(dir));
   }
 
@@ -109,7 +112,7 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       return Promise.reject(new RangeError(msg));
     }
 
-    await this.validateDirectory(dir);
+    await validateDirectory(dir);
     const hiddenDirPath = this.hiddenDirPath(dir);
     try {
       await this.processor.preprocess(dir, this.hiddenDir);
@@ -126,29 +129,22 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   }
 
   async goToVersion(dir: string, versionId: string): Promise<Version> {
-    await this.validateDirectory(dir);
+    await validateDirectory(dir);
     return this.tracker.goToVersion(this.hiddenDirPath(dir), versionId);
   }
 
   async compare(dir: string, versionId?: string): Promise<ChangeSet<TDNode>> {
     log.debug("Starting compare...");
-    await this.validateDirectory(dir);
+    await validateDirectory(dir);
 
     if (!versionId) {
       await this.processor.preprocess(dir, this.hiddenDir);
     }
 
     const managementDir = path.join(dir, this.hiddenDir);
+    const tocFile = await this.findFileWithCheck(managementDir, 'toc');
+    const toeDir = await this.findFileWithCheck(managementDir, 'dir');
 
-    const tocFile = findFileByExt('toc', managementDir);
-    if (!tocFile) {
-      return Promise.reject(new MissingFileError('Could not find toc file'));
-    }
-
-    const toeDir = findFileByExt('dir', managementDir);
-    if (!toeDir) {
-      return Promise.reject(new MissingFileError('Could not find dir'));
-    }
     const toeDirAbsPath = path.join(managementDir, toeDir);
     const containers = await findContainers(toeDirAbsPath);
 
@@ -190,94 +186,6 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     return ChangeSet.fromValues(added, modified, deleted);
   }
 
-  async getVersionState(dir: string, versionId?: string): Promise<TDState> {
-    await this.validateDirectory(dir);
-    const hiddenDirPath = this.hiddenDirPath(dir);
-
-    const tocFile = findFileByExt('toc', hiddenDirPath);
-    if (!tocFile) {
-      return Promise.reject(new MissingFileError('Could not find toc file'));
-    }
-
-    const toeDir = findFileByExt('dir', hiddenDirPath);
-    if (!toeDir) {
-      return Promise.reject(new MissingFileError('Could not find dir'));
-    }
-
-    const toeDirAbsPath = path.join(hiddenDirPath, toeDir);
-    // TODO: read container from version
-    const containers = await findContainers(toeDirAbsPath);
-    const container = containers[0];
-
-    const tocContent = await this.tracker.readFile(hiddenDirPath, tocFile, versionId);
-    const nodeNames: string[] = [];
-    const state = new TDState();
-
-    tocContent.split('\n').forEach(line => {
-      const trimmedLine = line.trim();
-
-      const nodeName = extractNodeNameFromToc(container, trimmedLine);
-      if (nodeName && !nodeNames.includes(nodeName)) {
-        nodeNames.push(nodeName);
-      }
-    });
-
-    for (const nodeName of nodeNames) {
-      try {
-        const [node, nodeInputs] = await this.getInputs(dir, toeDir, nodeName, container, versionId);
-        state.nodes.push(node);
-        state.inputs.set(node.name, nodeInputs);
-      } catch (error) {
-        log.error(`Could not parse information for node ${nodeName} due toe ${error}.`);
-        return Promise.reject(new TDError(`Error getting state from ${dir}`));
-      }
-    }
-
-    return Promise.resolve(state);
-  }
-
-  /*---------------------------- HELPER METHODS --------------------------*/
-
-  private async getInputs(dir: string, toeDir: string, nodeName: string, container: string, versionId?: string): Promise<[TDNode, string[]]> {
-    const hiddenDirPath = this.hiddenDirPath(dir);
-    const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.n`);
-    const nFileContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
-    const properties: Map<string, string> = new Map();
-
-    nFileContent.split('\n').forEach(line => {
-      this.parseProperty(line, properties); // TODO: solo usar la regla de tile.
-    });
-    const [type, subtype] = getNodeInfoFromNFile(nFileContent)!;
-    const node = new TDNode(nodeName, type, subtype, properties);
-
-    const nodeInputs: string[] = [];
-
-    // N file inputs
-    nodeInputs.push(...this.parseInputsNFile(nFileContent));
-
-    // Parm file inputs
-    if (subtype.endsWith('to')) { // chopto, sopto, topto, etc
-      const parmFilePath = path.posix.join(toeDir, container, `${nodeName}.parm`);
-      try {
-        const parmFileContent = await this.tracker.readFile(hiddenDirPath, parmFilePath, versionId);
-        nodeInputs.push(...this.parseInputsParmFile(parmFileContent, subtype.substring(0, subtype.length - 2)));
-      } catch (error) {
-        // Do nothing on purpose: parm file not found
-      }
-    }
-
-    // Network file inputs
-    const networkFilePath = path.posix.join(toeDir, container, `${nodeName}.network`);
-    try {
-      const networkFileContent = await this.tracker.readFile(hiddenDirPath, networkFilePath, versionId);
-      nodeInputs.push(...this.parseInputsNetworkFile(networkFileContent));
-    } catch (error) {
-      // Do nothing on purpose: network file was not found
-    }
-
-    return [node, nodeInputs];
-  }
-
   private async getModified(diff: string, container: string, toeDirAbsPath: string): Promise<TDNode[]> {
     const modifiedObjects = diff.split('diff --git');
     const modifiedNodes: TDNode[] = [];
@@ -291,7 +199,7 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       for (const line of obj.split('\n')) {
         const trimmedLine = line.trim();
         if (trimmedLine.startsWith('+') && !trimmedLine.startsWith('+++')) {
-          this.parseProperty(trimmedLine.substring(1).trim(), nodeProperties);
+          this.propertyRuleEngine.applyRules(trimmedLine.substring(1).trim(), nodeProperties);
         }
       }
       if (nodeProperties.size > 0) {
@@ -309,130 +217,98 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     return Promise.resolve(modifiedNodes);
   }
 
-  private parseProperty(line: string, nodeProperties: Map<string, string>): void {
-    for (const rule of this.rules) {
-      if (rule.match(line)) {
-        rule.extract(line, nodeProperties);
-        return;
+  async getVersionState(dir: string, versionId?: string): Promise<TDState> {
+    await validateDirectory(dir);
+    const hiddenDirPath = this.hiddenDirPath(dir);
+
+    const tocFile = await this.findFileWithCheck(hiddenDirPath, 'toc');
+    const toeDir = await this.findFileWithCheck(hiddenDirPath, 'dir');
+    const toeDirAbsPath = path.join(hiddenDirPath, toeDir);
+
+    const containers = await findContainers(toeDirAbsPath);
+    const container = containers[0];
+
+    const tocContent = await this.tracker.readFile(hiddenDirPath, tocFile, versionId);
+    const nodeNames = this.extractNodeNamesFromToc(tocContent, container);
+
+    const state = new TDState();
+
+    for (const nodeName of nodeNames) {
+      try {
+        const [node, nodeInputs] = await this.createNode(hiddenDirPath, toeDir, container, nodeName, versionId);
+        state.nodes.push(node);
+        state.inputs.set(node.name, nodeInputs);
+      } catch (error) {
+        log.error(`Could not parse information for node ${nodeName} due to ${error}.`);
+        return Promise.reject(new TDError(`Error getting state from ${dir}`));
       }
     }
+
+    return state;
   }
 
-  private parseInputsNFile(content: string): string[] {
-    const inputsSection = content.match(/inputs\s*\{([^}]*)\}/);
-    if (!inputsSection) {
-      return [];
+  private async findFileWithCheck(hiddenDirPath: string, extension: string): Promise<string> {
+    const file = findFileByExt(extension, hiddenDirPath);
+    if (!file) {
+      return Promise.reject(new MissingFileError(`Could not find ${extension} file`));
     }
-
-    return inputsSection[1].trim()
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line)
-      .map(line => {
-        const parts = line.split(/\s+/);
-        return parts[1];
-      });
+    return file;
   }
 
-  private parseInputsParmFile(content: string, type: string): string[] {
-    const connectionLine = content.split('\n').find(line => line.trim().startsWith(type.toLowerCase()));
-
-    if (!connectionLine) {
-      return [];
-    }
-
-    const parts = connectionLine.trim().split(/\s+/);
-    return parts.length >= 3 ? [parts[2]] : [];
+  private extractNodeNamesFromToc(tocContent: string, container: string): string[] {
+    const nodeNames: string[] = [];
+    tocContent.split('\n').forEach(line => {
+      const trimmedLine = line.trim();
+      const nodeName = extractNodeNameFromToc(container, trimmedLine);
+      if (nodeName && !nodeNames.includes(nodeName)) {
+        nodeNames.push(nodeName);
+      }
+    });
+    return nodeNames;
   }
 
-  private parseInputsNetworkFile(content: string): string[] {
-    const compInputsSection = content.match(/compinputs\s*\{([^}]*)\}/);
-    if (!compInputsSection) {
-      return [];
-    }
+  private async createNode(hiddenDirPath: string, toeDir: string, container: string, nodeName: string, versionId?: string): Promise<[TDNode, string[]]> {
+    const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.n`);
+    const nFileContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
 
-    return compInputsSection[1].trim()
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line && /^\d/.test(line))
-      .map(line => {
-        const parts = line.split(/\s+/);
-        return parts[1];
-      });
+    const properties = this.extractProperties(nFileContent);
+    const [type, subtype] = getNodeInfoFromNFile(nFileContent)!;
+    const node = new TDNode(nodeName, type, subtype, properties);
+
+    const nodeInputs = await this.extractNodeInputs(nFileContent, hiddenDirPath, toeDir, container, nodeName, versionId);
+    return [node, nodeInputs];
   }
 
-  private async validateDirectory(dir: string): Promise<void> {
+  private extractProperties(nFileContent: string): Map<string, string> {
+    const properties: Map<string, string> = new Map();
+    nFileContent.split('\n').forEach(line => {
+      this.propertyRuleEngine.applyRules(line, properties);
+    });
+    return properties;
+  }
+
+  private async extractNodeInputs(nFileContent: string, hiddenDirPath: string, toeDir: string, container: string, nodeName: string, versionId?: string): Promise<string[]> {
+    const nodeInputs: string[] = [];
+
+    nodeInputs.push(...this.inputRuleEngine.process(nFileContent));
+
+    const parmFilePath = path.posix.join(toeDir, container, `${nodeName}.parm`);
     try {
-      const stats = await fs.promises.stat(dir);
-      if (!stats.isDirectory()) {
-        const msg = `The path ${dir} is not a directory.`;
-        log.error(msg);
-        return Promise.reject(new TypeError(msg));
-      }
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        const msg = `The path ${dir} does not exist.`;
-        log.error(msg);
-        return Promise.reject(new TypeError(msg));
-      }
-      log.error(`Error validating directory ${dir}. Cause:`, error);
-      return Promise.reject(error);
+      nodeInputs.push(...this.inputRuleEngine.process(await this.tracker.readFile(hiddenDirPath, parmFilePath, versionId)));
+    } catch (_) {
+      // Do nothing on purpose: parm file was not found
     }
+
+    const networkFilePath = path.posix.join(toeDir, container, `${nodeName}.network`);
+    try {
+      const networkFileContent = await this.tracker.readFile(hiddenDirPath, networkFilePath, versionId);
+      nodeInputs.push(...this.inputRuleEngine.process(networkFileContent));
+    } catch (_) {
+      // Do nothing on purpose: network file was not found
+    }
+
+    return nodeInputs;
   }
 
-  /*---------------------------- RULES --------------------------*/
 
-  private buildRules(): void {
-    this.rules = [
-      /*----------------------IGNORE RULES-------------------*/
-      new PropertyRule(
-        '[IGNORE] flags',
-        'ignore flags property',
-        (line: string) => line.startsWith('flags'),
-        () => { /* No action for ignored properties */ }
-      ),
-      new PropertyRule(
-        '[IGNORE] view',
-        'ignore view property',
-        (line: string) => line.startsWith('view'),
-        () => { /* No action for ignored properties */ }
-      ),
-      new PropertyRule(
-        '[IGNORE] pageindex',
-        'ignore pageindex property',
-        (line: string) => line.startsWith('pageindex'),
-        () => { /* No action for ignored properties */ }
-      ),
-      /*-----------------------------------------------------*/
-
-      /*---------------------KNOWN PROPERTIES----------------*/
-      new PropertyRule(
-        'tile',
-        'tile property, format: tile <tileX> <tileY> <sizeX> <sizeY>',
-        (line: string) => line.startsWith('tile'),
-        (line: string, nodeProperties: Map<string, string>) => {
-          const parts = line.split(' ').slice(1);
-          if (parts.length === 4) {
-            nodeProperties.set('tileX', parts[0].trim());
-            nodeProperties.set('tileY', parts[1].trim());
-            nodeProperties.set('sizeX', parts[2].trim());
-            nodeProperties.set('sizeY', parts[3].trim());
-          }
-        }
-      ),
-      /*-----------------------------------------------------*/
-
-      /*-----------------------DEFAULT-----------------------*/
-      new PropertyRule(
-        'default',
-        'default property, format: <propertyName> <???> <value>',
-        (line: string) => line.split(' ').length >= 3,
-        (line: string, nodeProperties: Map<string, string>) => {
-          const parts = line.split(' ');
-          nodeProperties.set(parts[0].trim(), parts[2].trim());
-        }
-      )
-      /*-----------------------------------------------------*/
-    ];
-  }
 }

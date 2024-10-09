@@ -1,7 +1,12 @@
 import React, {useState} from "react";
 import {Button} from "../../../components/ui/button";
 import {
-    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
 } from "../../../components/ui/dialog";
 import {Label} from "../../../components/ui/label";
 import {Input} from "../../../components/ui/input";
@@ -15,9 +20,11 @@ interface DetailsComponentProps {
     setVersions: React.Dispatch<React.SetStateAction<Version[]>>;
     currentVersion: Version | null;
     setCurrentVersion: React.Dispatch<React.SetStateAction<Version | null>>;
+    compareVersion: Version | null;
+    setCompareVersion: React.Dispatch<React.SetStateAction<Version | null>>;
     selectedVersion: Version;
     setSelectedVersion: React.Dispatch<React.SetStateAction<Version | null>>
-    dir: string;
+    dir: string | undefined;
 }
 
 const DetailsComponent: React.FC<DetailsComponentProps> = ({
@@ -26,6 +33,8 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                                                                selectedVersion,
                                                                setCurrentVersion,
                                                                setSelectedVersion,
+                                                               setCompareVersion,
+                                                               compareVersion,
                                                                setVersions,
                                                                dir
                                                            }) => {
@@ -66,6 +75,10 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
 
     const handleVersionSelect = (version: Version) => {
         setSelectedVersion(version);
+    };
+
+    const handleCompareVersionSelect = (version: Version) => {
+        setCompareVersion(version);
     };
 
     return (<>
@@ -150,6 +163,16 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
             onVersionSelect={handleVersionSelect}
             currentVersion={currentVersion}
             selectedVersion={selectedVersion}
+        />
+        <hr className="border-white opacity-50 my-4"/>
+        <h2 className="text-white font-semibold mb-2">Compare to:</h2>
+        <History
+            versions={versions}
+            path={dir}
+            orange={true}
+            onVersionSelect={handleCompareVersionSelect}
+            currentVersion={currentVersion}
+            selectedVersion={compareVersion}
         />
         <hr className="border-white opacity-50 my-4"/>
 

@@ -11,9 +11,10 @@ import NodeGraph from "./NodeGraph/NodeGraph";
 interface NodesProps {
     changes: ChangeSet<TDNode>
     current: TDState | undefined
+    compare: TDState | undefined
 }
 
-const Nodes: React.FC<NodesProps> = ({changes, current}) => {
+const Nodes: React.FC<NodesProps> = ({changes, current, compare}) => {
     const [graphViz, setGraphViz] = useState<boolean>(true);
 
     return (<div
@@ -39,7 +40,10 @@ const Nodes: React.FC<NodesProps> = ({changes, current}) => {
                 Operator
             </div>
         </div>
-        {graphViz ? (<NodeGraph current={current}/>) : (<NodeList changes={changes} current={current}/>)}
+        {/* Hidden instead of not rendered to avoid re-rendering the ReactFlow diagram each time */}
+        <NodeGraph hidden={!graphViz} current={current} compare={compare}/>
+        {/* TODO: add diff with custom version to NodeList changes */}
+        {graphViz ? (<></>) : (<NodeList changes={changes} current={current}/>)}
     </div>);
 }
 

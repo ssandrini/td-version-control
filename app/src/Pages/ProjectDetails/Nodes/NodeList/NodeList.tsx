@@ -13,7 +13,6 @@ interface NodeListProps {
 const NodeList: React.FC<NodeListProps> = ({changes, current}) => {
 
     return (<div
-
         className="flex flex-col mt-4 bg-gray-800 py-4 rounded-lg h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700">
         <div className="text-h2 font-bold text-white p-2 w-full bg-gray-600 rounded-lg">Version:</div>
         <div className="flex px-4 flex-row gap-3 py-4 flex-wrap">

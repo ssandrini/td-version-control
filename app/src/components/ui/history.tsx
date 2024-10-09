@@ -4,14 +4,15 @@ import {Version} from '../../../electron/models/Version.ts'
 import {cn} from "../../lib/utils";
 
 interface HistoryProps {
-    path: string;
+    path?: string;
     onVersionSelect: (version: Version) => void;
     currentVersion: Version | null;
     selectedVersion: Version | null;
     versions: Version[];
+    orange?: boolean
 }
 
-const History: React.FC<HistoryProps> = ({versions, onVersionSelect, currentVersion, selectedVersion}) => {
+const History: React.FC<HistoryProps> = ({versions, onVersionSelect, currentVersion, selectedVersion, orange}) => {
     return (<div className="flex w-full flex-row overflow-auto no-scrollbar">
         {versions.length === 0 ? <p>No versions found.</p> : versions.map((version) => (<HistoryItem
             key={version.name}
@@ -19,6 +20,7 @@ const History: React.FC<HistoryProps> = ({versions, onVersionSelect, currentVers
             isCurrent={version.id === currentVersion?.id}
             isSelected={version.id === selectedVersion?.id}
             onClick={() => onVersionSelect(version)}
+            orange={orange}
         />))}
         <div
             className={`flex flex-col flex-grow h-28}`}
@@ -27,8 +29,8 @@ const History: React.FC<HistoryProps> = ({versions, onVersionSelect, currentVers
                 className={cn("h-14 rounded-lg m-2 transition-colors duration-200", "text-gray-100 px-2 py-1")}>
             </div>
             <div className="w-full mt-auto flex flex-row items-center">
-                <div className={`w-6 h-6 bg-blue-500 rounded-full`}/>
-                <div className={"w-full h-1 bg-blue-500"}/>
+                <div className={cn("w-6 h-6",  orange ? 'bg-orange-500' : 'bg-blue-500', "rounded-full")}/>
+                <div className={cn("w-full h-1", orange ? "bg-orange-500" : "bg-blue-500")}/>
             </div>
         </div>
     </div>);

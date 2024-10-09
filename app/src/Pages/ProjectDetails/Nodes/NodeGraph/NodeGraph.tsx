@@ -6,62 +6,162 @@ import {
 import '@xyflow/react/dist/style.css';
 import {TDState} from "../../../../../electron/models/TDState";
 import OperatorNode from "./OperatorNode/OperatorNode";
+import {cn} from "../../../../lib/utils";
+import {nodeState} from "../../../../models/OperatorNodeVariant";
 
 interface NodeGraphProps {
     current: TDState | undefined
+    compare: TDState | undefined
+    hidden?: boolean
 }
 
-const NodeGraph: React.FC<NodeGraphProps> = ({current}) => {
+const compareProperties = (map1?: Map<string, string>, map2?: Map<string, string>): boolean => {
+    if (map1 === map2) {
+        return true;
+    }
+
+    if (!map1 || !map2 || map1.size !== map2.size) {
+        return false;
+    }
+
+    for (const [key, value] of map1) {
+        if (map2.get(key) !== value) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
     const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | undefined>(undefined);
 
-    const createNodesAndEdgesFromState = (currentState: TDState | undefined): { nodes: Node[], edges: Edge[] } => {
+    const createNodesAndEdgesFromState = (currentState?: TDState, compare?: TDState): {
+        nodes: Node[], edges: Edge[]
+    } => {
         if (!currentState) return {nodes: [], edges: []}
 
-        const nodes: Node[] = currentState.nodes.map((currentNode) => ({
-            id: currentNode.name, type: "operator", position: {
-                x: currentNode.properties?.get('tileX') ?? Math.random() * 400,
-                y: -1 * (currentNode.properties?.get('tileY') ?? Math.random() * 400)
-            }, data: {label: currentNode.name, operator: currentNode},
-        }));
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const nodes: Node[] = currentState.nodes.map((currentNode) => {
+            if (!compare) {
+                return {
+                    id: currentNode.name, type: "operator", position: {
+                        x: currentNode.properties?.get('tileX') ?? (Math.random() * 400),
+                        y: -1 * ((currentNode.properties?.get('tileY') ?? (Math.random() * 400)) as number)
+                    }, data: {
+                        label: currentNode.name, operator: currentNode
+                    }
+                };
+            }
 
-        console.log(currentState.inputs);
-        console.log(currentState.nodes);
+            // Node remains equal in both versions.
+            if (compare?.nodes.find((compareNode) => (currentNode.name === compareNode.name && currentNode.type === compareNode.type && currentNode.subtype === compareNode.subtype && compareProperties(currentNode.properties, compareNode.properties)))) {
+                return {
+                    id: currentNode.name, type: "operator", position: {
+                        x: currentNode.properties?.get('tileX') ?? (Math.random() * 400),
+                        y: -1 * ((currentNode.properties?.get('tileY') ?? (Math.random() * 400)) as number)
+                    }, data: {
+                        label: currentNode.name, operator: currentNode
+                    }
+                };
+            }
+
+            // Node has changes in properties.
+            if (compare?.nodes.find((compareNode) => compareNode.name == currentNode.name)) {
+                return {
+                    id: currentNode.name, type: "operator", position: {
+                        x: currentNode.properties?.get('tileX') ?? (Math.random() * 400),
+                        y: -1 * ((currentNode.properties?.get('tileY') ?? (Math.random() * 400)) as number)
+                    }, data: {
+                        label: currentNode.name, operator: currentNode, variant: nodeState.modified
+                    }
+                };
+            }
+
+            // Node is only in currentVersion.
+            return {
+                id: currentNode.name, type: "operator", position: {
+                    x: currentNode.properties?.get('tileX') ?? (Math.random() * 400),
+                    y: -1 * ((currentNode.properties?.get('tileY') ?? (Math.random() * 400)) as number)
+                }, data: {
+                    label: currentNode.name, operator: currentNode, variant: nodeState.new
+                }
+            };
+        });
+
+        compare?.nodes.map((compareNode) => {
+            // Node in compare version is not present in current version.
+            if (!current?.nodes.find((currentNode) => compareNode.name == currentNode.name)) {
+                nodes.push({
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-expect-error
+                    id: compareNode.name, type: "operator", position: {
+                        x: compareNode.properties?.get('tileX') ?? (Math.random() * 400),
+                        y: -1 * ((compareNode.properties?.get('tileY') ?? (Math.random() * 400)) as number)
+                    }, data: {
+                        label: compareNode.name, operator: compareNode, variant: nodeState.deleted
+                    }
+                })
+            }
+        })
 
         const edges: Edge[] = []
         currentState.inputs.forEach((value, key) => {
             value.map((input) => {
-                edges.push({
-                    id: `e${key}-${input}`, source: input, target: key
-                })
+                // Nothing to compare to or edge exists in both versions.
+                if (!compare || compare.inputs.get(key)?.find((compareInput) => input == compareInput)) {
+                    edges.push({
+                        id: `e${key}-${input}`, source: input, target: key
+                    })
+                    return;
+                }
+
+                // Edge does not exist in compare version. New edge.
+                if (!compare.inputs.get(key)?.find((compareInput) => input == compareInput)) {
+                    edges.push({
+                        id: `e${key}-${input}`, source: input, target: key, animated: true, style: { stroke: 'green' },
+                    })
+                    return;
+                }
             })
         })
-        // const edges = currentState.inputs.((row, sourceIndex) =>
-        //     row.map((cell, targetIndex) => {
-        //         if (cell) {
-        //             return {
-        //                 id: `e${sourceIndex + 1}-${targetIndex + 1}`,
-        //                 source: `${sourceIndex + 1}`,
-        //                 target: `${targetIndex + 1}`,
-        //             };
-        //         }
-        //         return null;
-        //     })
-        // ).filter(edge => edge !== null);
+
+        compare?.inputs.forEach((compareValue, key) => {
+            compareValue.map((compareInput) => {
+                // Edge exists only in current version. Edge was deleted.
+                if (!currentState.inputs.get(key)?.find((input) => input == compareInput)) {
+                    edges.push({
+                        id: `e${key}-${compareInput}`, source: compareInput, target: key, animated: true, style: { stroke: 'red' },
+                    })
+                    return;
+                }
+            })
+        })
 
         return {nodes, edges};
     };
 
-    const {nodes: initialNodes, edges: initialEdges} = createNodesAndEdgesFromState(current);
+    const {nodes: initialNodes, edges: initialEdges} = createNodesAndEdgesFromState(current, compare);
 
     useEffect(() => {
         if (current != undefined) {
-            const {nodes: newNodes, edges: newEdges} = createNodesAndEdgesFromState(current);
+            const {nodes: newNodes, edges: newEdges} = createNodesAndEdgesFromState(current, compare);
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             setNodes(newNodes)
+            console.log(newNodes);
             setEdges(newEdges)
             reactFlowInstance?.fitView()
         }
-    }, [current]);
+    }, [current, compare]);
 
+    useEffect(() => {
+        reactFlowInstance?.fitView()
+    }, [reactFlowInstance]);
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
@@ -69,7 +169,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current}) => {
 
     const onConnect = useCallback((params: any) => setEdges((eds) => addEdge(params, eds)), [setEdges],);
 
-    return (<div className="w-full h-full rounded-lg my-5">
+    return (<div className={cn(hidden ? "hidden" : "", "w-full h-full rounded-lg my-5")}>
         <ReactFlow
             className="text-black"
             nodes={nodes}

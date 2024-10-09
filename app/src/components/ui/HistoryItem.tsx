@@ -7,9 +7,10 @@ interface HistoryItemProps {
     isCurrent: boolean;
     onClick: () => void;
     isSelected: boolean;
+    orange?: boolean
 }
 
-const HistoryItem: React.FC<HistoryItemProps> = ({version, isCurrent, onClick, isSelected}) => {
+const HistoryItem: React.FC<HistoryItemProps> = ({version, isCurrent, onClick, isSelected, orange}) => {
     return (<div
             className={`flex flex-col h-28 min-w-}`}
             onClick={onClick}
@@ -25,8 +26,8 @@ const HistoryItem: React.FC<HistoryItemProps> = ({version, isCurrent, onClick, i
                 })}
             </div>
             <div className="w-full mt-auto flex flex-row items-center">
-                <div className={`w-6 h-6 ${isCurrent ? 'bg-gray-200' : 'bg-blue-500'} rounded-full`}/>
-                <div className={"w-full h-1 bg-blue-500"}/>
+                <div className={cn("w-6 h-6",  isCurrent ? (orange ? 'bg-orange-400' : 'bg-gray-200') : (orange ? 'bg-orange-500' : 'bg-blue-500'), "rounded-full")}/>
+                <div className={cn("w-full h-1", orange ? "bg-orange-500" : "bg-blue-500")}/>
             </div>
         </div>);
 };

@@ -24,13 +24,6 @@ const Projects: React.FC = () => {
         });
     }, []);
 
-    const handleRowClick = (projectName: string) => {
-        const project = projects.find(p => p.name === projectName);
-        if (project) {
-            navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: project.path, projectName: projectName } });
-        }
-    };
-
     const handleFilePick = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
@@ -90,12 +83,12 @@ const Projects: React.FC = () => {
         setDeleteDialogOpen(true);
     };
 
-    const handleCellClick = (event: MouseEvent, projectName: string) => {
+    const handleCellClick = (event: MouseEvent, project: Project) => {
         // Prevents the row click if the click is within a button
         if ((event.target as HTMLElement).closest('button')) {
             return;
         }
-        handleRowClick(projectName);
+        navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { project: project } });
     };
 
     return (
@@ -139,7 +132,7 @@ const Projects: React.FC = () => {
                                     {projects.map((project, index) => (
                                         <tr
                                             key={index}
-                                            onClick={(event) => handleCellClick(event, project.name)}
+                                            onClick={(event) => handleCellClick(event, project)}
                                             className="cursor-pointer hover:bg-gray-700"
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">{project.name}</td>

@@ -31,6 +31,7 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   readonly inputRuleEngine: InputRuleEngine;
   private versionNameMax = 256;
   private descriptionMax = 1024;
+  private stateFile = 'state.json';
 
   constructor(processor: Processor, tracker: Tracker, hiddenDir: string) {
     this.processor = processor;
@@ -76,7 +77,12 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     }
     log.info(`Created ${output} at ${hiddenDirPath}`);
     try {
-      return await this.tracker.init(hiddenDirPath);
+      await this.tracker.init(hiddenDirPath);
+      return this.createVersion(
+        dir,
+        'Initial Version',
+        'This is the initial version of your project'
+      );
     } catch (error) {
       log.error(
         `Error initializing tracker at ${hiddenDirPath}. Cause:`,
@@ -116,7 +122,10 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     await validateDirectory(dir);
     const hiddenDirPath = this.hiddenDirPath(dir);
     try {
+      log.debug("Preprocessing");
       await this.processor.preprocess(dir, this.hiddenDir);
+      log.debug("Saving version");
+      await this.saveVersionState(dir);
       const createdVersion = await this.tracker.createVersion(
         hiddenDirPath,
         versionName,
@@ -219,6 +228,25 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   }
 
   async getVersionState(dir: string, versionId?: string): Promise<TDState> {
+    const hiddenDir = this.hiddenDirPath(dir);
+    if (versionId) {
+      const content = await this.tracker.readFile(this.hiddenDirPath(dir), this.stateFile, versionId);
+      return TDState.loadFromFile(content);
+    }
+
+    // Currently on working directory
+    this.processor.preprocess(dir, hiddenDir);
+    return this.createVersionState(dir, versionId);
+  }
+
+  private async saveVersionState(dir: string): Promise<TDState> {
+    const state = await this.createVersionState(dir);
+    log.debug("State version: ", state.toString());
+    await state.dumpToFile(path.join(this.hiddenDirPath(dir), this.stateFile));
+    return state;
+  }
+
+  private async createVersionState(dir: string, versionId?: string): Promise<TDState> {
     await validateDirectory(dir);
     const hiddenDirPath = this.hiddenDirPath(dir);
 

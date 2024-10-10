@@ -245,8 +245,6 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       }
     }
 
-    log.debug("State: ", state);
-
     return state;
   }
 

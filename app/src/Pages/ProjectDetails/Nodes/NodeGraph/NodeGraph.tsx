@@ -110,17 +110,17 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
         currentState.inputs.forEach((value, key) => {
             value.map((input) => {
                 // Nothing to compare to or edge exists in both versions.
-                if (!compare || compare.inputs.get(key)?.find((compareInput) => input == compareInput)) {
+                if (!compare || compare.inputs.get(key)?.find((compareInput) => input.destination == compareInput.destination)) {
                     edges.push({
-                        id: `e${key}-${input}`, source: input.destination, target: key, style: { stroke: input.parm? 'blue' : 'yellow'}
+                        id: `e${key}-${input.destination}`, source: input.destination, target: key, style: { stroke: input.parm? 'blue' : 'yellow'}
                     })
                     return;
                 }
 
                 // Edge does not exist in compare version. New edge.
-                if (!compare.inputs.get(key)?.find((compareInput) => input == compareInput)) {
+                if (!compare.inputs.get(key)?.find((compareInput) => input.destination == compareInput.destination)) {
                     edges.push({
-                        id: `e${key}-${input}`, source: input.destination, target: key, animated: true, style: { stroke: 'green' },
+                        id: `e${key}-${input.destination}`, source: input.destination, target: key, animated: true, style: { stroke: 'green' },
                     })
                     return;
                 }
@@ -130,9 +130,9 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
         compare?.inputs.forEach((compareValue, key) => {
             compareValue.map((compareInput) => {
                 // Edge exists only in current version. Edge was deleted.
-                if (!currentState.inputs.get(key)?.find((input) => input == compareInput)) {
+                if (!currentState.inputs.get(key)?.find((input) => input.destination == compareInput.destination)) {
                     edges.push({
-                        id: `e${key}-${compareInput}`, source: compareInput.destination, target: key, animated: true, style: { stroke: 'red' },
+                        id: `e${key}-${compareInput.destination}`, source: compareInput.destination, target: key, animated: true, style: { stroke: 'red' },
                     })
                     return;
                 }

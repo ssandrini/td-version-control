@@ -1,3 +1,4 @@
+import { TDEdge } from "../../models/TDEdge";
 import { InputRule } from "./interfaces/InputRule";
 import { NetworkFileRule } from "./NetworkFileRule";
 import { NFileRule } from "./NFileRule";
@@ -21,8 +22,8 @@ export class InputRuleEngine {
      * @param content The file content to process.
      * @returns An array of inputs extracted from the content.
      */
-    public process(content: string): string[] {
-        const extractedInputs: string[] = [];
+    public process(content: string): TDEdge[] {
+        const extractedInputs: TDEdge[] = [];
 
         for (const rule of this.rules) {
             const inputs = rule.extract(content);

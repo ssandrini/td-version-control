@@ -1,8 +1,9 @@
+import { TDEdge } from "./TDEdge";
 import { TDNode } from "./TDNode";
 
 export class TDState {
     public nodes: TDNode[] = [];
-    public inputs: Map<string, string[]> = new Map();
+    public inputs: Map<string, TDEdge[]> = new Map();
 
     constructor() {}
 
@@ -26,7 +27,7 @@ export class TDState {
         const nodesString = this.nodes.map(node => node.toString()).join(', ');
 
         const inputsString = Array.from(this.inputs.keys())
-            .map(element => `${element}: [${this.inputs.get(element)?.join(', ')}]`)
+            .map(element => `${element}: [${this.inputs.get(element)?.map(e => `${e.destination} (${e.parm})`)?.join(', ')}]`)
             .join('; ');
 
         return `TDState { nodes: [${nodesString}], inputs: {${inputsString}} }`;

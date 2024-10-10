@@ -21,6 +21,7 @@ import { TDError } from '../errors/TDError';
 import { PropertyRuleEngine } from '../rules/properties/PropertyRuleEngine';
 import hidefile from "hidefile"
 import {InputRuleEngine} from "../rules/inputs/InputRuleEngine";
+import { TDEdge } from '../models/TDEdge';
 
 export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   readonly processor: Processor;
@@ -244,6 +245,8 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       }
     }
 
+    log.debug("State: ", state);
+
     return state;
   }
 
@@ -267,7 +270,7 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     return nodeNames;
   }
 
-  private async createNode(hiddenDirPath: string, toeDir: string, container: string, nodeName: string, versionId?: string): Promise<[TDNode, string[]]> {
+  private async createNode(hiddenDirPath: string, toeDir: string, container: string, nodeName: string, versionId?: string): Promise<[TDNode, TDEdge[]]> {
     const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.n`);
     const nFileContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
 
@@ -287,8 +290,8 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     return properties;
   }
 
-  private async extractNodeInputs(nFileContent: string, hiddenDirPath: string, toeDir: string, container: string, nodeName: string, versionId?: string): Promise<string[]> {
-    const nodeInputs: string[] = [];
+  private async extractNodeInputs(nFileContent: string, hiddenDirPath: string, toeDir: string, container: string, nodeName: string, versionId?: string): Promise<TDEdge[]> {
+    const nodeInputs: TDEdge[] = [];
 
     nodeInputs.push(...this.inputRuleEngine.process(nFileContent));
 

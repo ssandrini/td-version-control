@@ -112,7 +112,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
                 // Nothing to compare to or edge exists in both versions.
                 if (!compare || compare.inputs.get(key)?.find((compareInput) => input == compareInput)) {
                     edges.push({
-                        id: `e${key}-${input}`, source: input, target: key
+                        id: `e${key}-${input}`, source: input.destination, target: key, style: { stroke: input.parm? 'blue' : 'yellow'}
                     })
                     return;
                 }
@@ -120,7 +120,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
                 // Edge does not exist in compare version. New edge.
                 if (!compare.inputs.get(key)?.find((compareInput) => input == compareInput)) {
                     edges.push({
-                        id: `e${key}-${input}`, source: input, target: key, animated: true, style: { stroke: 'green' },
+                        id: `e${key}-${input}`, source: input.destination, target: key, animated: true, style: { stroke: 'green' },
                     })
                     return;
                 }
@@ -132,7 +132,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
                 // Edge exists only in current version. Edge was deleted.
                 if (!currentState.inputs.get(key)?.find((input) => input == compareInput)) {
                     edges.push({
-                        id: `e${key}-${compareInput}`, source: compareInput, target: key, animated: true, style: { stroke: 'red' },
+                        id: `e${key}-${compareInput}`, source: compareInput.destination, target: key, animated: true, style: { stroke: 'red' },
                     })
                     return;
                 }

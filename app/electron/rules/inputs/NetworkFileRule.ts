@@ -1,3 +1,4 @@
+import { TDEdge } from "../../models/TDEdge";
 import { InputRule } from "./interfaces/InputRule";
 
 export class NetworkFileRule implements InputRule {
@@ -10,7 +11,7 @@ export class NetworkFileRule implements InputRule {
         return NetworkFileRule.COMPINPUTS_REGEX.test(content);
     }
 
-    public extract(content: string): string[] {
+    public extract(content: string): TDEdge[] {
         const compInputsSection = content.match(NetworkFileRule.COMPINPUTS_REGEX);
         if (!compInputsSection) {
             return [];
@@ -22,7 +23,7 @@ export class NetworkFileRule implements InputRule {
             .filter(line => line && /^\d/.test(line))
             .map(line => {
                 const parts = line.split(/\s+/);
-                return parts[1];
+                return new TDEdge(parts[1], false);
             });
     }
 

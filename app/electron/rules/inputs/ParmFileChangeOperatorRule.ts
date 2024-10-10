@@ -1,3 +1,4 @@
+import { TDEdge } from "../../models/TDEdge";
 import { InputRule } from "./interfaces/InputRule";
 
 export class ParmFileChangeOperatorRule implements InputRule {
@@ -14,14 +15,14 @@ export class ParmFileChangeOperatorRule implements InputRule {
         return ParmFileChangeOperatorRule.INPUT_LINE_REGEX.test(content);
     }
 
-    public extract(content: string): string[] {
+    public extract(content: string): TDEdge[] {
         const inputLines = content.split('\n');
-        const inputs: string[] = [];
+        const inputs: TDEdge[] = [];
 
         for (const line of inputLines) {
             const match = ParmFileChangeOperatorRule.INPUT_LINE_REGEX.exec(line);
-            if (match && !inputs.includes(match[2])) {
-                inputs.push(match[2]);
+            if (match) { // TODO: check duplicated edges
+                inputs.push(new TDEdge(match[2], true));
             }
         }
 

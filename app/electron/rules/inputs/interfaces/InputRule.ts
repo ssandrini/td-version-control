@@ -1,3 +1,5 @@
+import { TDEdge } from "../../../models/TDEdge";
+
 /**
  * Represents a rule for extracting input nodes from a TouchDesigner file.
  */
@@ -17,5 +19,5 @@ export interface InputRule {
      * @param content - The content of the .n file containing the inputs section.
      * @returns An array of strings representing the names of the input nodes.
      */
-    extract: (content: string) => string[];
+    extract: (content: string) => TDEdge[];
 }

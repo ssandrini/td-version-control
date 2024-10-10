@@ -20,7 +20,8 @@ import { TDState } from '../models/TDState';
 import { TDError } from '../errors/TDError';
 import { PropertyRuleEngine } from '../rules/properties/PropertyRuleEngine';
 import hidefile from "hidefile"
-import {InputRuleEngine} from "../rules/inputs/InputRuleEngine";
+import { InputRuleEngine } from "../rules/inputs/InputRuleEngine";
+import { TDEdge } from '../models/TDEdge';
 
 export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   readonly processor: Processor;
@@ -247,6 +248,46 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     return state;
   }
 
+  private async createNode(hiddenDirPath: string, toeDir: string, container: string, nodeName: string, versionId?: string): Promise<[TDNode, TDEdge[]]> {
+    const files = [
+      { ext: 'n', required: true },
+      { ext: 'parm', required: false },
+      { ext: 'network', required: false },
+    ];
+
+    const filePaths = files.map(file => path.posix.join(toeDir, container, `${nodeName}.${file.ext}`));
+
+    const fileContents = await Promise.all(filePaths.map(async (filePath, index) => {
+      try {
+        return await this.tracker.readFile(hiddenDirPath, filePath, versionId);
+      } catch (error) {
+        if (files[index].required) {
+          return Promise.reject(new TDError(`Required file missing: ${files[index].ext} for node ${nodeName}`));
+        }
+        return '';
+      }
+    }));
+
+    const properties = new Map<string, string>();
+    fileContents.forEach(content => this.processProperties(content, properties));
+
+    const [type, subtype] = getNodeInfoFromNFile(fileContents[0])!;
+    const node = new TDNode(nodeName, type, subtype, properties);
+
+    const nodeInputs: TDEdge[] = [];
+    fileContents.forEach(content => nodeInputs.push(...this.inputRuleEngine.process(content)));
+
+    return [node, nodeInputs];
+  }
+
+  private processProperties(content: string, properties: Map<string, string>) {
+    content.split('\n').forEach(line => {
+      this.propertyRuleEngine.applyRules(line, properties);
+    });
+  }
+
+
+
   private async findFileWithCheck(hiddenDirPath: string, extension: string): Promise<string> {
     const file = findFileByExt(extension, hiddenDirPath);
     if (!file) {
@@ -266,49 +307,5 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     });
     return nodeNames;
   }
-
-  private async createNode(hiddenDirPath: string, toeDir: string, container: string, nodeName: string, versionId?: string): Promise<[TDNode, string[]]> {
-    const nodeFilePath = path.posix.join(toeDir, container, `${nodeName}.n`);
-    const nFileContent = await this.tracker.readFile(hiddenDirPath, nodeFilePath, versionId);
-
-    const properties = this.extractProperties(nFileContent);
-    const [type, subtype] = getNodeInfoFromNFile(nFileContent)!;
-    const node = new TDNode(nodeName, type, subtype, properties);
-
-    const nodeInputs = await this.extractNodeInputs(nFileContent, hiddenDirPath, toeDir, container, nodeName, versionId);
-    return [node, nodeInputs];
-  }
-
-  private extractProperties(nFileContent: string): Map<string, string> {
-    const properties: Map<string, string> = new Map();
-    nFileContent.split('\n').forEach(line => {
-      this.propertyRuleEngine.applyRules(line, properties);
-    });
-    return properties;
-  }
-
-  private async extractNodeInputs(nFileContent: string, hiddenDirPath: string, toeDir: string, container: string, nodeName: string, versionId?: string): Promise<string[]> {
-    const nodeInputs: string[] = [];
-
-    nodeInputs.push(...this.inputRuleEngine.process(nFileContent));
-
-    const parmFilePath = path.posix.join(toeDir, container, `${nodeName}.parm`);
-    try {
-      nodeInputs.push(...this.inputRuleEngine.process(await this.tracker.readFile(hiddenDirPath, parmFilePath, versionId)));
-    } catch (_) {
-      // Do nothing on purpose: parm file was not found
-    }
-
-    const networkFilePath = path.posix.join(toeDir, container, `${nodeName}.network`);
-    try {
-      const networkFileContent = await this.tracker.readFile(hiddenDirPath, networkFilePath, versionId);
-      nodeInputs.push(...this.inputRuleEngine.process(networkFileContent));
-    } catch (_) {
-      // Do nothing on purpose: network file was not found
-    }
-
-    return nodeInputs;
-  }
-
 
 }

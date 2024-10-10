@@ -1,4 +1,5 @@
-import {InputRule} from "./interfaces/InputRule";
+import { TDEdge } from "../../models/TDEdge";
+import { InputRule } from "./interfaces/InputRule";
 
 export class NFileRule implements InputRule {
     public name = 'NFileRule';
@@ -10,7 +11,7 @@ export class NFileRule implements InputRule {
         return NFileRule.INPUTS_REGEX.test(content);
     }
 
-    public extract(content: string): string[] {
+    public extract(content: string): TDEdge[] {
         const inputsSection = content.match(NFileRule.INPUTS_REGEX);
         if (!inputsSection) {
             return [];
@@ -20,9 +21,8 @@ export class NFileRule implements InputRule {
             .split('\n')
             .map(line => line.trim())
             .filter(line => line)
-            .map(line => {
-                const parts = line.split(/\s+/);
-                return parts[1];
-            });
+            .map(line => line.split(/\s+/))
+            .filter(parts => parts.length > 1 && parts[1])
+            .map(parts => new TDEdge(parts[1], false));
     }
 }

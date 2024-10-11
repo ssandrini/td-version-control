@@ -3,6 +3,7 @@ import log from 'electron-log/main';
 import fs from 'fs-extra';
 import Template from '../models/Template';
 import path from 'node:path'
+import {TDState} from "../models/TDState";
 
 /**
  * Searches for the first file in the current directory with the specified extension.
@@ -234,4 +235,13 @@ export const validateDirectory = async (dir: string): Promise<void> => {
         log.error(`Error validating directory ${dir}. Cause:`, error);
         return Promise.reject(error);
     }
+}
+
+export const dumpTDStateToFile = async (filePath: string, tdState: TDState): Promise<void> => {
+    const data = JSON.stringify(tdState.serialize(), null, 2);
+    await fs.writeFile(filePath, data, 'utf8');
+}
+
+export const dumpDiffToFile = async (filePath: string, content: string): Promise<void> => {
+    await fs.writeFile(filePath, content, 'utf8');
 }

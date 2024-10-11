@@ -5,15 +5,13 @@ import fs from 'fs-extra';
 import { Processor } from '../processors/interfaces/Processor';
 import path from 'node:path';
 import { Tracker } from '../trackers/interfaces/Tracker';
-import { ChangeSet } from '../models/ChangeSet';
 import { TDNode } from '../models/TDNode';
 import {
   extractNodeNameFromToc,
   findContainers,
   findFileByExt,
-  getNodeInfo,
-  extractNodeNameFromDiffLine,
-  getNodeInfoFromNFile, validateDirectory
+  getNodeInfoFromNFile, validateDirectory,
+  dumpTDStateToFile, dumpDiffToFile,
 } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 import { TDState } from '../models/TDState';
@@ -23,7 +21,7 @@ import hidefile from "hidefile"
 import { InputRuleEngine } from "../rules/inputs/InputRuleEngine";
 import { TDEdge } from '../models/TDEdge';
 
-export class TDProjectManager implements ProjectManager<TDNode, TDState> {
+export class TDProjectManager implements ProjectManager<TDState> {
   readonly processor: Processor;
   readonly hiddenDir: string;
   readonly tracker: Tracker;
@@ -32,6 +30,8 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
   private versionNameMax = 256;
   private descriptionMax = 1024;
   private stateFile = 'state.json';
+  private workingStateFile = 'workingState.json';
+  private diffFile = 'diff';
 
   constructor(processor: Processor, tracker: Tracker, hiddenDir: string) {
     this.processor = processor;
@@ -69,13 +69,6 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       return Promise.reject(error);
     }
 
-    let output;
-    try {
-      output = await this.processor.preprocess(dir, hiddenDirPath);
-    } catch (error) {
-      return Promise.reject(error);
-    }
-    log.info(`Created ${output} at ${hiddenDirPath}`);
     try {
       await this.tracker.init(hiddenDirPath);
       return this.createVersion(
@@ -122,10 +115,8 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     await validateDirectory(dir);
     const hiddenDirPath = this.hiddenDirPath(dir);
     try {
-      log.debug("Preprocessing");
       await this.processor.preprocess(dir, this.hiddenDir);
-      log.debug("Saving version");
-      await this.saveVersionState(dir);
+      await this.saveVersionState(dir, this.stateFile);
       const createdVersion = await this.tracker.createVersion(
         hiddenDirPath,
         versionName,
@@ -143,90 +134,6 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     return this.tracker.goToVersion(this.hiddenDirPath(dir), versionId);
   }
 
-  async compare(dir: string, versionId?: string): Promise<ChangeSet<TDNode>> {
-    log.debug("Starting compare...");
-    await validateDirectory(dir);
-
-    if (!versionId) {
-      await this.processor.preprocess(dir, this.hiddenDir);
-    }
-
-    const managementDir = path.join(dir, this.hiddenDir);
-    const tocFile = await this.findFileWithCheck(managementDir, 'toc');
-    const toeDir = await this.findFileWithCheck(managementDir, 'dir');
-
-    const toeDirAbsPath = path.join(managementDir, toeDir);
-    const containers = await findContainers(toeDirAbsPath);
-
-    const tocDiff = (await this.tracker.compare(managementDir, versionId, tocFile)).split('\n');
-
-    const added = await Promise.all(
-      tocDiff
-        .filter((line) => line.startsWith('+') && !line.startsWith('+++'))
-        .map(async (line) => {
-          const lineContent = line.slice(1).trim();
-          const nodeName = extractNodeNameFromToc(containers[0], lineContent);
-          const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
-          if (result) {
-            const [nodeType, nodeSubtype] = result;
-            return new TDNode(nodeName, nodeType, nodeSubtype);
-          }
-          return new TDNode(nodeName, undefined, undefined);
-        })
-    );
-
-    const deleted = await Promise.all(
-      tocDiff
-        .filter((line) => line.startsWith('-') && !line.startsWith('---'))
-        .map(async (line) => {
-          const lineContent = line.slice(1).trim();
-          const nodeName = extractNodeNameFromToc(containers[0], lineContent);
-          const result = await getNodeInfo(toeDirAbsPath, containers[0], nodeName);
-          if (result) {
-            const [nodeType, nodeSubtype] = result;
-            return new TDNode(nodeName, nodeType, nodeSubtype);
-          }
-          return new TDNode(nodeName, undefined, undefined);
-        })
-    );
-
-    const modifiedDiff = (await this.tracker.compare(managementDir, versionId, undefined, true));
-    const modified = await this.getModified(modifiedDiff, containers[0], toeDirAbsPath);
-
-    return ChangeSet.fromValues(added, modified, deleted);
-  }
-
-  private async getModified(diff: string, container: string, toeDirAbsPath: string): Promise<TDNode[]> {
-    const modifiedObjects = diff.split('diff --git');
-    const modifiedNodes: TDNode[] = [];
-    for (const obj of modifiedObjects) {
-      const nodeName = extractNodeNameFromDiffLine(container, 'diff --git' + obj.split('\n')[0].trim())
-      if (nodeName == "") {
-        continue;
-      }
-
-      const nodeProperties = new Map<string, string>();
-      for (const line of obj.split('\n')) {
-        const trimmedLine = line.trim();
-        if (trimmedLine.startsWith('+') && !trimmedLine.startsWith('+++')) {
-          this.propertyRuleEngine.applyRules(trimmedLine.substring(1).trim(), nodeProperties);
-        }
-      }
-      if (nodeProperties.size > 0) {
-        const result = await getNodeInfo(toeDirAbsPath, container, nodeName);
-        let tdNode;
-        if (result) {
-          const [nodeType, nodeSubtype] = result;
-          tdNode = new TDNode(nodeName, nodeType, nodeSubtype, nodeProperties);
-        } else {
-          tdNode = new TDNode(nodeName, undefined, undefined, nodeProperties); // no debería pasar
-        }
-        modifiedNodes.push(tdNode);
-      }
-    }
-    return Promise.resolve(modifiedNodes);
-  }
-
   async getVersionState(dir: string, versionId?: string): Promise<TDState> {
     const hiddenDir = this.hiddenDirPath(dir);
     if (versionId) {
@@ -235,14 +142,29 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
     }
 
     // Currently on working directory
-    this.processor.preprocess(dir, hiddenDir);
-    return this.createVersionState(dir, versionId);
+    await this.processor.preprocess(dir, hiddenDir);
+    let workingState, lastDiff : string;
+    try {
+      workingState = await this.tracker.readFile(this.hiddenDirPath(dir), this.workingStateFile, undefined);
+      lastDiff = await this.tracker.readFile(this.hiddenDirPath(dir), this.diffFile);
+    } catch (e) {
+      await dumpDiffToFile(path.join(this.hiddenDirPath(dir), this.diffFile), await this.tracker.compare(this.hiddenDirPath(dir), undefined, undefined, false));
+      return await this.saveVersionState(dir, this.workingStateFile);
+    }
+
+    const diff = (await this.tracker.compare(this.hiddenDirPath(dir), undefined, undefined, false));
+    if (diff != lastDiff) { // TO DO: hay que comparar más inteligentemente estos diffs, porque ahora si cambia view te dan distinto
+                            // y eso no debería generar un nuevo state.
+      await dumpDiffToFile(path.join(this.hiddenDirPath(dir), this.diffFile), diff);
+      return await this.saveVersionState(dir, this.workingStateFile);
+    }
+
+    return TDState.loadFromFile(workingState);
   }
 
-  private async saveVersionState(dir: string): Promise<TDState> {
+  private async saveVersionState(dir: string, file: string): Promise<TDState> {
     const state = await this.createVersionState(dir);
-    log.debug("State version: ", state.toString());
-    await state.dumpToFile(path.join(this.hiddenDirPath(dir), this.stateFile));
+    await dumpTDStateToFile(path.join(this.hiddenDirPath(dir), file), state);
     return state;
   }
 
@@ -313,8 +235,6 @@ export class TDProjectManager implements ProjectManager<TDNode, TDState> {
       this.propertyRuleEngine.applyRules(line, properties);
     });
   }
-
-
 
   private async findFileWithCheck(hiddenDirPath: string, extension: string): Promise<string> {
     const file = findFileByExt(extension, hiddenDirPath);

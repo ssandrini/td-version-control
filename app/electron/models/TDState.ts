@@ -1,6 +1,5 @@
 import { TDEdge } from "./TDEdge";
 import { TDNode } from "./TDNode";
-import fs from 'fs-extra';
 
 export class TDState {
     public nodes: TDNode[] = [];
@@ -11,15 +10,23 @@ export class TDState {
     public serialize(): object {
         return {
             nodes: this.nodes.map(node => node.serialize()),
-            inputs: this.inputs
+            inputs: Array.from(this.inputs.entries()).reduce((obj, [key, value]) => {
+                obj[key] = value.map(edge => edge.serialize());
+                return obj;
+            }, {})
         };
     }
 
     public static deserialize(data: any): TDState {
         const state = new TDState();
-        
+
         state.nodes = data.nodes.map((nodeData: any) => TDNode.deserialize(nodeData));
-        state.inputs = data.inputs;
+
+        const inputs = new Map<string, TDEdge[]>();
+        for (const [key, value] of Object.entries(data.inputs)) {
+            inputs.set(key, value.map((edgeData: any) => TDEdge.deserialize(edgeData)));
+        }
+        state.inputs = inputs;
 
         return state;
     }
@@ -32,11 +39,6 @@ export class TDState {
             .join('; ');
 
         return `TDState { nodes: [${nodesString}], inputs: {${inputsString}} }`;
-    }
-    
-    public async dumpToFile(filePath: string): Promise<void> {
-        const data = JSON.stringify(this.serialize(), null, 2);
-        await fs.writeFile(filePath, data, 'utf8');
     }
 
     public static async loadFromFile(content: string): Promise<TDState> {

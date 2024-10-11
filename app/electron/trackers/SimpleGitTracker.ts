@@ -13,6 +13,7 @@ export class SimpleGitTracker implements Tracker {
     readonly email: string;
     readonly separator = '//';
     readonly EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+    readonly ignoredFiles = ['diff', 'workingState.json'];
 
     constructor(username: string, email: string) {
         this.git = simpleGit();
@@ -25,6 +26,8 @@ export class SimpleGitTracker implements Tracker {
         await this.git.init();
         await this.git.raw(['config', '--local', 'user.name', this.username]);
         await this.git.raw(['config', '--local', 'user.email', this.email]);
+        const gitignorePath = path.join(dir, '.gitignore');
+        await fs.writeFile(gitignorePath, this.ignoredFiles.join('\n'), 'utf-8');
     }
 
     async currentVersion(dir: string): Promise<Version> {
@@ -89,7 +92,7 @@ export class SimpleGitTracker implements Tracker {
     async compare(dir: string, versionId?: string, file?: string, modified = false): Promise<string> {
         await this.git.cwd(dir);
 
-        const diffParams = ['--unified=0'];
+        const diffParams = ['--unified=0', ':!*.dir/.*', ':!*.dir/local/*'];
         if (modified) {
             diffParams.push('--diff-filter=M');
         }

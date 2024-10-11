@@ -25,11 +25,12 @@ const OperatorNode: React.FC<OperatorNodeProps> = ({data}) => {
     }
 
     return (<>
-        <div className="nodrag" style={{width: width, height: height}}>
+        <div className="nodrag cursor-pointer" style={{width: width, height: height}}>
             <OperatorCard
                 node={data.operator}
                 Icon={Icon}
                 iconColor={iconColor}
+                compare={data.compare}
             />
         </div>
         <Handle type="target" position={Position.Left}/>

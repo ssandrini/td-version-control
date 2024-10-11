@@ -74,7 +74,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
                         x: currentNode.properties?.get('tileX') ?? (Math.random() * 400),
                         y: -1 * ((currentNode.properties?.get('tileY') ?? (Math.random() * 400)) as number)
                     }, data: {
-                        label: currentNode.name, operator: currentNode, variant: nodeState.modified
+                        label: currentNode.name, operator: currentNode, variant: nodeState.modified, compare: compare?.nodes.find((compareNode) => compareNode.name == currentNode.name)
                     }
                 };
             }
@@ -112,7 +112,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
                 // Nothing to compare to or edge exists in both versions.
                 if (!compare || compare.inputs.get(key)?.find((compareInput) => input.destination == compareInput.destination)) {
                     edges.push({
-                        id: `e${key}-${input.destination}`, source: input.destination, target: key, style: { stroke: input.parm? 'blue' : 'yellow'}
+                        id: `e${key}-${input.destination}`, source: input.destination, target: key, type: (input.parm ? "straight" : undefined)
                     })
                     return;
                 }

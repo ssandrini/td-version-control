@@ -139,12 +139,6 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
 
   ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
-  ipcMain.handle(API_METHODS.COMPARE, async (_, dir: string, versionId: string) => {
-    log.debug('Compare main handler');
-    const changeSet = await projectManager.compare(dir, versionId);
-    return changeSet.serialize();
-  });
-
   ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
     watcherMgr.registerWatcher(path, () => {
       // Registrar los callbacks que necesitemos acá

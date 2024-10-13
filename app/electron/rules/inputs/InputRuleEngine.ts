@@ -30,6 +30,8 @@ export class InputRuleEngine {
             extractedInputs.push(...inputs);
         }
 
-        return extractedInputs;
+        return extractedInputs.filter((edge, index, self) =>
+            index === self.findIndex(e => e.destination === edge.destination)
+        );
     }
 }

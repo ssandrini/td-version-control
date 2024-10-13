@@ -1,7 +1,7 @@
 import { Version } from '../../models/Version';
 
 export interface Tracker {
-    init(dir: string): Promise<Version>;
+    init(dir: string): Promise<void>;
     currentVersion(dir: string): Promise<Version>;
     listVersions(dir: string): Promise<Version[]>;
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;

@@ -30,18 +30,18 @@ export class TDNode implements HasKey {
 
         return result;
     }
-    
+
     serialize(): object {
         return {
             name: this.name,
             type: this.type,
             subtype: this.subtype,
-            properties: this.properties
+            properties: Object.fromEntries(this.properties || new Map())
         };
     }
 
     static deserialize(data: any): TDNode {
-        const properties = new Map(data.properties);
+        const properties = new Map(Object.entries(data.properties));
         return new TDNode(data.name, data.type, data.subtype, properties);
     }
 }

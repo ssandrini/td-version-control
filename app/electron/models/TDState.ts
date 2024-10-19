@@ -10,15 +10,23 @@ export class TDState {
     public serialize(): object {
         return {
             nodes: this.nodes.map(node => node.serialize()),
-            inputs: this.inputs
+            inputs: Array.from(this.inputs.entries()).reduce((obj, [key, value]) => {
+                obj[key] = value.map(edge => edge.serialize());
+                return obj;
+            }, {})
         };
     }
 
     public static deserialize(data: any): TDState {
         const state = new TDState();
-        
+
         state.nodes = data.nodes.map((nodeData: any) => TDNode.deserialize(nodeData));
-        state.inputs = data.inputs;
+
+        const inputs = new Map<string, TDEdge[]>();
+        for (const [key, value] of Object.entries(data.inputs)) {
+            inputs.set(key, value.map((edgeData: any) => TDEdge.deserialize(edgeData)));
+        }
+        state.inputs = inputs;
 
         return state;
     }
@@ -31,5 +39,10 @@ export class TDState {
             .join('; ');
 
         return `TDState { nodes: [${nodesString}], inputs: {${inputsString}} }`;
+    }
+
+    public static async loadFromFile(content: string): Promise<TDState> {
+        const parsedData = JSON.parse(content);
+        return TDState.deserialize(parsedData);
     }
 }

@@ -4,6 +4,8 @@ import { Version } from '../models/Version';
 import { TrackerError } from '../errors/TrackerError';
 import log from 'electron-log/main';
 import { Author } from '../models/Author';
+import fs from 'fs-extra';
+import path from 'node:path';
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
@@ -11,6 +13,7 @@ export class SimpleGitTracker implements Tracker {
     readonly email: string;
     readonly separator = '//';
     readonly EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+    readonly ignoredFiles = ['diff', 'workingState.json'];
 
     constructor(username: string, email: string) {
         this.git = simpleGit();
@@ -18,16 +21,13 @@ export class SimpleGitTracker implements Tracker {
         this.email = email;
     }
 
-    async init(dir: string): Promise<Version> {
+    async init(dir: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.init();
         await this.git.raw(['config', '--local', 'user.name', this.username]);
         await this.git.raw(['config', '--local', 'user.email', this.email]);
-        return this.createVersion(
-            dir,
-            'Initial version',
-            'This is the initial version of your project!'
-        );
+        const gitignorePath = path.join(dir, '.gitignore');
+        await fs.writeFile(gitignorePath, this.ignoredFiles.join('\n'), 'utf-8');
     }
 
     async currentVersion(dir: string): Promise<Version> {
@@ -92,7 +92,7 @@ export class SimpleGitTracker implements Tracker {
     async compare(dir: string, versionId?: string, file?: string, modified = false): Promise<string> {
         await this.git.cwd(dir);
 
-        const diffParams = ['--unified=0'];
+        const diffParams = ['--unified=0', ':!*.dir/.*', ':!*.dir/local/*'];
         if (modified) {
             diffParams.push('--diff-filter=M');
         }
@@ -128,14 +128,16 @@ export class SimpleGitTracker implements Tracker {
     }
 
     async readFile(dir: string, filePath: string, versionId?: string): Promise<string> {
+        if (!versionId) {
+            return fs.readFileSync(path.join(dir, filePath), 'utf-8');
+        }
+        
         await this.git.cwd(dir);
-        const commitHash = versionId ? versionId : 'HEAD';
-
         try {
-            return await this.git.show([`${commitHash}:${filePath}`]);
+            return await this.git.show([`${versionId}:${filePath}`]);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            throw new TrackerError(`Failed to read file "${filePath}" at commit "${commitHash}": ${errorMessage}`);
+            throw new TrackerError(`Failed to read file "${filePath}" at commit "${versionId}": ${errorMessage}`);
         }
     }
 }

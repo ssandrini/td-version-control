@@ -50,43 +50,20 @@ const ProjectDetail: React.FC = () => {
     }, [currentVersion]);
 
     useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api
-            .compareVersions(dir, selectedVersion?.id)
-            .then((changeSet: ChangeSet<TDNode>) => {
-                // log.debug("Change set:", changeSet);
-                // log.debug("Added:", changeSet.added.items.map(node => node.toString()));
-                // log.debug("Deleted:", changeSet.deleted.items.map(node => node.toString()));
-                // log.debug("Modified:", changeSet.modified.items.map(node => node.toString()));
-                // const modifiedNode = changeSet.modified.items[0];
-                // // JERO TE DEJO UN EJEMPLO DE COMO ACCEDER A LAS PROPERTIES
-                // if (modifiedNode && modifiedNode.properties) {
-                //     modifiedNode.properties.forEach((value, key) => {
-                //         log.debug(`Propiedad: ${key}, Valor: ${value}`);
-                //     });
-                // }
-                setChanges(changeSet);
-            })
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .catch((error: any) => {
-                log.error("Error retrieving changeset due to", error);
-                // TODO handle error
-            });
-
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api
-            .getState(dir, selectedVersion?.id)
-            .then((tdstate: TDState) => {
-                setCurrentState(tdstate);
-            })
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .catch((error: any) => {
-                log.error("Error retrieving TDSTATE due to", error);
-            });
-
+        if (selectedVersion) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api
+                .getState(dir, selectedVersion.id)
+                .then((tdState: object) => {
+                    const state = TDState.deserialize(tdState);
+                    setCurrentState(state);
+                })
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .catch((error: any) => {
+                    log.error("Error retrieving TDSTATE due to", error);
+                });
+        }
     }, [selectedVersion]);
 
     useEffect(() => {

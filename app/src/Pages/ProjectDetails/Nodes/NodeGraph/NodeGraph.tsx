@@ -190,6 +190,8 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
 
     return (<div className={cn(hidden ? "hidden" : "", "border-2 w-full h-full rounded-lg my-5")}>
         <ReactFlow
+            maxZoom={2}
+            minZoom={0.1}
             className="text-black"
             nodes={nodes}
             edges={edges}

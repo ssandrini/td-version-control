@@ -151,7 +151,27 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
             // @ts-expect-error
             setNodes(newNodes)
             setEdges(newEdges)
-            reactFlowInstance?.fitView()
+            reactFlowInstance?.fitView().then((response) => {
+                if(!response) {
+                    reactFlowInstance?.fitView().then(async (response) => {
+                        if (!response) {
+                            // This is some high level coding.
+                            await new Promise(f => setTimeout(f, 10));
+                            reactFlowInstance?.fitView().then((response) => {
+                                if(!response) {
+                                    reactFlowInstance?.fitView().then(async (response) => {
+                                        if (!response) {
+                                            // This is some SERIOUS high level coding.
+                                            await new Promise(f => setTimeout(f, 10));
+                                            reactFlowInstance?.fitView();
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    })
+                }
+            })
         }
     }, [current, compare]);
 
@@ -168,7 +188,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
 
     const onConnect = useCallback((params: any) => setEdges((eds) => addEdge(params, eds)), [setEdges],);
 
-    return (<div className={cn(hidden ? "hidden" : "", "w-full h-full rounded-lg my-5")}>
+    return (<div className={cn(hidden ? "hidden" : "", "border-2 w-full h-full rounded-lg my-5")}>
         <ReactFlow
             className="text-black"
             nodes={nodes}

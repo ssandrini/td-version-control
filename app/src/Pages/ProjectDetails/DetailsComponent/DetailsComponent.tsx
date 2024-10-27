@@ -1,12 +1,7 @@
 import React, {useState} from "react";
 import {Button} from "../../../components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle
+    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
 } from "../../../components/ui/dialog";
 import {Label} from "../../../components/ui/label";
 import {Input} from "../../../components/ui/input";
@@ -43,14 +38,13 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
 
-    const handleGoToVersion = () => {
-        if (selectedVersion) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            window.api.goToVersion(dir, selectedVersion.id).then((newVersion) => {
-                setCurrentVersion(newVersion);
-            });
-        }
+    const handleGoToVersion = (version: Version) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.goToVersion(dir, version.id).then((newVersion) => {
+            setCurrentVersion(newVersion);
+            setSelectedVersion(version);
+        });
     };
 
     const handleAddVersion = () => {
@@ -89,14 +83,6 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 <Button variant="outline" className="text-black"
                         onClick={() => setShowNewVersionModal(true)}>Create New
                     Version</Button>
-                {selectedVersion.id != currentVersion?.id && (<div className="flex justify-center">
-                    <button
-                        onClick={handleGoToVersion}
-                        className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 max-w-64"
-                    >
-                        Move
-                    </button>
-                </div>)}
             </div>
             {showNewVersionModal && (<Dialog open>
                 <DialogContent>
@@ -163,18 +149,11 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
             onVersionSelect={handleVersionSelect}
             currentVersion={currentVersion}
             selectedVersion={selectedVersion}
+            handleGoToVersion={handleGoToVersion}
+            handleCompareVersionSelect={handleCompareVersionSelect}
+            compareVersion={compareVersion}
+
         />
-        <hr className="border-white opacity-50 my-4"/>
-        <h2 className="text-white font-semibold mb-2">Compare to:</h2>
-        <History
-            versions={versions}
-            path={dir}
-            orange={true}
-            onVersionSelect={handleCompareVersionSelect}
-            currentVersion={currentVersion}
-            selectedVersion={compareVersion}
-        />
-        <hr className="border-white opacity-50 my-4"/>
 
         <div className="flex items-center justify-left mt-4">
             <FaUserCircle className="text-5xl text-gray-300 mr-2"/>

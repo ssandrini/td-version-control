@@ -5,7 +5,7 @@ import {cn} from "../../lib/utils";
 interface HistoryItemProps {
     version: Version;
     isCurrent: boolean;
-    onClick: () => void;
+    onClick?: () => void;
     isSelected: boolean;
     orange?: boolean
 }

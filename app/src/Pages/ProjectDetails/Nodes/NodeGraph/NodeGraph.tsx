@@ -150,7 +150,6 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             setNodes(newNodes)
-            console.log(newNodes);
             setEdges(newEdges)
             reactFlowInstance?.fitView()
         }

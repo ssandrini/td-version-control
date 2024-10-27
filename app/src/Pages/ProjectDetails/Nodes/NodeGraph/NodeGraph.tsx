@@ -74,7 +74,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
                         x: currentNode.properties?.get('tileX') ?? (Math.random() * 400),
                         y: -1 * ((currentNode.properties?.get('tileY') ?? (Math.random() * 400)) as number)
                     }, data: {
-                        label: currentNode.name, operator: currentNode, variant: nodeState.modified
+                        label: currentNode.name, operator: currentNode, variant: nodeState.modified, compare: compare?.nodes.find((compareNode) => compareNode.name == currentNode.name)
                     }
                 };
             }
@@ -112,7 +112,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
                 // Nothing to compare to or edge exists in both versions.
                 if (!compare || compare.inputs.get(key)?.find((compareInput) => input.destination == compareInput.destination)) {
                     edges.push({
-                        id: `e${key}-${input.destination}`, source: input.destination, target: key, style: { stroke: input.parm? 'blue' : 'yellow'}
+                        id: `e${key}-${input.destination}`, source: input.destination, target: key, type: (input.parm ? "straight" : undefined)
                     })
                     return;
                 }
@@ -150,9 +150,28 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             setNodes(newNodes)
-            console.log(newNodes);
             setEdges(newEdges)
-            reactFlowInstance?.fitView()
+            reactFlowInstance?.fitView().then((response) => {
+                if(!response) {
+                    reactFlowInstance?.fitView().then(async (response) => {
+                        if (!response) {
+                            // This is some high level coding.
+                            await new Promise(f => setTimeout(f, 10));
+                            reactFlowInstance?.fitView().then((response) => {
+                                if(!response) {
+                                    reactFlowInstance?.fitView().then(async (response) => {
+                                        if (!response) {
+                                            // This is some SERIOUS high level coding.
+                                            await new Promise(f => setTimeout(f, 10));
+                                            reactFlowInstance?.fitView();
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    })
+                }
+            })
         }
     }, [current, compare]);
 
@@ -169,7 +188,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({current, hidden, compare}) => {
 
     const onConnect = useCallback((params: any) => setEdges((eds) => addEdge(params, eds)), [setEdges],);
 
-    return (<div className={cn(hidden ? "hidden" : "", "w-full h-full rounded-lg my-5")}>
+    return (<div className={cn(hidden ? "hidden" : "", "border-2 w-full h-full rounded-lg my-5")}>
         <ReactFlow
             className="text-black"
             nodes={nodes}

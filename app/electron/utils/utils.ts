@@ -238,7 +238,7 @@ export const validateDirectory = async (dir: string): Promise<void> => {
 }
 
 export const dumpTDStateToFile = async (filePath: string, tdState: TDState): Promise<void> => {
-    const data = JSON.stringify(tdState.serialize(), null, 2);
+    const data = JSON.stringify(tdState.serializeForFile(), null, 2);
     await fs.writeFile(filePath, data, 'utf8');
 }
 

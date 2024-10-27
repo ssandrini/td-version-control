@@ -7,7 +7,11 @@ import {localPaths} from "../../const";
 import log from 'electron-log/renderer';
 import Project from "../../../electron/models/Project.ts";
 
-const Projects: React.FC = () => {
+interface ProjectsProps {
+    hideHeader?:boolean
+}
+
+const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
     const [projects, setProjects] = useState<Project[]>([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
@@ -92,17 +96,19 @@ const Projects: React.FC = () => {
     };
 
     return (
-        <div className="flex bg-gray-900 w-full overflow-auto h-full">
+        <div className="flex w-full overflow-auto h-full">
             {/* Main Content */}
             <div className="flex-1 p-8 text-white">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-3xl font-semibold">Projects</h2>
-                    <div className="flex space-x-4">
-                        <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleNewProject}>Create</Button>
-                        <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleFilePick}>Open</Button>
+                {!hideHeader && (
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-3xl font-semibold">Projects</h2>
+                        <div className="flex space-x-4">
+                            <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleNewProject}>Create</Button>
+                            <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleFilePick}>Open</Button>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="overflow-auto">
                     {/* Projects Table or No Projects Message */}
@@ -124,7 +130,7 @@ const Projects: React.FC = () => {
                                             Last version
                                         </th>
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                            Actions
+
                                         </th>
                                     </tr>
                                 </thead>

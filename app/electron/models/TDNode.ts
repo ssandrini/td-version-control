@@ -36,11 +36,25 @@ export class TDNode implements HasKey {
             name: this.name,
             type: this.type,
             subtype: this.subtype,
-            properties: Object.fromEntries(this.properties || new Map())
+            properties: this.properties
         };
     }
 
     static deserialize(data: any): TDNode {
+        const properties = new Map(data.properties);
+        return new TDNode(data.name, data.type, data.subtype, properties);
+    }
+
+    serializeForFile(): object {
+        return {
+            name: this.name,
+            type: this.type,
+            subtype: this.subtype,
+            properties: Object.fromEntries(this.properties || new Map())
+        };
+    }
+
+    static deserializeFromFile(data: any): TDNode {
         const properties = new Map(Object.entries(data.properties));
         return new TDNode(data.name, data.type, data.subtype, properties);
     }

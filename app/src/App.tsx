@@ -9,6 +9,7 @@ import Layout from "./Pages/Layout";
 import {VariableProvider} from "./hooks/Variables/useVariableContext.tsx";
 import {localPaths} from "./const";
 import NewProject from './Pages/NewProject/NewProjects.tsx';
+import InnerLayout from "./Pages/InnerLayout";
 
 const App: React.FC = () => {
     return (<VariableProvider>
@@ -16,10 +17,18 @@ const App: React.FC = () => {
             <Routes>
                 <Route path={localPaths.HOME} element={<Layout/>}>
                     <Route path="" element={<Main/>}/>
-                    <Route path={localPaths.PROJECTS} element={<Projects/>}/>
-                    <Route path={localPaths.SETTINGS} element={<Settings/>}/>
-                    <Route path={localPaths.PROJECT_DETAIL} element={<ProjectDetail />} />
-                    <Route path={localPaths.NEW_PROJECT} element={<NewProject/>} />
+                    <Route path={localPaths.PROJECTS} element={<InnerLayout/>}>
+                        <Route path="" element={<Projects/>}/>
+                    </Route>
+                    <Route path={localPaths.SETTINGS} element={<InnerLayout/>}>
+                        <Route path="" element={<Settings/>}/>
+                    </Route>
+                    <Route path={localPaths.PROJECT_DETAIL} element={<InnerLayout />} >
+                        <Route path="" element={<ProjectDetail/>}/>
+                    </Route>
+                    <Route path={localPaths.NEW_PROJECT} element={<InnerLayout/>} >
+                        <Route path="" element={<NewProject/>}/>
+                    </Route>
                 </Route>
             </Routes>
         </BrowserRouter>

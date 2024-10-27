@@ -1,6 +1,5 @@
 import React, {useEffect} from 'react'
 import {useVariableContext} from "../../hooks/Variables/useVariableContext.tsx";
-import Sidebar from "../../components/ui/Sidebar.tsx";
 import {Outlet} from "react-router-dom";
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
@@ -58,13 +57,8 @@ const Layout: React.FC = () => {
                 </DialogContent>
             </Dialog>
         </div>)}
-        <div className="flex h-screen">
-            <Sidebar/>
-            <div className="w-full h-screen overflow-auto">
-                <Outlet/>
-            </div>
-        </div>
+        <Outlet/>
     </>);
 };
 
-export default Layout
+export default Layout;

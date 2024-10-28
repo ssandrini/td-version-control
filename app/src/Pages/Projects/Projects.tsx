@@ -61,7 +61,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             await window.api.openToe(project.path);
-            navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: project.path, projectName: project.name } });
+            navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { project: project } });
         } catch (error) {
             log.error('Unexpected error:', error);
             alert('Error: Ocurrió un problema inesperado al intentar abrir el proyecto.');

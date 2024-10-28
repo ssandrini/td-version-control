@@ -59,7 +59,7 @@ const NewProject: React.FC = () => {
             window.api.saveProject(newProject).then(() => {
                 setSuccess(true);
                 setTimeout(() => {
-                    navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: newProject.path, projectName: newProject.name } });
+                    navigate(localPaths.HOME + localPaths.PROJECT_DETAIL,  { state: { project: newProject } });
                 }, 1500);
             });
         }).catch((err: unknown) => {

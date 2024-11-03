@@ -8,4 +8,9 @@ export interface Tracker {
     goToVersion(dir: string, versionId: string): Promise<Version>;
     compare(dir: string, versionId?: string, file?: string, modified? : boolean): Promise<string>;
     readFile(dir: string, filePath: string, versionId?: string): Promise<string>;
+
+    // Remote handling
+    clone(dir: string, url: string): Promise<void>;
+    pull(dir: string): Promise<void>;
+    push(dir: string): Promise<void>;
 }

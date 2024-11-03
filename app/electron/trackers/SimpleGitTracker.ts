@@ -20,12 +20,14 @@ export class SimpleGitTracker implements Tracker {
         this.username = username;
         this.email = email;
     }
+    
 
     async init(dir: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.init();
-        await this.git.raw(['config', '--local', 'user.name', this.username]);
-        await this.git.raw(['config', '--local', 'user.email', this.email]);
+        // TODO: uncomment this and add CRLF
+        // await this.git.raw(['config', '--local', 'user.name', this.username]);
+        // await this.git.raw(['config', '--local', 'user.email', this.email]);
         const gitignorePath = path.join(dir, '.gitignore');
         await fs.writeFile(gitignorePath, this.ignoredFiles.join('\n'), 'utf-8');
     }
@@ -140,4 +142,42 @@ export class SimpleGitTracker implements Tracker {
             throw new TrackerError(`Failed to read file "${filePath}" at commit "${versionId}": ${errorMessage}`);
         }
     }
+
+    async clone(dir: string, url: string): Promise<void> {
+        // Equivalent to running `git clone url dir`
+        try {
+            await this.git.clone(url, dir);
+        } catch(error) {
+            const errorMessage = `Failed cloning ${url} into ${dir}`;
+            log.error(errorMessage);
+            throw new TrackerError(errorMessage);
+        }
+    }
+
+    async pull(dir: string): Promise<void> {
+        log.info(`Pulling latest changes in ${dir}`);
+        await this.git.cwd(dir);
+        try {
+            const result = await this.git.pull();
+            log.info(`Pull successful: ${result.summary.changes} changes, ${result.summary.insertions} insertions, ${result.summary.deletions} deletions.`);
+        } catch (error) {
+            const errorMessage = `Failed to pull changes in ${dir}`;
+            log.error(errorMessage, error);
+            throw new TrackerError(errorMessage);
+        }
+    }
+    
+    async push(dir: string): Promise<void> {
+        log.info(`Pushing changes from ${dir}`);
+        await this.git.cwd(dir);
+        try {
+            const result = await this.git.push();
+            log.info(`Push successful: ${result.pushed.length} references updated.`);
+        } catch (error) {
+            const errorMessage = `Failed to push changes from ${dir}`;
+            log.error(errorMessage, error);
+            throw new TrackerError(errorMessage);
+        }
+    }
+    
 }

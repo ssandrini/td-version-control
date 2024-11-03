@@ -8,4 +8,8 @@ export interface ProjectManager<S> {
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;
     goToVersion(dir: string, versionId: string): Promise<Version>;
     getVersionState(dir: string, versionId?: string): Promise<S>;
+
+    // Remote handling
+    pull(dir: string): Promise<void>;
+    push(dir: string): Promise<void>;
 }

@@ -94,7 +94,7 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>): void => {
+const setupProject = <S>(projectManager: ProjectManager<S>): void => {
   ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
     projectManager.listVersions(dir)
   );
@@ -138,6 +138,12 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
   );
 
   ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
+
+  // Remote handling
+  ipcMain.handle(API_METHODS.PULL, (_, dir: string) => projectManager.pull(dir));
+
+  ipcMain.handle(API_METHODS.PUSH, (_, dir) => projectManager.push(dir));
+  // -----*-----
 
   ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
     watcherMgr.registerWatcher(path, () => {

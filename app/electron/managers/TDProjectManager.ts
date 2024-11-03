@@ -49,6 +49,10 @@ export class TDProjectManager implements ProjectManager<TDState> {
     await validateDirectory(dir);
 
     if (src) {
+      if(this.verifyUrl(src)) {
+        return this.initFromUrl(dir, src);
+      } 
+
       try {
         await validateDirectory(src);
         fs.copySync(src, dir, { recursive: true });
@@ -83,6 +87,14 @@ export class TDProjectManager implements ProjectManager<TDState> {
       );
       return Promise.reject(error);
     }
+  }
+
+  private async initFromUrl(dir: string, url: string): Promise<Version> {
+    const hiddenDirPath = this.hiddenDirPath(dir);
+    await this.tracker.clone(hiddenDirPath, url);
+    hidefile.hideSync(hiddenDirPath);
+    this.processor.postprocess(hiddenDirPath, dir);
+    return await this.currentVersion(dir);
   }
 
   async currentVersion(dir: string): Promise<Version> {
@@ -160,6 +172,17 @@ export class TDProjectManager implements ProjectManager<TDState> {
     }
 
     return TDState.loadFromFile(workingState);
+  }
+
+  async pull(dir: string): Promise<void> {
+    const hiddenDirPath = this.hiddenDirPath(dir);
+    await this.tracker.pull(hiddenDirPath);
+    this.processor.postprocess(hiddenDirPath, dir);
+  }
+
+  async push(dir: string): Promise<void> {
+    const hiddenDirPath = this.hiddenDirPath(dir);
+    await this.tracker.push(hiddenDirPath);
   }
 
   private async saveVersionState(dir: string, file: string): Promise<TDState> {
@@ -256,4 +279,12 @@ export class TDProjectManager implements ProjectManager<TDState> {
     return nodeNames;
   }
 
+  private verifyUrl(url: string): boolean {
+    try {
+      new URL(url);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
 }

@@ -3,19 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { FaFolderOpen, FaPlay, FaTrashAlt } from "react-icons/fa";
 import { Dialog, DialogFooter, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog.tsx";
-import {localPaths} from "../../const";
+import { localPaths } from "../../const";
 import log from 'electron-log/renderer';
 import Project from "../../../electron/models/Project.ts";
 
 interface ProjectsProps {
-    hideHeader?:boolean
+    hideHeader?: boolean
 }
 
-const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
+const Projects: React.FC<ProjectsProps> = ({ hideHeader }) => {
     const [projects, setProjects] = useState<Project[]>([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
-    const [loadingProject, setLoadingProject] = useState<boolean>(false); // Estado para manejar el loader
+    const [loadingProject, setLoadingProject] = useState<boolean>(false);
+    const [projectUrl, setProjectUrl] = useState<string>('');
+    const [directory, setDirectory] = useState<string>('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -66,7 +68,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
             log.error('Unexpected error:', error);
             alert('Error: Ocurrió un problema inesperado al intentar abrir el proyecto.');
         } finally {
-            setLoadingProject(false); // Ocultar loader
+            setLoadingProject(false);
         }
     };
 
@@ -93,6 +95,26 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
             return;
         }
         navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { project: project } });
+    };
+
+    const handleInitProject = async () => {
+        if (directory && projectUrl) {
+            try {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                await window.api.createProject(directory, projectUrl);
+                log.info(`Project initialized with URL ${projectUrl} at ${directory}`);
+                setProjectUrl('');
+                setDirectory('');
+                // Optionally refresh the projects list after initialization
+                // Call your function to get recent projects again
+            } catch (error) {
+                log.error('Error initializing project:', error);
+                alert('Error: Ocurrió un problema al inicializar el proyecto.');
+            }
+        } else {
+            alert('Please provide both a directory and a URL.');
+        }
     };
 
     return (
@@ -179,6 +201,26 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                             </p>
                         </div>
                     )}
+                </div>
+
+                {/* New Project Form */}
+                <div className="mt-8 bg-gray-800 p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-4">Initialize New Project</h3>
+                    <input
+                        type="text"
+                        placeholder="Project URL"
+                        value={projectUrl}
+                        onChange={(e) => setProjectUrl(e.target.value)}
+                        className="p-2 mb-2 w-full rounded bg-gray-700 text-white"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Select Directory"
+                        value={directory}
+                        onChange={(e) => setDirectory(e.target.value)}
+                        className="p-2 mb-2 w-full rounded bg-gray-700 text-white"
+                    />
+                    <Button className="bg-blue-600 hover:bg-blue-500" onClick={handleInitProject}>Initialize Project</Button>
                 </div>
             </div>
 

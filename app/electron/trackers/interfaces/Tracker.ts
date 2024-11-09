@@ -1,4 +1,5 @@
 import { Version } from '../../models/Version';
+import {Content, Filename, TrackerMergeResult} from "../../merge/TrackerMergeResult";
 
 export interface Tracker {
     init(dir: string): Promise<void>;
@@ -11,6 +12,8 @@ export interface Tracker {
 
     // Remote handling
     clone(dir: string, url: string): Promise<void>;
-    pull(dir: string): Promise<void>;
+    pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult>;
     push(dir: string): Promise<void>;
+    finishMerge(dir: string, userInput: Map<Filename, Content[]>): Promise<void>
+    abortMerge(dir: string): Promise<void>;
 }

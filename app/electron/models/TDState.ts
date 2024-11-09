@@ -18,6 +18,7 @@ export class TDState {
         return {
             nodes: this.nodes.map(node => node.serializeForFile()),
             inputs: Array.from(this.inputs.entries()).reduce((obj, [key, value]) => {
+                // @ts-ignore
                 obj[key] = value.map(edge => edge.serialize());
                 return obj;
             }, {})
@@ -40,6 +41,7 @@ export class TDState {
 
         const inputs = new Map<string, TDEdge[]>();
         for (const [key, value] of Object.entries(data.inputs)) {
+            // @ts-ignore
             inputs.set(key, value.map((edgeData: any) => TDEdge.deserialize(edgeData)));
         }
         state.inputs = inputs;

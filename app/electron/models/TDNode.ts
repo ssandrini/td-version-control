@@ -42,7 +42,7 @@ export class TDNode implements HasKey {
 
     static deserialize(data: any): TDNode {
         const properties = new Map(data.properties);
-        return new TDNode(data.name, data.type, data.subtype, properties);
+        return new TDNode(data.name, data.type, data.subtype, properties as Map<string, string>);
     }
 
     serializeForFile(): object {
@@ -56,6 +56,6 @@ export class TDNode implements HasKey {
 
     static deserializeFromFile(data: any): TDNode {
         const properties = new Map(Object.entries(data.properties));
-        return new TDNode(data.name, data.type, data.subtype, properties);
+        return new TDNode(data.name, data.type, data.subtype, properties as Map<string, string>);
     }
 }

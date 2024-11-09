@@ -1,32 +1,38 @@
 import log from 'electron-log/main';
-import { ProjectManager } from './interfaces/ProjectManager';
-import { Version } from '../models/Version';
+import {ProjectManager} from './interfaces/ProjectManager';
+import {Version} from '../models/Version';
 import fs from 'fs-extra';
-import { Processor } from '../processors/interfaces/Processor';
+import {Processor} from '../processors/interfaces/Processor';
 import path from 'node:path';
-import { Tracker } from '../trackers/interfaces/Tracker';
-import { TDNode } from '../models/TDNode';
+import {Tracker} from '../trackers/interfaces/Tracker';
+import {TDNode} from '../models/TDNode';
 import {
+  buildNodeMap,
+  dumpDiffToFile,
+  dumpTDStateToFile,
   extractNodeNameFromToc,
   findContainers,
   findFileByExt,
-  getNodeInfoFromNFile, validateDirectory,
-  dumpTDStateToFile, dumpDiffToFile,
+  getNodeInfoFromNFile, splitSet,
+  validateDirectory,
 } from '../utils/utils';
-import { MissingFileError } from '../errors/MissingFileError';
-import { TDState } from '../models/TDState';
-import { TDError } from '../errors/TDError';
-import { PropertyRuleEngine } from '../rules/properties/PropertyRuleEngine';
+import {MissingFileError} from '../errors/MissingFileError';
+import {TDState} from '../models/TDState';
+import {TDError} from '../errors/TDError';
+import {PropertyRuleEngine} from '../rules/properties/PropertyRuleEngine';
 import hidefile from "hidefile"
-import { InputRuleEngine } from "../rules/inputs/InputRuleEngine";
-import { TDEdge } from '../models/TDEdge';
+import {InputRuleEngine} from "../rules/inputs/InputRuleEngine";
+import {TDEdge} from '../models/TDEdge';
+import {MergeStatus, TrackerMergeResult} from "../merge/TrackerMergeResult";
+import {TDMergeResult, TDMergeStatus} from "../models/TDMergeResult";
 
-export class TDProjectManager implements ProjectManager<TDState> {
+export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> {
   readonly processor: Processor;
   readonly hiddenDir: string;
   readonly tracker: Tracker;
   readonly propertyRuleEngine: PropertyRuleEngine;
   readonly inputRuleEngine: InputRuleEngine;
+  readonly excludedFiles: RegExp[];
   private versionNameMax = 256;
   private descriptionMax = 1024;
   private stateFile = 'state.json';
@@ -39,11 +45,14 @@ export class TDProjectManager implements ProjectManager<TDState> {
     this.tracker = tracker;
     this.propertyRuleEngine = new PropertyRuleEngine();
     this.inputRuleEngine = new InputRuleEngine();
-  }
 
-  private hiddenDirPath = (dir: string): string => {
-    return path.join(dir, this.hiddenDir);
-  };
+    this.excludedFiles = [
+      /\.build$/,
+      /\.lod$/,
+      /\.bin$/,
+      /^local\/.*$/
+    ];
+  }
 
   async init(dir: string, src?: string): Promise<Version> {
     await validateDirectory(dir);
@@ -87,14 +96,6 @@ export class TDProjectManager implements ProjectManager<TDState> {
       );
       return Promise.reject(error);
     }
-  }
-
-  private async initFromUrl(dir: string, url: string): Promise<Version> {
-    const hiddenDirPath = this.hiddenDirPath(dir);
-    await this.tracker.clone(hiddenDirPath, url);
-    hidefile.hideSync(hiddenDirPath);
-    this.processor.postprocess(hiddenDirPath, dir);
-    return await this.currentVersion(dir);
   }
 
   async currentVersion(dir: string): Promise<Version> {
@@ -174,16 +175,45 @@ export class TDProjectManager implements ProjectManager<TDState> {
     return TDState.loadFromFile(workingState);
   }
 
-  async pull(dir: string): Promise<void> {
+  async pull(dir: string): Promise<TDMergeResult> {
     const hiddenDirPath = this.hiddenDirPath(dir);
-    await this.tracker.pull(hiddenDirPath);
-    this.processor.postprocess(hiddenDirPath, dir);
+
+    const result: TrackerMergeResult = await this.tracker.pull(hiddenDirPath, this.excludedFiles);
+
+    if (result.mergeStatus === MergeStatus.FINISHED) {
+      await this.processor.postprocess(hiddenDirPath, dir);
+      return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
+    }
+
+    if (result.mergeStatus === MergeStatus.IN_PROGRESS && result.unresolvedConflicts === null) {
+      log.error("MergeStatus IN_PROGRESS, unresolvedConflicts null");
+      return Promise.reject(new TDError("MergeStatus IN_PROGRESS, unresolvedConflicts null"));
+    }
+
+    const stateA = new TDState(), stateB = new TDState();
+    const nodeMap = buildNodeMap(result.unresolvedConflicts!);
+    for (const [nodeName, contentSet] of nodeMap) {
+      const [contentsA, contentsB] = splitSet(contentSet);
+      const [nodeA, nodeInputsA] = this.extractNodeAndInputs(nodeName, contentsA);
+      const [nodeB, nodeInputsB] = this.extractNodeAndInputs(nodeName, contentsB);
+      stateA.nodes.push(nodeA);
+      stateA.inputs.set(nodeA.name, nodeInputsA);
+      stateB.nodes.push(nodeB);
+      stateB.inputs.set(nodeB.name, nodeInputsB);
+    }
+
+    log.debug(`MergeResult: IN_PROGRESS, StateA: ${stateA.toString()}, StateB: ${stateB.toString()}`);
+    return new TDMergeResult(TDMergeStatus.IN_PROGRESS, stateA, stateB);
   }
 
   async push(dir: string): Promise<void> {
     const hiddenDirPath = this.hiddenDirPath(dir);
     await this.tracker.push(hiddenDirPath);
   }
+
+    private hiddenDirPath = (dir: string): string => {
+    return path.join(dir, this.hiddenDir);
+  };
 
   private async saveVersionState(dir: string, file: string): Promise<TDState> {
     const state = await this.createVersionState(dir);
@@ -241,6 +271,16 @@ export class TDProjectManager implements ProjectManager<TDState> {
       }
     }));
 
+    return Promise.resolve(this.extractNodeAndInputs(nodeName, fileContents));
+  }
+
+  private processProperties(content: string, properties: Map<string, string>) {
+    content.split('\n').forEach(line => {
+      this.propertyRuleEngine.applyRules(line, properties);
+    });
+  }
+
+  private extractNodeAndInputs(nodeName: string, fileContents: string[]): [TDNode, TDEdge[]] {
     const properties = new Map<string, string>();
     fileContents.forEach(content => this.processProperties(content, properties));
 
@@ -251,12 +291,6 @@ export class TDProjectManager implements ProjectManager<TDState> {
     fileContents.forEach(content => nodeInputs.push(...this.inputRuleEngine.process(content)));
 
     return [node, nodeInputs];
-  }
-
-  private processProperties(content: string, properties: Map<string, string>) {
-    content.split('\n').forEach(line => {
-      this.propertyRuleEngine.applyRules(line, properties);
-    });
   }
 
   private async findFileWithCheck(hiddenDirPath: string, extension: string): Promise<string> {
@@ -286,5 +320,13 @@ export class TDProjectManager implements ProjectManager<TDState> {
     } catch (error) {
       return false;
     }
+  }
+
+  private async initFromUrl(dir: string, url: string): Promise<Version> {
+    const hiddenDirPath = this.hiddenDirPath(dir);
+    await this.tracker.clone(hiddenDirPath, url);
+    hidefile.hideSync(hiddenDirPath);
+    await this.processor.postprocess(hiddenDirPath, dir);
+    return await this.currentVersion(dir);
   }
 }

@@ -1,11 +1,13 @@
-import simpleGit, { SimpleGit } from 'simple-git';
-import { Tracker } from '../trackers/interfaces/Tracker';
+import simpleGit, {GitResponseError, MergeResult, SimpleGit, StatusResult} from 'simple-git';
+import { Tracker } from './interfaces/Tracker';
 import { Version } from '../models/Version';
 import { TrackerError } from '../errors/TrackerError';
 import log from 'electron-log/main';
 import { Author } from '../models/Author';
 import fs from 'fs-extra';
 import path from 'node:path';
+import {Content, Filename, MergeStatus, TrackerMergeResult} from "../merge/TrackerMergeResult";
+import {parseMergeConflicts, resolveFileConflicts, resolveWithCurrentBranch} from "../merge/MergeParser";
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
@@ -20,7 +22,7 @@ export class SimpleGitTracker implements Tracker {
         this.username = username;
         this.email = email;
     }
-    
+
 
     async init(dir: string): Promise<void> {
         await this.git.cwd(dir);
@@ -120,8 +122,8 @@ export class SimpleGitTracker implements Tracker {
                 log.error(`Invalid response from git rev-list for commit "${commit.hash}".`);
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            throw new TrackerError(`Failed to check parents for commit "${commit.hash}": ${errorMessage}`);
+            const message = `Failed to check parents for commit "${commit.hash}"}`;
+            this.handleError(error, message);
         }
 
         const parents = hasParent.trim().split(' ');
@@ -131,42 +133,92 @@ export class SimpleGitTracker implements Tracker {
 
     async readFile(dir: string, filePath: string, versionId?: string): Promise<string> {
         if (!versionId) {
-            return fs.readFileSync(path.join(dir, filePath), 'utf-8');
+            return Promise.resolve(this.readFileContent(path.join(dir, filePath)));
         }
-        
+
         await this.git.cwd(dir);
         try {
             return await this.git.show([`${versionId}:${filePath}`]);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            throw new TrackerError(`Failed to read file "${filePath}" at commit "${versionId}": ${errorMessage}`);
+            const errorMessage = `Failed to read file "${filePath}" at commit "${versionId}":`;
+            this.handleError(error, errorMessage);
         }
     }
 
     async clone(dir: string, url: string): Promise<void> {
-        // Equivalent to running `git clone url dir`
         try {
             await this.git.clone(url, dir);
         } catch(error) {
             const errorMessage = `Failed cloning ${url} into ${dir}`;
-            log.error(errorMessage);
-            throw new TrackerError(errorMessage);
+            this.handleError(error, errorMessage);
         }
     }
 
-    async pull(dir: string): Promise<void> {
-        log.info(`Pulling latest changes in ${dir}`);
-        await this.git.cwd(dir);
+    async pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult> {
+        this.git.cwd(dir);
+
         try {
-            const result = await this.git.pull();
-            log.info(`Pull successful: ${result.summary.changes} changes, ${result.summary.insertions} insertions, ${result.summary.deletions} deletions.`);
-        } catch (error) {
-            const errorMessage = `Failed to pull changes in ${dir}`;
-            log.error(errorMessage, error);
-            throw new TrackerError(errorMessage);
+            await this.git.fetch();
+            log.info("Fetch completed successfully.");
+        } catch (fetchError) {
+            const errorMessage = "Fetch failed in pull operation";
+            this.handleError(fetchError, errorMessage);
         }
+
+        let conflicts;
+        try {
+            const mergeSummary = await this.git.merge(['FETCH_HEAD']);
+            log.info(`Merged ${mergeSummary.merges.length} files without conflicts.`);
+            return Promise.resolve({mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null});
+        } catch (error) {
+            const gitError = error as GitResponseError<MergeResult>;
+            const mergeSummary = gitError.git;
+            if (!mergeSummary) {
+                const errorMessage = "Merge failed, but no conflict details were available."
+                this.handleError(error, errorMessage);
+            }
+            conflicts = mergeSummary.conflicts;
+        }
+
+        log.info(`Merge resulted in ${conflicts.length} conflicts`);
+        const conflictMap = new Map<Filename, Set<[Content, Content]>>();
+
+        for (const conflict of conflicts) {
+            const filePath = path.join(dir, conflict.file!);
+            let currentContent = this.readFileContent(filePath);
+
+            log.debug(`Conflict detected in file: ${conflict.file}`);
+            log.debug(`Conflict reason: ${conflict.reason}`);
+            log.debug(`Current content:\n${currentContent}`);
+
+            // Automatic conflict resolution
+            if (excludedFiles.some((regex) => regex.test(filePath))) {
+                currentContent = resolveWithCurrentBranch(currentContent);
+                fs.writeFileSync(filePath, currentContent);
+                await this.git.add(conflict.file!);
+                continue;
+            }
+
+            // Non-automatic conflicts
+            conflictMap.set(conflict.file!, parseMergeConflicts(currentContent));
+        }
+
+        if (conflictMap.size > 0) {
+            log.info("Merge status: IN_PROGRESS");
+            return Promise.resolve({mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap});
+        }
+
+        try {
+            await this.git.commit("MergeVersion");
+            log.info("Merge conflicts resolved successfully.");
+        } catch (commitError) {
+            const errorMessage = "Failed to finalize merge";
+            this.handleError(commitError, errorMessage);
+        }
+
+        return Promise.resolve({mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null});
     }
-    
+
     async push(dir: string): Promise<void> {
         log.info(`Pushing changes from ${dir}`);
         await this.git.cwd(dir);
@@ -175,9 +227,95 @@ export class SimpleGitTracker implements Tracker {
             log.info(`Push successful: ${result.pushed.length} references updated.`);
         } catch (error) {
             const errorMessage = `Failed to push changes from ${dir}`;
-            log.error(errorMessage, error);
+            this.handleError(error, errorMessage);
+        }
+    }
+
+    async finishMerge(dir: string, userInput: Map<Filename, Content[]>): Promise<void> {
+        this.git.cwd(dir);
+        try {
+            const status: StatusResult = await this.git.status();
+            const conflictedFiles = status.conflicted;
+            await this.checkConflicts(conflictedFiles, userInput);
+            await this.resolveConflictsForFiles(dir, conflictedFiles, userInput);
+            await this.commitMerge();
+
+        } catch (error) {
+            const errorMessage = "Error in finish merge";
+            this.handleError(error, errorMessage);
+        }
+    }
+
+    async abortMerge(dir: string): Promise<void> {
+        try {
+            await this.git.cwd(dir);
+            await this.git.merge(['--abort']);
+            log.info('Merge aborted successfully');
+        } catch (error) {
+            this.handleError(error, 'Failed to abort merge');
+        }
+    }
+
+    private handleError(error: unknown, message: string): never {
+        const cause = error instanceof Error ? error.message : String(error);
+        log.error(`Error message: ${message}`);
+        log.debug(`Cause: ${cause}`);
+        throw new TrackerError(message);
+    }
+
+    private readFileContent(filePath: string): string {
+        try {
+            return fs.readFileSync(filePath, 'utf-8');
+        } catch (error) {
+            const errorMessage = `Failed to read file: ${filePath}.`;
+            this.handleError(error, errorMessage);
+        }
+    }
+
+    private async addResolvedFileToGit(file: string): Promise<void> {
+        try {
+            await this.git.add(file);
+        } catch (error) {
+            const errorMessage = `Failed to add resolved file to git: ${file}`;
+            this.handleError(error, errorMessage);
+        }
+    }
+
+    private async resolveConflictsForFiles(dir: string, conflictedFiles: string[], userInput: Map<Filename, Content[]>): Promise<void> {
+        for (const file of conflictedFiles) {
+            const filePath = path.join(dir, file);
+            const currentContent = this.readFileContent(filePath);
+
+            const userConflicts = userInput.get(file);
+            if (!userConflicts) {
+                const errorMessage = `No user input found for conflicted file: ${file}`;
+                log.error(errorMessage);
+                throw new TrackerError(errorMessage);
+            }
+
+            const resolvedContent = resolveFileConflicts(currentContent, userConflicts);
+
+            fs.writeFileSync(filePath, resolvedContent);
+
+            await this.addResolvedFileToGit(file);
+        }
+    }
+
+    private async checkConflicts(conflictedFiles: string[], userInput: Map<Filename, Content[]>): Promise<void> {
+        if (conflictedFiles.length !== userInput.size) {
+            const errorMessage = `Number of conflicted files does not match number of entries in user input. Conflicted: ${conflictedFiles.length}, User Input: ${userInput.size}`;
+            log.error(errorMessage);
             throw new TrackerError(errorMessage);
         }
     }
-    
+
+    private async commitMerge(): Promise<void> {
+        try {
+            await this.git.commit("Finished resolving merge conflicts.");
+            log.info("Merge conflicts resolved and committed successfully.");
+        } catch (error) {
+            const errorMessage = "Failed to commit resolved changes";
+            this.handleError(error, errorMessage);
+        }
+    }
 }

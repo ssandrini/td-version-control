@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import Template from '../models/Template';
 import path from 'node:path'
 import {TDState} from "../models/TDState";
+import {Content, Filename} from "../merge/TrackerMergeResult";
 
 /**
  * Searches for the first file in the current directory with the specified extension.
@@ -245,3 +246,30 @@ export const dumpTDStateToFile = async (filePath: string, tdState: TDState): Pro
 export const dumpDiffToFile = async (filePath: string, content: string): Promise<void> => {
     await fs.writeFile(filePath, content, 'utf8');
 }
+
+export const buildNodeMap = (inputMap: Map<Filename, Set<[Content, Content]>>): Map<string, Set<[string, string]>> => {
+    const outputMap = new Map<string, Set<[string, string]>>();
+    for (const [filename, valueSet] of inputMap.entries()) {
+        const nodeName = filename.split('.')[0];
+        if (outputMap.has(nodeName)) {
+            const existingSet = outputMap.get(nodeName)!;
+            valueSet.forEach(item => existingSet.add(item));
+        } else {
+            outputMap.set(nodeName, new Set(valueSet));
+        }
+    }
+    return outputMap;
+}
+
+export const splitSet = (set: Set<[string, string]>): [string[], string[]] => {
+    const firstElements: string[] = [];
+    const secondElements: string[] = [];
+
+    for (const [first, second] of set) {
+        firstElements.push(first);
+        secondElements.push(second);
+    }
+
+    return [firstElements, secondElements];
+}
+

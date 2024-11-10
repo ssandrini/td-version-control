@@ -14,6 +14,7 @@ export interface Tracker {
     clone(dir: string, url: string): Promise<void>;
     pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult>;
     push(dir: string): Promise<void>;
-    finishMerge(dir: string, userInput: Map<Filename, Content[]>): Promise<void>
+    settleConflicts(dir: string, userInput: Map<Filename, Content[]>): Promise<void>
     abortMerge(dir: string): Promise<void>;
+    getMergeResult(dir: string): Promise<TrackerMergeResult>;
 }

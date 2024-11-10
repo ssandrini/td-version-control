@@ -50,7 +50,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
       /\.build$/,
       /\.lod$/,
       /\.bin$/,
-      /^local\/.*$/
+      /^local\/.*$/,
+      /\.json$/,
     ];
   }
 
@@ -177,11 +178,12 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
   async pull(dir: string): Promise<TDMergeResult> {
     const hiddenDirPath = this.hiddenDirPath(dir);
-
     const result: TrackerMergeResult = await this.tracker.pull(hiddenDirPath, this.excludedFiles);
 
     if (result.mergeStatus === MergeStatus.FINISHED) {
       await this.processor.postprocess(hiddenDirPath, dir);
+      await this.saveVersionState(dir, this.stateFile);
+      await this.tracker.createVersion(dir, "MergeVersion");
       return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
     }
 
@@ -190,20 +192,10 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
       return Promise.reject(new TDError("MergeStatus IN_PROGRESS, unresolvedConflicts null"));
     }
 
-    const stateA = new TDState(), stateB = new TDState();
-    const nodeMap = buildNodeMap(result.unresolvedConflicts!);
-    for (const [nodeName, contentSet] of nodeMap) {
-      const [contentsA, contentsB] = splitSet(contentSet);
-      const [nodeA, nodeInputsA] = this.extractNodeAndInputs(nodeName, contentsA);
-      const [nodeB, nodeInputsB] = this.extractNodeAndInputs(nodeName, contentsB);
-      stateA.nodes.push(nodeA);
-      stateA.inputs.set(nodeA.name, nodeInputsA);
-      stateB.nodes.push(nodeB);
-      stateB.inputs.set(nodeB.name, nodeInputsB);
-    }
+    const [currentState, incomingState] = this.createStatesFromConflicts(result.unresolvedConflicts!);
 
-    log.debug(`MergeResult: IN_PROGRESS, StateA: ${stateA.toString()}, StateB: ${stateB.toString()}`);
-    return new TDMergeResult(TDMergeStatus.IN_PROGRESS, stateA, stateB);
+    log.debug(`MergeResult: IN_PROGRESS, currentState: ${currentState.toString()}, incomingState: ${incomingState.toString()}`);
+    return new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState);
   }
 
   async push(dir: string): Promise<void> {
@@ -211,9 +203,49 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     await this.tracker.push(hiddenDirPath);
   }
 
-    private hiddenDirPath = (dir: string): string => {
+  private hiddenDirPath = (dir: string): string => {
     return path.join(dir, this.hiddenDir);
   };
+
+  async finishMerge(dir: string, userInputState: TDState): Promise<void> {
+    const hiddenDirPath = this.hiddenDirPath(dir);
+    const result: TrackerMergeResult = await this.tracker.getMergeResult(hiddenDirPath);
+    log.debug("Merge result status:", result.mergeStatus);
+
+    if (result.mergeStatus === MergeStatus.FINISHED) {
+      log.debug("Merge already finished; no further action required.");
+      return;
+    }
+
+    log.debug("Merge status is IN_PROGRESS; proceeding with merge resolution.");
+    const [currentState, _] = this.createStatesFromConflicts(result.unresolvedConflicts!);
+    log.debug(`Unresolved conflicts count: ${currentState.nodes.length}`);
+
+    const resolvedContents = new Map<string, string[]>();
+
+    for (const userNode of userInputState.nodes) {
+      log.debug(`Checking user node: ${userNode.name}`);
+      const inCurrentState = currentState.isNodeInState(userNode);
+      log.debug(`Node ${userNode.name} belongs to state ${inCurrentState ? "Current" : "Incoming"}`);
+      const contentSelector = inCurrentState ? 0 : 1;
+      log.debug(`Selected content: ${contentSelector === 0 ? "Current" : "Incoming"}`);
+
+      for (const [filename, contentSet] of result.unresolvedConflicts!) {
+        if (filename.startsWith(userNode.name)) {
+          const [contentsA, contentsB] = splitSet(contentSet);
+          const selectedContent = contentSelector === 0 ? contentsA : contentsB;
+          log.debug(`Resolved content for ${filename}: ${selectedContent.join(', ')}`);
+          resolvedContents.set(filename, selectedContent);
+        }
+      }
+    }
+
+    await this.tracker.settleConflicts(hiddenDirPath, resolvedContents);
+    await this.processor.postprocess(hiddenDirPath, dir);
+    await this.saveVersionState(dir, this.stateFile);
+    await this.tracker.createVersion(dir, "MergeVersion");
+    log.debug("Merge resolution complete.");
+  }
 
   private async saveVersionState(dir: string, file: string): Promise<TDState> {
     const state = await this.createVersionState(dir);
@@ -271,7 +303,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
       }
     }));
 
-    return Promise.resolve(this.extractNodeAndInputs(nodeName, fileContents));
+    return Promise.resolve(this.extractNodeAndInputs(nodeName, fileContents, true));
   }
 
   private processProperties(content: string, properties: Map<string, string>) {
@@ -280,11 +312,11 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     });
   }
 
-  private extractNodeAndInputs(nodeName: string, fileContents: string[]): [TDNode, TDEdge[]] {
+  private extractNodeAndInputs(nodeName: string, fileContents: string[], nFile: boolean): [TDNode, TDEdge[]] {
     const properties = new Map<string, string>();
     fileContents.forEach(content => this.processProperties(content, properties));
 
-    const [type, subtype] = getNodeInfoFromNFile(fileContents[0])!;
+    const [type, subtype] = nFile? getNodeInfoFromNFile(fileContents[0])! : [undefined, undefined];
     const node = new TDNode(nodeName, type, subtype, properties);
 
     const nodeInputs: TDEdge[] = [];
@@ -329,4 +361,23 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     await this.processor.postprocess(hiddenDirPath, dir);
     return await this.currentVersion(dir);
   }
+
+  private createStatesFromConflicts(unresolvedConflicts: Map<string, Set<[string, string]>>): [TDState, TDState] {
+    const currentState = new TDState(), incomingState = new TDState();
+    const nodeMap = buildNodeMap(unresolvedConflicts);
+
+    for (const [nodeName, contentSet] of nodeMap) {
+      const [contentsA, contentsB] = splitSet(contentSet);
+      const [nodeA, nodeInputsA] = this.extractNodeAndInputs(nodeName, contentsA, false);
+      const [nodeB, nodeInputsB] = this.extractNodeAndInputs(nodeName, contentsB, false);
+
+      currentState.nodes.push(nodeA);
+      currentState.inputs.set(nodeA.name, nodeInputsA);
+      incomingState.nodes.push(nodeB);
+      incomingState.inputs.set(nodeB.name, nodeInputsB);
+    }
+
+    return [currentState, incomingState];
+  }
+
 }

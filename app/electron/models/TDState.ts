@@ -63,4 +63,27 @@ export class TDState {
         const parsedData = JSON.parse(content);
         return TDState.deserializeFromFile(parsedData);
     }
+
+    public isNodeInState(node: TDNode): boolean {
+        const stateNode = this.nodes.find(stateNode =>
+            stateNode.name === node.name &&
+            stateNode.propertiesEqual(node.properties)
+        );
+
+        if (!stateNode) return false;
+
+        const stateEdges = this.inputs.get(stateNode.name) || [];
+        const nodeEdges = this.inputs.get(node.name) || [];
+
+        return TDState.areEdgesEqual(stateEdges, nodeEdges);
+    }
+
+    public static areEdgesEqual(edgesA: TDEdge[], edgesB: TDEdge[]): boolean {
+        if (edgesA.length !== edgesB.length) return false;
+
+        for (let i = 0; i < edgesA.length; i++) {
+            if (edgesA[i].destination !== edgesB[i].destination) return false;
+        }
+        return true;
+    }
 }

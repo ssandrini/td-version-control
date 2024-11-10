@@ -6,13 +6,13 @@ export enum TDMergeStatus {
 }
 
 export class TDMergeResult {
-    constructor(public status: TDMergeStatus, public stateA: TDState|null, public stateB: TDState|null) {}
+    constructor(public status: TDMergeStatus, public currentState: TDState|null, public incomingState: TDState|null) {}
 
     serialize() : object {
         return this;
     }
 
     static deserialize(data: any): TDMergeResult {
-        return new TDMergeResult(data.status, data.stateA, data.stateB);
+        return new TDMergeResult(data.status, data.currentState, data.incomingState);
     }
 }

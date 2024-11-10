@@ -1,6 +1,7 @@
 import { ipcRenderer, contextBridge } from 'electron'
 import Project from './models/Project'
 import { API_METHODS } from './apiMethods'
+import {TDState} from "./models/TDState";
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -38,5 +39,6 @@ contextBridge.exposeInMainWorld('api', {
   getTemplates:       async() => ipcRenderer.invoke(API_METHODS.GET_TEMPLATES),
   getState:           async(path: string, versionId?: string) => ipcRenderer.invoke(API_METHODS.GET_STATE, path, versionId),
   pull:               async(dir: string) => ipcRenderer.invoke(API_METHODS.PULL, dir),
-  push:               async(dir: string) => ipcRenderer.invoke(API_METHODS.PUSH, dir)
+  push:               async(dir: string) => ipcRenderer.invoke(API_METHODS.PUSH, dir),
+  finishMerge:        async(dir:string, state: TDState) => ipcRenderer.invoke(API_METHODS.FINISH_MERGE, dir, state),
 });

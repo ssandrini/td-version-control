@@ -273,3 +273,7 @@ export const splitSet = (set: Set<[string, string]>): [string[], string[]] => {
     return [firstElements, secondElements];
 }
 
+export const extractFileName = (filePath: string): string | null => {
+    const match = filePath.match(/[^\/\\]+$/);
+    return match ? match[0] : null;
+}

@@ -1,6 +1,8 @@
 import { Version } from '../../models/Version';
 
 // TODO: S type musy be serializable
+// S: state
+// R: mergeResult
 export interface ProjectManager<S, R> {
     init(dir: string, src?: string): Promise<Version>;
     currentVersion(dir: string): Promise<Version>;
@@ -12,4 +14,5 @@ export interface ProjectManager<S, R> {
     // Remote handling
     pull(dir: string): Promise<R>;
     push(dir: string): Promise<void>;
+    finishMerge(dir: string, userInput: S): Promise<void>;
 }

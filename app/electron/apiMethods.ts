@@ -17,5 +17,6 @@ export const API_METHODS = {
     COMPARE: 'compare-versions',
     GET_STATE: 'get-state',
     PULL: 'pull',
-    PUSH: 'push'
+    PUSH: 'push',
+    FINISH_MERGE: "finish-merge"
 }

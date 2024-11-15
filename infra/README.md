@@ -42,7 +42,7 @@ Before starting, ensure you have:
 
 ## Setup Instructions
 
-### 1 Configure Variables
+### 1. Configure Variables
 
 Edit the `variables.tf` file or create a `terraform.tfvars` file to customize the deployment. Key variables include:
 

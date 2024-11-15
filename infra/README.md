@@ -4,19 +4,20 @@
 
 This repository contains the Terraform configurations for deploying the backend services for Mariana's remote versioning capabilities. [Gitea](https://gitea.io/en-us/) is used as a lightweight, self-hosted Git service.
 
+
 ## Table of Contents
 
 - [Architecture Overview](#architecture-overview)
 - [Prerequisites](#prerequisites)
 - [Setup Instructions](#setup-instructions)
-  - [Configure Variables](#2-configure-variables)
-  - [Initialize Terraform](#3-initialize-terraform)
-  - [Apply Terraform Configuration](#4-apply-terraform-configuration)
+  - [1. Configure Variables](#1-configure-variables)
+  - [2. Initialize Terraform](#3-initialize-terraform)
+  - [3. Apply Terraform Configuration](#4-apply-terraform-configuration)
 - [Accessing Gitea](#accessing-gitea)
 - [Destroying the Infrastructure](#destroying-the-infrastructure)
 - [Troubleshooting](#troubleshooting)
-- [Contributions](#contributions)
-- [License](#license)
+- [Setting Up the gcloud SDK](#setting-up-the-gcloud-sdk)
+
 
 ## Architecture Overview
 
@@ -115,7 +116,7 @@ Type `yes` when prompted to confirm the operation.
 
    Use the admin credentials specified in your `terraform.tfvars` file.
 
-## :warning: :warning: Destroying the Infrastructure :warning: :warning:
+## Destroying the Infrastructure
 
 To remove all resources created by Terraform:
 
@@ -143,3 +144,60 @@ Confirm by typing `yes` when prompted.
   - Check for typos or incorrect values in your `terraform.tfvars` file. _(MIHTT: Man I Hate Terraforms Tfvars)_
   - If you mess with the `tfstate` you get the lead. _((threat))_
   - Make sure the GCP Compute api is turned on `compute.googleapis.com`.
+
+## Setting Up the gcloud SDK
+
+To interact with GCP resources, and depliy the infraestructure, ensure the Google Cloud SDK is installed and properly configured:
+
+1. **Install the gcloud SDK**:
+   - Download and install the SDK from the [official Google Cloud SDK documentation](https://cloud.google.com/sdk/docs/install).
+
+2. **Authenticate with the Google Account**:
+   Run the following command and follow the prompts to log in:
+
+   ```bash
+   gcloud auth application-default login
+   ```
+
+3. **Set the active project**:
+   There are two ways to configure the project ID for your GCP project:
+  
+   1. Set up the project with the sdk helper:
+      ```bash
+      gcloud init
+      ```
+
+   2. Manually set up the project:
+      ```bash
+      gcloud config set project <your-project-id>
+      ```
+      It should be the same as the `project_id` environment variable.
+
+    **Either one should work.**
+
+4. **Verify your setup**:
+   Check if your gcloud CLI is properly configured by listing active configurations:
+
+   ```bash
+   gcloud config list
+   ```
+
+   You should see your project, region, and zone correctly set.
+
+5. **Enable required APIs**:
+   > _**This step should not be done unless a new project is run, the API should already be initialized**_. 
+   
+   Ensure the necessary APIs are enabled for your project:
+
+   ```bash
+   gcloud services enable compute.googleapis.com
+   ```
+
+6. **Test your connection**:
+   Try listing your active compute instances to ensure everything is set up:
+
+   ```bash
+   gcloud compute instances list
+   ```
+
+   If your instance is listed, the SDK is ready for use.

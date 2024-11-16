@@ -1,5 +1,6 @@
 export interface HasKey {
     getKey(): string;
+    serialize(): object;
 }
 
 export class Set<T extends HasKey> {

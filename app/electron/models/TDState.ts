@@ -18,6 +18,7 @@ export class TDState {
         return {
             nodes: this.nodes.map(node => node.serializeForFile()),
             inputs: Array.from(this.inputs.entries()).reduce((obj, [key, value]) => {
+                // @ts-ignore
                 obj[key] = value.map(edge => edge.serialize());
                 return obj;
             }, {})
@@ -40,6 +41,7 @@ export class TDState {
 
         const inputs = new Map<string, TDEdge[]>();
         for (const [key, value] of Object.entries(data.inputs)) {
+            // @ts-ignore
             inputs.set(key, value.map((edgeData: any) => TDEdge.deserialize(edgeData)));
         }
         state.inputs = inputs;
@@ -60,5 +62,28 @@ export class TDState {
     public static async loadFromFile(content: string): Promise<TDState> {
         const parsedData = JSON.parse(content);
         return TDState.deserializeFromFile(parsedData);
+    }
+
+    public isNodeInState(node: TDNode): boolean {
+        const stateNode = this.nodes.find(stateNode =>
+            stateNode.name === node.name &&
+            stateNode.propertiesEqual(node.properties)
+        );
+
+        if (!stateNode) return false;
+
+        const stateEdges = this.inputs.get(stateNode.name) || [];
+        const nodeEdges = this.inputs.get(node.name) || [];
+
+        return TDState.areEdgesEqual(stateEdges, nodeEdges);
+    }
+
+    public static areEdgesEqual(edgesA: TDEdge[], edgesB: TDEdge[]): boolean {
+        if (edgesA.length !== edgesB.length) return false;
+
+        for (let i = 0; i < edgesA.length; i++) {
+            if (edgesA[i].destination !== edgesB[i].destination) return false;
+        }
+        return true;
     }
 }

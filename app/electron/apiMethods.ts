@@ -16,6 +16,9 @@ export const API_METHODS = {
     GET_TEMPLATES: 'get-templates',
     COMPARE: 'compare-versions',
     GET_STATE: 'get-state',
+    PULL: 'pull',
+    PUSH: 'push',
+    FINISH_MERGE: "finish-merge",
     AUTHENTICATE_USER: 'authenticate-user',
     GET_USER: 'get-user',
 }

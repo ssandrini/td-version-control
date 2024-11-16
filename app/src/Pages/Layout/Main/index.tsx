@@ -11,7 +11,7 @@ const Main: React.FC = () => {
 
     return (<div
         className="flex flex-col items-center pt-10 h-screen bg-gradient-to-r from-blue-950 to-blue-900 text-white overflow-y-auto">
-        <div className="flex flex-col bg-gradient-to-r from-blue-900 to-blue-950 border border-white p-10 rounded-[2rem] gap-4 justify-between">
+        <div className="flex flex-col bg-gradient-to-r from-blue-900 to-blue-950 border border-white p-10 rounded-[2rem] gap-4 justify-between shadow-lg">
             <div className="text-center cursor-pointer" onClick={() => setShowMiddleDiv(!showMiddleDiv)}>
                 <div className="flex flex-row w-full items-center justify-center gap-3 mb-4">
                     <img src="public/img.png" alt="" className="w-14 h-14 rounded-lg"/>

@@ -80,7 +80,7 @@ const LogIn: React.FC<LogInProps> = () => {
     return (<div
         className="flex flex-col items-center justify-evenly pt-10 h-screen bg-gradient-to-r from-blue-950 to-blue-900 text-white overflow-y-auto">
         <div
-            className="flex flex-col bg-gradient-to-r from-blue-900 to-blue-950 border border-white p-10 rounded-[2rem] gap-4 justify-between">
+            className="flex flex-col bg-gradient-to-r from-blue-900 to-blue-950 border border-white p-10 rounded-[2rem] gap-4 justify-between shadow-lg">
             <div className="text-center cursor-pointer" onClick={() => setShowMiddleDiv(!showMiddleDiv)}>
                 <div className="flex flex-row w-full items-center justify-center gap-3 mb-4">
                     <img src="public/img.png" alt="" className="w-14 h-14 rounded-lg"/>
@@ -118,7 +118,7 @@ const LogIn: React.FC<LogInProps> = () => {
             </div>)}
         </div>
         <div className="flex justify-center items-center md:w-[30rem] w-[25rem] max-w-[90%] md:mt-0 text-gray-700">
-            <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 py-16 my-3">
+            <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 py-16 my-3 shadow-lg">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="w-full space-y-1 h-20">
                         <label htmlFor="email"

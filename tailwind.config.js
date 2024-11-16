@@ -9,6 +9,11 @@ module.exports = {
   ],
   prefix: "",
   theme: {
+    boxShadow: {
+      lg: '0 0 10px rgba(0, 0, 0, 0.3)',
+      md: '0 0 7px rgba(0, 0, 0, 0.2)',
+      sm: '0 0 5px rgba(0, 0, 0, 0.1)',
+    },
     container: {
       center: true,
       padding: "2rem",

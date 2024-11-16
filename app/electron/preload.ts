@@ -41,4 +41,6 @@ contextBridge.exposeInMainWorld('api', {
   pull:               async(dir: string) => ipcRenderer.invoke(API_METHODS.PULL, dir),
   push:               async(dir: string) => ipcRenderer.invoke(API_METHODS.PUSH, dir),
   finishMerge:        async(dir:string, state: TDState) => ipcRenderer.invoke(API_METHODS.FINISH_MERGE, dir, state),
+  authenticate:       async(username: string, password: string) => ipcRenderer.invoke(API_METHODS.AUTHENTICATE_USER, username, password),
+  getUser:            async() => ipcRenderer.invoke(API_METHODS.GET_USER),
 });

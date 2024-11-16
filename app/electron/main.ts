@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { app, BrowserWindow, ipcMain, screen } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import userDataMgr from "./managers/UserDataManager";
+import {UserDataManager} from "./managers/UserDataManager";
 import Project from "./models/Project";
 import watcherMgr from "./managers/WatcherManager"
 import log from "electron-log/main";
@@ -15,6 +14,7 @@ import { API_METHODS } from "./apiMethods";
 import { filePicker, openToeFile, getTemplates } from "./utils/utils";
 import { HasKey } from "./utils/Set";
 import { TDState } from "./models/TDState";
+import GiteaAPI from "./services/GiteaAPI";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -58,9 +58,11 @@ function createWindow() {
   // TODO: get user correctly
   const tracker = new SimpleGitTracker("tduser", "tduser@example.com");
   const processor = new TDProcessor();
+  const userDataMgr = new UserDataManager();
   const projectManager = new TDProjectManager(processor, tracker, ".mar");
+  const giteaApi = new GiteaAPI("http://34.44.41.60", userDataMgr);
 
-  setupProject(projectManager);
+  setupProject(projectManager, giteaApi, userDataMgr);
 
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
@@ -94,7 +96,7 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>): void => {
+const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>, api: GiteaAPI, userDataMgr: UserDataManager): void => {
   ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
     projectManager.listVersions(dir)
   );
@@ -156,5 +158,24 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
     log.debug('get state main handler');
     const state = await projectManager.getVersionState(path, versionId) as TDState;
     return state.serialize();
+  });
+
+  ipcMain.handle(API_METHODS.AUTHENTICATE_USER, async (_, username: string, password: string) => {
+    try {
+      await api.authenticate(username, password);
+      return { success: true };
+    } catch (error) {
+      log.error("Authentication failed:", error);
+      return error;
+    }
+  });
+
+  ipcMain.handle(API_METHODS.GET_USER, async () => {
+    try {
+      return await api.getUserDetails();
+    } catch (error) {
+      log.error("Failed to fetch user details:", error);
+      return error;
+    }
   });
 };

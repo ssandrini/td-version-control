@@ -1,5 +1,6 @@
 import React, {createContext, type ReactNode, useContext, useState} from "react";
 import VariableContextType from "../../models/VariableContextType.ts";
+import User from "../../models/User.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 export const VariableContext: React.Context<VariableContextType> = createContext<VariableContextType>(null!)
@@ -7,7 +8,7 @@ export const VariableContext: React.Context<VariableContextType> = createContext
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function VariableProvider({children}: { children: ReactNode }): JSX.Element {
     const [touchDesignerLocation, setTouchDesignerLocation] = useState<string>("");
-    const [user, setUser] = useState<{username: string} | undefined>(undefined);
+    const [user, setUser] = useState<User | undefined>(undefined);
 
     const isLoggedIn = (): boolean => {
         return user != undefined;

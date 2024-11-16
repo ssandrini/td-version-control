@@ -32,7 +32,7 @@ const Settings: React.FC = () => {
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                     <div className="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center text-xl font-bold">
-                        {user?.username?.charAt(0) || "NN"}
+                            <img className={user?.avatarUrl && "w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center text-xl font-bold"} src={user?.avatarUrl} alt={user?.username?.charAt(0) || "NN"}></img>
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
@@ -50,7 +50,7 @@ const Settings: React.FC = () => {
                         </div>
                         <div className="mb-2">
                             <span className="text-gray-600">Email: </span>
-                            <span className="font-medium text-gray-800">{user?.username || "N/A"}</span>
+                            <span className="font-medium text-gray-800">{user?.email || "N/A"}</span>
                         </div>
                     </div>
                 </div>

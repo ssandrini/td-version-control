@@ -46,8 +46,12 @@ const LogIn: React.FC<LogInProps> = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api.authenticate(username, password).then(() => {
-            setUser({username: username});
             setSubmitted(true);
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api.getUser().then((user) => {
+                setUser(user);
+            });
         }).catch((e : APIError) => {
             console.log("error status:" + e.statusCode);
             setSubmitted(true);

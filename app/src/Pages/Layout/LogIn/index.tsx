@@ -16,16 +16,16 @@ const LogIn: React.FC<LogInProps> = () => {
     const navigate = useNavigate();
 
     const [showMiddleDiv, setShowMiddleDiv] = useState(false);
-    const [email, setEmail] = useState<string>('');
-    const [isEmailValid, setIsEmailValid] = useState<boolean>(false);
+    const [username, setUsername] = useState<string>('');
+    const [isUsernameValid, setIsUsernameValid] = useState<boolean>(false);
     const [password, setPassword] = useState<string>('');
     const [userError, setUserError] = useState<boolean>(false);
     const [submitted, setSubmitted] = useState<boolean>(false);
     const [type, setType] = useState('password');
 
     useEffect(() => {
-        setIsEmailValid(validateEmail(email));
-    }, [email]);
+        setIsUsernameValid(username.length >= 4);
+    }, [username]);
 
     if (isLoggedIn()) {
         navigate(localPaths.HOME)
@@ -40,24 +40,13 @@ const LogIn: React.FC<LogInProps> = () => {
         }
     }
 
-    const validateEmail = (email: string) => {
-        return true;
-        const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return re.test(email);
-    };
-
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        if (!validateEmail(email)) {
-            setUserError(true);
-            return;
-        }
-
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.authenticate(email, password).then(() => {
-            setUser({username: email});
+        window.api.authenticate(username, password).then(() => {
+            setUser({username: username});
             setSubmitted(true);
         }).catch((e : APIError) => {
             console.log("error status:" + e.statusCode);
@@ -67,15 +56,13 @@ const LogIn: React.FC<LogInProps> = () => {
 
     };
 
-    const handleEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
         const {value} = event.target;
-        setEmail(value);
+        setUsername(value);
         if (submitted) {
             setSubmitted(false);
         }
         setUserError(false);
-
-        setIsEmailValid(validateEmail(value));
     };
 
     const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +74,7 @@ const LogIn: React.FC<LogInProps> = () => {
         setUserError(false);
     };
 
-    const isFormValid = isEmailValid && password.trim().length >= 8;
+    const isFormValid = isUsernameValid && password.trim().length >= 8;
 
     return (<div
         className="flex flex-col items-center justify-evenly pt-10 h-screen bg-gradient-to-r from-blue-950 to-blue-900 text-white overflow-y-auto">
@@ -133,25 +120,26 @@ const LogIn: React.FC<LogInProps> = () => {
             <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 py-16 my-3 shadow-lg">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="w-full space-y-1 h-20">
-                        <label htmlFor="email"
-                               className="text-left">Email*</label>
+                        <label htmlFor="username"
+                               className="text-left">Username*</label>
                         <Input
                             type="text"
-                            id="email"
-                            className={`w-full border ${submitted && (!email || userError) ? 'border-red-500' : 'border-input'} rounded-md shadow-sm focus:ring-blue-600`}
-                            value={email}
-                            placeholder="ejemplo@mail.com"
-                            onChange={handleEmailChange}
+                            id="username"
+                            className={`w-full border ${submitted && (!username || userError) ? 'border-red-500' : 'border-input'} rounded-md shadow-sm focus:ring-blue-600`}
+                            value={username}
+                            placeholder="Username"
+                            onChange={handleUsernameChange}
                         />
                     </div>
 
                     <div className="space-y-1 h-30">
                         <label htmlFor="password"
-                               className="text-left">Contraseña*</label>
+                               className="text-left">Password*</label>
                         <div className="relative">
                             <Input
                                 type={type}
                                 id="password"
+                                placeholder="Password"
                                 className={`w-full border rounded-md shadow-sm focus:ring-blue-600 pr-10 ${submitted && userError ? 'border-red-500' : 'border-input'}`}
                                 value={password}
                                 onChange={handlePasswordChange}

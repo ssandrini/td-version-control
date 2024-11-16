@@ -9,8 +9,8 @@ interface OperatorNodeProps {
 }
 
 const OperatorNode: React.FC<OperatorNodeProps> = ({data}) => {
-    const width = `${data.operator.properties?.get('sizeX') / 20 ?? 1}rem`;
-    const height = `${data.operator.properties?.get('sizeY') / 20 ?? 1}rem`;
+    const width = `${(data.operator.properties?.get('sizeX') / 20) ?? 1}rem`;
+    const height = `${(data.operator.properties?.get('sizeY') / 20) ?? 1}rem`;
     let Icon = undefined;
     let iconColor = undefined;
     if (data.variant === nodeState.new) {

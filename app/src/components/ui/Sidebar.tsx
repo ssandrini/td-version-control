@@ -19,7 +19,7 @@ const Sidebar: React.FC = () => {
     }, [window]);
 
     return (<div
-        className={cn(expanded ? "w-60" : "w-16", "transition-all overflow-hidden duration-600 ease-in-out h-full bg-gray-900 text-white flex flex-col shadow-lg border-r border-gray-700 overflow-y-auto sticky items-top")}
+        className={cn(expanded ? "w-60" : "w-16", "transition-all overflow-hidden duration-600 ease-in-out h-full bg-gray-900 text-white flex flex-col border-r border-gray-700 overflow-y-auto sticky items-top")}
     >
         <div className="flex items-center pl-2.5 h-16 border-b border-gray-700">
             <img src="public/img.png" alt="" className="w-11 h-11 rounded-full"/>
@@ -53,7 +53,7 @@ const Sidebar: React.FC = () => {
             </div>
             <div className="flex h-full w-full">
                 <div
-                    className={cn(!expanded ? "h-10 flex items-center justify-center" : "", "text-red mt-auto", "rounded hover:bg-red-600 hover:bg-opacity-40 w-full")}>
+                    className={cn(!expanded ? "h-10 flex items-center justify-center" : "", "text-red mt-auto hover:cursor-pointer", "rounded hover:bg-red-600 hover:bg-opacity-40 w-full")}>
                     <div onClick={() => setUser(undefined)}
                           className={cn("flex items-center py-2", expanded ? "px-4" : "justify-center")}>
                         <CiLogout className={cn("text-xl text-red-600 font-bold", expanded ? "mr-3" : "")}/>

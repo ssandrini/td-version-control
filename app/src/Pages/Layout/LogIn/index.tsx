@@ -5,6 +5,7 @@ import {localPaths} from "../../../const";
 import {Button} from "../../../components/ui/button";
 import {Input} from "../../../components/ui/input";
 import {MdOutlineVisibility, MdOutlineVisibilityOff} from "react-icons/md";
+import {APIError} from "../../../../electron/errors/APIError";
 
 
 interface LogInProps {
@@ -40,6 +41,7 @@ const LogIn: React.FC<LogInProps> = () => {
     }
 
     const validateEmail = (email: string) => {
+        return true;
         const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         return re.test(email);
     };
@@ -57,12 +59,8 @@ const LogIn: React.FC<LogInProps> = () => {
         window.api.authenticate(email, password).then(() => {
             setUser({username: email});
             setSubmitted(true);
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            window.api.getUser().then((user) => {
-                console.log(user);
-            });
-        }).catch(() => {
+        }).catch((e : APIError) => {
+            console.log("error status:" + e.statusCode);
             setSubmitted(true);
             setUserError(true)
         });

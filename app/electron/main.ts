@@ -172,21 +172,10 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>,
   });
 
   ipcMain.handle(API_METHODS.AUTHENTICATE_USER, async (_, username: string, password: string) => {
-    try {
-      await api.authenticate(username, password);
-      return { success: true };
-    } catch (error) {
-      log.error("Authentication failed:", error);
-      return error;
-    }
+    return api.authenticate(username, password);
   });
 
   ipcMain.handle(API_METHODS.GET_USER, async () => {
-    try {
-      return await api.getUserDetails();
-    } catch (error) {
-      log.error("Failed to fetch user details:", error);
-      return error;
-    }
+    return api.getUserDetails();
   });
 };

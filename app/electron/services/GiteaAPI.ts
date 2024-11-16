@@ -1,9 +1,9 @@
 import axios, { AxiosInstance } from "axios";
-import { MissingTokenError } from "../errors/MissingTokenError";
-import { TokenExpiredError } from "../errors/TokenExpiredError";
-import { APIError } from "../errors/APIError";
 import { User } from "../models/User";
-import {UserDataManager} from "../managers/UserDataManager";
+import { UserDataManager } from "../managers/UserDataManager";
+import log from "electron-log/main";
+import {APIError} from "../errors/APIError";
+import crypto from "crypto"
 
 export default class GiteaAPI {
     private apiClient: AxiosInstance;
@@ -16,68 +16,115 @@ export default class GiteaAPI {
             headers: { "Content-Type": "application/json" },
         });
 
+        log.debug("Initializing GiteaAPI with baseURL:", baseURL);
+
         // Add auth token interceptor
         this.apiClient.interceptors.request.use(
             (config) => {
+                log.debug(`Request to: ${config.url}`);
+                log.debug(`Request body: ${JSON.stringify(config.data)}`);
+                log.debug(`Request headers: ${JSON.stringify(config.headers)}`);
+
+                if (config.url && config.url.includes("/tokens")) {
+                    log.debug("Skipping auth token for authentication request.");
+                    return config;
+                }
+
                 const token = this.userDataManager.getAuthToken();
                 if (!token) {
-                    throw new MissingTokenError("Authentication token is missing.");
+                    log.error("Missing authentication token");
+                    return Promise.reject(new APIError("Authentication token is missing.", 401));
                 }
+                log.debug("Adding Authorization header with token:", token);
                 config.headers.Authorization = `token ${token}`;
                 return config;
             },
-            (error) => Promise.reject(error)
-        );
-
-        // Check errors' interceptor.
-        this.apiClient.interceptors.response.use(
-            (response) => response,
             (error) => {
-                if (error instanceof MissingTokenError) {
-                    throw error;
-                }
-
-                if (error.response?.status === 401) {
-                    this.userDataManager.clearAuthToken();
-                    throw new TokenExpiredError("Authentication token has expired or is invalid.");
-                }
-
-                throw new APIError(
-                    error.response?.data?.message || "An error occurred while accessing the API.",
-                    error.response?.status
-                );
+                log.error("Request interceptor error:", error);
+                return Promise.reject(error);
             }
         );
 
+        // Check errors' interceptor
+        this.apiClient.interceptors.response.use(
+            (response) => {
+                log.debug(`Response from: ${response.config.url}`);
+                log.debug(`Response status: ${response.status}`);
+                log.debug(`Response data: ${JSON.stringify(response.data)}`);
+                return response;
+            },
+            (error) => {
+                if (error.response) {
+                    log.error(`Response from: ${error.response.config.url}`);
+                    log.error(`Response status: ${error.response.status}`);
+                    log.error(`Response body: ${JSON.stringify(error.response.data)}`);
+                }
+                return error.response;
+            }
+        );
     }
 
     async authenticate(username: string, password: string): Promise<void> {
+        log.debug("Authenticating user:", username);
         const encodedCredentials = btoa(`${username}:${password}`);
-        const response = await this.apiClient.post(`/users/${username}/tokens`, {
-            name: "user",
-            scopes: ["write:user", "write:repository"],
-        }, {
-            headers: { Authorization: `Basic ${encodedCredentials}` },
-        });
 
-        const token = response.data?.sha1;
-        if (token) {
-            this.userDataManager.saveAuthToken(token);
-        } else {
-            throw new APIError("Failed to retrieve authentication token.");
+        try {
+            const response = await this.apiClient.post(
+                `api/v1/users/${username}/tokens`,
+                {
+                    name: crypto.randomUUID().toString(),
+                    scopes: ["write:user", "write:repository"],
+                },
+                {
+                    headers: { Authorization: `Basic ${encodedCredentials}` },
+                }
+            );
+
+            if (response.status < 200 || response.status >= 300) {
+                log.error(`Authentication failed with status: ${response.status}`);
+                return Promise.reject(new APIError("Authentication failed", response.status));
+            }
+
+            log.debug("Authentication response:", response);
+            const token = response.data?.sha1;
+            if (token) {
+                log.debug("Authentication successful, saving token");
+                this.userDataManager.saveAuthToken(token);
+            } else {
+                log.error("Failed to retrieve authentication token");
+                return Promise.reject(new APIError("Authentication failed", 500));
+            }
+        } catch (error) {
+            log.error("Authentication error:", error);
+            return Promise.reject(new APIError("Authentication failed", 500));
         }
     }
 
     async getUserDetails(): Promise<User> {
-        const response = await this.apiClient.get("/user");
-        const data = response.data;
+        log.debug("Fetching user details...");
+        try {
+            const response = await this.apiClient.get("/api/v1/user");
 
-        return new User(
-            data.id,
-            data.username || data.login,
-            data.email,
-            data.avatar_url
-        );
+            if (response.status !== 200) {
+                log.error(`Failed to fetch user details, status code: ${response.status}`);
+                return Promise.reject(new APIError("Get user failed", response.status));
+            }
+
+            log.debug("User details response:", response);
+            const data = response.data;
+            log.debug("User details fetched successfully:", data);
+
+            return new User(
+                data.id,
+                data.username || data.login,
+                data.email,
+                data.avatar_url
+            );
+        } catch (error) {
+            log.error("Error fetching user details:", error);
+            return Promise.reject(new APIError("Get user failed", 500));
+        }
     }
+
 
 }

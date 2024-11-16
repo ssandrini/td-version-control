@@ -3,8 +3,12 @@ import {Link} from 'react-router-dom';
 import {FaCog, FaFolderOpen, FaHome} from 'react-icons/fa';
 import {cn} from "../../lib/utils";
 import {localPaths} from "../../const";
+import {useVariableContext} from "../../hooks/Variables/useVariableContext";
+import {CiLogout} from "react-icons/ci";
 
 const Sidebar: React.FC = () => {
+    const {setUser} = useVariableContext();
+
     const [expanded] = useState(false);
     const url = new URL(window.location.href).pathname.split('/')[1];
     const [selected, setSelected] = useState<string>(url);
@@ -22,7 +26,7 @@ const Sidebar: React.FC = () => {
             {expanded && (
                 <h1 className="text-xl font-semibold ml-2 transition-all duration-600 ease-in-out">Mariana</h1>)}
         </div>
-        <div className={cn("flex p-2 flex-col space-y-4 items-center justify-center w-full")}>
+        <div className={cn("flex p-2 flex-col space-y-4 items-center justify-start w-full h-full")}>
             <div
                 className={cn(!expanded ? "h-10 flex items-center justify-center" : "", "rounded hover:bg-gray-700 w-full", selected == localPaths.HOME ? "bg-gray-600" : "")}>
                 <Link to={localPaths.HOME} onClick={() => setSelected(localPaths.HOME)}
@@ -46,6 +50,16 @@ const Sidebar: React.FC = () => {
                     <FaCog className={cn("text-xl", expanded ? "mr-3" : "")}/>
                     {expanded && ("Settings")}
                 </Link>
+            </div>
+            <div className="flex h-full w-full">
+                <div
+                    className={cn(!expanded ? "h-10 flex items-center justify-center" : "", "text-red mt-auto", "rounded hover:bg-red-600 hover:bg-opacity-40 w-full")}>
+                    <div onClick={() => setUser(undefined)}
+                          className={cn("flex items-center py-2", expanded ? "px-4" : "justify-center")}>
+                        <CiLogout className={cn("text-xl text-red-600 font-bold", expanded ? "mr-3" : "")}/>
+                        {expanded && ("Log Out")}
+                    </div>
+                </div>
             </div>
         </div>
     </div>);

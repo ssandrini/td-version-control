@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import {useVariableContext} from "../../hooks/Variables/useVariableContext.tsx";
 import {Outlet} from "react-router-dom";
 import {
@@ -6,10 +6,16 @@ import {
 } from "../../components/ui/dialog.tsx";
 import {Button} from "../../components/ui/button.tsx";
 import log from 'electron-log/renderer';
+import LogIn from "./LogIn";
 
 
 const Layout: React.FC = () => {
-    const {hasTDL, setTouchDesignerLocation} = useVariableContext();
+    const {hasTDL, setTouchDesignerLocation, isLoggedIn, user} = useVariableContext();
+    const [showLogin, setShowLogin] = useState<boolean>(!isLoggedIn());
+
+    useEffect(() => {
+        setShowLogin(!isLoggedIn());
+    }, [isLoggedIn, user]);
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -42,7 +48,7 @@ const Layout: React.FC = () => {
     };
 
     return (<>
-        {!hasTDL() && (<div>
+        {!hasTDL() && !showLogin && (<div>
             <Dialog open>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
@@ -57,7 +63,7 @@ const Layout: React.FC = () => {
                 </DialogContent>
             </Dialog>
         </div>)}
-        <Outlet/>
+        {showLogin ? (<LogIn/>) : (<Outlet/>)}
     </>);
 };
 

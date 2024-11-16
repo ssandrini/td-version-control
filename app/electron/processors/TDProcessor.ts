@@ -88,7 +88,7 @@ export class TDProcessor implements Processor {
         }
 
         try {
-            fs.moveSync(toePath, outDir, { overwrite: true });
+            fs.moveSync(toePath, path.join(outDir, toePath), { overwrite: true });
         } catch (error) {
             log.error(`Error moving ${toePath} to ${outDir}`);
             return Promise.reject(error);

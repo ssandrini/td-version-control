@@ -1,4 +1,4 @@
-import {HasKey} from "../utils/Set";
+import { HasKey } from "../utils/Set";
 
 export class TDNode implements HasKey {
     readonly name: string;
@@ -42,7 +42,7 @@ export class TDNode implements HasKey {
 
     static deserialize(data: any): TDNode {
         const properties = new Map(data.properties);
-        return new TDNode(data.name, data.type, data.subtype, properties);
+        return new TDNode(data.name, data.type, data.subtype, properties as Map<string, string>);
     }
 
     serializeForFile(): object {
@@ -56,6 +56,20 @@ export class TDNode implements HasKey {
 
     static deserializeFromFile(data: any): TDNode {
         const properties = new Map(Object.entries(data.properties));
-        return new TDNode(data.name, data.type, data.subtype, properties);
+        return new TDNode(data.name, data.type, data.subtype, properties as Map<string, string>);
+    }
+
+    public propertiesEqual(otherProperties?: Map<string, string>): boolean {
+        if (!otherProperties || this.properties?.size !== otherProperties.size) {
+            return false;
+        }
+
+        for (const [key, value] of this.properties) {
+            if (otherProperties.get(key) !== value) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

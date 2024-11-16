@@ -13,8 +13,8 @@ import { SimpleGitTracker } from "./trackers/SimpleGitTracker";
 import { TDProcessor } from "./processors/TDProcessor";
 import { API_METHODS } from "./apiMethods";
 import { filePicker, openToeFile, getTemplates } from "./utils/utils";
-import { HasKey } from "./utils/Set";
 import { TDState } from "./models/TDState";
+import {TDMergeResult} from "./models/TDMergeResult";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -94,7 +94,7 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>): void => {
+const setupProject = <S,R>(projectManager: ProjectManager<S,R>): void => {
   ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
     projectManager.listVersions(dir)
   );
@@ -138,6 +138,17 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
   );
 
   ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
+
+  // Remote handling
+  ipcMain.handle(API_METHODS.PULL, async (_, dir: string) => {
+    const result = await projectManager.pull(dir) as TDMergeResult;
+    return result.serialize();
+  });
+
+  ipcMain.handle(API_METHODS.PUSH, (_, dir: string) => projectManager.push(dir));
+
+  ipcMain.handle(API_METHODS.FINISH_MERGE, (_, dir: string, state: S) => projectManager.finishMerge(dir, state));
+  // -----*-----
 
   ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
     watcherMgr.registerWatcher(path, () => {

@@ -52,7 +52,21 @@ const LogIn: React.FC<LogInProps> = () => {
             return;
         }
 
-        setUser({username: email});
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.authenticate(email, password).then(() => {
+            setUser({username: email});
+            setSubmitted(true);
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api.getUser().then((user) => {
+                console.log(user);
+            });
+        }).catch(() => {
+            setSubmitted(true);
+            setUserError(true)
+        });
+
     };
 
     const handleEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +89,7 @@ const LogIn: React.FC<LogInProps> = () => {
         setUserError(false);
     };
 
-    const isFormValid = isEmailValid && password.trim().length > 0;
+    const isFormValid = isEmailValid && password.trim().length >= 8;
 
     return (<div
         className="flex flex-col items-center justify-evenly pt-10 h-screen bg-gradient-to-r from-blue-950 to-blue-900 text-white overflow-y-auto">
@@ -145,22 +159,20 @@ const LogIn: React.FC<LogInProps> = () => {
                                 onChange={handlePasswordChange}
                             />
                             <div onClick={handleToggle}>
-                            {type === "password" ? (
-                                <MdOutlineVisibilityOff className="absolute inset-y-0 right-0 flex items-center pr-4 pt-0.5 h-10 w-10 cursor-pointer"/>
-                            ) : (
-                                <MdOutlineVisibility className="absolute inset-y-0 right-0 flex items-center pr-4 pt-0.5 h-10 w-10 cursor-pointer"/>
-                            )}
+                                {type === "password" ? (<MdOutlineVisibilityOff
+                                    className="absolute inset-y-0 right-0 flex items-center pr-4 pt-0.5 h-10 w-10 cursor-pointer"/>) : (
+                                    <MdOutlineVisibility
+                                        className="absolute inset-y-0 right-0 flex items-center pr-4 pt-0.5 h-10 w-10 cursor-pointer"/>)}
                             </div>
                         </div>
-                        {submitted && userError &&
-                            <p className="text-red-500 text-sm">Credenciales inválidas.</p>}
+                        {submitted && userError && <p className="text-red-500 text-sm">Credenciales inválidas.</p>}
                     </div>
 
                     <div className="flex flex-col justify-center content-center pt-4">
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={!isFormValid}>Iniciar Sesión</Button>
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={!isFormValid}>Iniciar Sesión</Button>
                     </div>
                 </form>
             </div>

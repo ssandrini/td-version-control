@@ -25,6 +25,7 @@ export class AuthService {
         if (response.result) {
             log.debug("Authentication successful, saving token");
             userDataManager.saveAuthToken(response.result.sha1);
+            userDataManager.saveUserCredentials(username, password);
         } else {
             log.error(`Error retrieving token due to ${response.errorCode}`);
             return Promise.resolve(ApiResponse.fromErrorCode(response.errorCode!));
@@ -41,6 +42,7 @@ export class AuthService {
         log.debug("Logging out user...");
         // TO DO: api call DELETE token
         userDataManager.clearAuthToken();
+        userDataManager.clearUserCredentials();
         log.debug("User successfully logged out. Authentication token cleared.");
         return Promise.resolve(ApiResponse.fromResult());
     }

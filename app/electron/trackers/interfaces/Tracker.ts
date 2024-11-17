@@ -2,7 +2,7 @@ import { Version } from '../../models/Version';
 import {Content, Filename, TrackerMergeResult} from "../../merge/TrackerMergeResult";
 
 export interface Tracker {
-    init(dir: string): Promise<void>;
+    init(dir: string, dst?: string): Promise<void>;
     currentVersion(dir: string): Promise<Version>;
     listVersions(dir: string): Promise<Version[]>;
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;

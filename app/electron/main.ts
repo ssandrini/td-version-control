@@ -16,6 +16,8 @@ import { TDState } from "./models/TDState";
 import {TDMergeResult} from "./models/TDMergeResult";
 import {HasKey} from "./utils/Set";
 import authService from "./services/AuthService"
+import remoteRepoService from "./services/RemoteRepoService";
+import {Version} from "./models/Version";
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -133,9 +135,42 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
 
   ipcMain.handle(API_METHODS.OPEN_TD, (_, path: string) => openToeFile(path));
 
-  ipcMain.handle(API_METHODS.CREATE_PROJECT, (_, dir: string, src?: string) =>
-    projectManager.init(dir, src)
-  );
+  ipcMain.handle(API_METHODS.CREATE_PROJECT, async (_, dir: string, name: string, remote: boolean, src?: string) => {
+    let initialVersion: Version;
+    let remoteUrl: string = "";
+    log.debug("params: ", dir, name, remote, src);
+    if (remote) {
+      const response = await remoteRepoService.createRepository(name);
+      if (response.result) {
+        remoteUrl = response.result;
+        initialVersion = await projectManager.init(dir, remoteUrl, src);
+      } else {
+        // TO DO: fixme
+        return Promise.reject(new Error('Unexpected error'));
+      }
+    } else {
+      initialVersion = await projectManager.init(dir, undefined, src);
+    }
+
+    if (src) {
+      try {
+        new URL(src);
+        remoteUrl = src;
+      } catch (error) {
+      }
+    }
+
+    const newProject: Project = {
+      name: name,
+      author: initialVersion.author.name,
+      lastModified: new Date().toLocaleDateString(),
+      lastVersion: initialVersion.name,
+      path: dir,
+      remote: remoteUrl
+    };
+    userDataMgr.addRecentProject(newProject);
+    return Promise.resolve(newProject);
+  });
 
   ipcMain.handle(API_METHODS.GO_TO_VERSION, (_, dir: string, versionId: string) =>
     projectManager.goToVersion(dir, versionId)
@@ -183,4 +218,8 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
   ipcMain.handle(API_METHODS.GET_USER, async () => {
     return authService.getUserDetails();
   });
+
+  ipcMain.handle(API_METHODS.GET_REMOTE_PROJECTS, async () => {
+    return remoteRepoService.getProjects();
+  })
 };

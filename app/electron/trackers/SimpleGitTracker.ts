@@ -9,6 +9,7 @@ import path from 'node:path';
 import {Content, Filename, MergeStatus, TrackerMergeResult} from "../merge/TrackerMergeResult";
 import {parseMergeConflicts, resolveFileConflicts, resolveWithCurrentBranch} from "../merge/MergeParser";
 import {extractFileName} from "../utils/utils";
+import userDataManager from "../managers/UserDataManager";
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
@@ -25,14 +26,18 @@ export class SimpleGitTracker implements Tracker {
     }
 
 
-    async init(dir: string): Promise<void> {
+    async init(dir: string, dst?: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.init();
         // TODO: uncomment this and add CRLF
-        await this.git.raw(['config', '--local', 'user.name', this.username]);
-        await this.git.raw(['config', '--local', 'user.email', this.email]);
+        await this.git.raw(['config', '--local', 'user.name', "BraveJero"]);
+        await this.git.raw(['config', '--local', 'user.email', "jbrave@itba.edu.ar"]);
+        await this.git.raw(['config', '--local', 'push.autoSetupRemote', "true"])
         const gitignorePath = path.join(dir, '.gitignore');
         await fs.writeFile(gitignorePath, this.ignoredFiles.join('\n'), 'utf-8');
+        if(dst) {
+            await this.git.addRemote('origin', dst);
+        }
     }
 
     async currentVersion(dir: string): Promise<Version> {
@@ -148,7 +153,14 @@ export class SimpleGitTracker implements Tracker {
 
     async clone(dir: string, url: string): Promise<void> {
         try {
-            await this.git.clone(url, dir);
+            const { username, password } = userDataManager.getUserCredentials()!;
+            const normalizedUrl = new URL(url);
+            normalizedUrl.protocol = 'https:';
+            normalizedUrl.username = username;
+            normalizedUrl.password = password;
+            const remoteWithCredentials = normalizedUrl.toString();
+            log.debug("remote with cred: ", remoteWithCredentials);
+            await this.git.clone(remoteWithCredentials, dir);
         } catch(error) {
             const errorMessage = `Failed cloning ${url} into ${dir}`;
             this.handleError(error, errorMessage);
@@ -160,7 +172,8 @@ export class SimpleGitTracker implements Tracker {
         log.info("Starting pull operation with fetch");
 
         try {
-            await this.git.fetch();
+            const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
+            await this.git.fetch(remoteUrl);
             log.info("Fetch completed successfully.");
         } catch (fetchError) {
             const errorMessage = "Fetch failed in pull operation";
@@ -218,7 +231,9 @@ export class SimpleGitTracker implements Tracker {
         log.info(`Pushing changes from ${dir}`);
         await this.git.cwd(dir);
         try {
-            const result = await this.git.push();
+            let result;
+            const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
+            result = await this.git.push(remoteUrl);
             log.info(`Push successful: ${result.pushed.length} references updated.`);
         } catch (error) {
             const errorMessage = `Failed to push changes from ${dir}`;
@@ -304,6 +319,24 @@ export class SimpleGitTracker implements Tracker {
             throw new TrackerError(errorMessage);
         }
     }
+
+    private async addCredentialsToRemoteUrl(dir: string): Promise<string> {
+        await this.git.cwd(dir);
+        try {
+            const remoteUrl = (await this.git.listRemote(['--get-url'])).trim();
+            const { username, password } = userDataManager.getUserCredentials()!;
+            const normalizedUrl = new URL(remoteUrl);
+            normalizedUrl.protocol = 'http:';
+            normalizedUrl.username = username;
+            normalizedUrl.password = password;
+            const remoteWithCredentials = normalizedUrl.toString();
+            log.debug("remote with cred: ", remoteWithCredentials);
+            return remoteWithCredentials;
+        } catch (e) {
+            throw e;
+        }
+    }
+
 
     async getMergeResult(dir: string): Promise<TrackerMergeResult> {
         await this.git.cwd(dir);

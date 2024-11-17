@@ -21,4 +21,5 @@ export const API_METHODS = {
     FINISH_MERGE: "finish-merge",
     AUTHENTICATE_USER: 'authenticate-user',
     GET_USER: 'get-user',
+    GET_REMOTE_PROJECTS: 'get-remote-projects',
 }

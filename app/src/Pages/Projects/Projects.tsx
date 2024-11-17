@@ -117,6 +117,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
         // @ts-expect-error
         window.api.createProject('/home/jbrave/Desktop/ITBA/PF/td-version-control', project.name, false, project.remote).then((response) => {
             console.log(response);
+            window.location.reload();
         })
     }
 

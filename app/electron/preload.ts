@@ -1,6 +1,6 @@
-import { ipcRenderer, contextBridge } from 'electron'
+import {contextBridge, ipcRenderer} from 'electron'
 import Project from './models/Project'
-import { API_METHODS } from './apiMethods'
+import {API_METHODS} from './apiMethods'
 import {TDState} from "./models/TDState";
 
 // --------- Expose some API to the Renderer process ---------
@@ -44,4 +44,5 @@ contextBridge.exposeInMainWorld('api', {
   authenticate:       async(username: string, password: string) => ipcRenderer.invoke(API_METHODS.AUTHENTICATE_USER, username, password),
   getUser:            async() => ipcRenderer.invoke(API_METHODS.GET_USER),
   getRemoteProjects:  async() => ipcRenderer.invoke(API_METHODS.GET_REMOTE_PROJECTS),
+  logout:             async() => ipcRenderer.invoke(API_METHODS.LOGOUT),
 });

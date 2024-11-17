@@ -13,8 +13,7 @@ import {ApiResponse} from "../../../electron/errors/ApiResponse";
 
 
 const Layout: React.FC = () => {
-    const {hasTDL, setTouchDesignerLocation, isLoggedIn, user, setUser} = useVariableContext();
-    const [showLogin, setShowLogin] = useState<boolean>(!isLoggedIn());
+    const {hasTDL, setTouchDesignerLocation, user, setUser} = useVariableContext();
     const [userStateReady, setUserStateReady] = useState<boolean>(false);
 
     useEffect(() => {
@@ -23,19 +22,13 @@ const Layout: React.FC = () => {
         window.api.getUser().then((response: ApiResponse) => {
             if(response.errorCode) {
                 setUser(undefined);
-                setShowLogin(true);
             } else {
                 setUser(user);
-                setShowLogin(false);
             }
         }).finally(() => {
             setUserStateReady(true)
         });
     }, []);
-
-    useEffect(() => {
-        setShowLogin(!isLoggedIn());
-    }, [isLoggedIn, user]);
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -68,7 +61,7 @@ const Layout: React.FC = () => {
     };
 
     return (<>
-        {!hasTDL() && !showLogin && (<div>
+        {!hasTDL() && (user != undefined) && (<div>
             <Dialog open>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
@@ -88,7 +81,7 @@ const Layout: React.FC = () => {
             <MarianaHelper/>
             <Spinner/>
         </div>) : (<>
-            {showLogin ? (<LogIn/>) : (<Outlet/>)}
+            {user == undefined ? (<LogIn/>) : (<Outlet/>)}
         </>)}
     </>);
 };

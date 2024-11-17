@@ -155,7 +155,7 @@ export class SimpleGitTracker implements Tracker {
         try {
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(url);
-            normalizedUrl.protocol = 'https:';
+            normalizedUrl.protocol = 'http:';
             normalizedUrl.username = username;
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();

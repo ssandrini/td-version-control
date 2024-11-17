@@ -22,4 +22,5 @@ export const API_METHODS = {
     AUTHENTICATE_USER: 'authenticate-user',
     GET_USER: 'get-user',
     GET_REMOTE_PROJECTS: 'get-remote-projects',
+    LOGOUT: 'logout',
 }

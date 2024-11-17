@@ -222,4 +222,8 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
   ipcMain.handle(API_METHODS.GET_REMOTE_PROJECTS, async () => {
     return remoteRepoService.getProjects();
   })
+
+  ipcMain.handle(API_METHODS.LOGOUT, async () => {
+    return authService.logout();
+  })
 };

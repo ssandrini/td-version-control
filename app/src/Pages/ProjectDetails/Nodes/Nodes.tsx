@@ -14,36 +14,47 @@ interface NodesProps {
     compare: TDState | undefined
 }
 
+const Viz: {
+    GRAPH: string,
+    SETTINGS: string,
+    COLLABORATORS: string,
+    CONFLICTS: string,
+} = {
+    GRAPH: 'GRAPH',
+    SETTINGS: 'SETTINGS',
+    COLLABORATORS: 'COLLABORATORS',
+    CONFLICTS: 'CONFLICTS',
+}
+
 const Nodes: React.FC<NodesProps> = ({changes, current, compare}) => {
-    const [graphViz, setGraphViz] = useState<boolean>(true);
+    const [graphViz, setGraphViz] = useState<string>(Viz.GRAPH);
 
     return (<div
         className="flex flex-col py-4 rounded-lg h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 mx-2">
         <div
             className="ml-auto flex flex-row p-2 bg-gray-600 w-fit rounded-lg gap-2 transition-all duration-600 ease-in-out">
             <div
-                className={cn(graphViz ? "bg-blue-800 text-white" : "text-gray-500", "flex gap-2 flex-row items-center p-2 rounded-lg cursor-pointer")}
+                className={cn(graphViz == Viz.GRAPH ? "bg-blue-800 text-white" : "text-gray-500", "flex gap-2 flex-row items-center p-2 rounded-lg cursor-pointer")}
                 onClick={() => {
-                    setGraphViz(true)
+                    setGraphViz(Viz.GRAPH)
                 }}
             >
                 <FaCircleNodes/>
                 Graph
             </div>
             <div
-                className={cn(!graphViz ? "bg-blue-800 text-white" : "text-gray-500", "flex gap-2 flex-row items-center p-2 rounded-lg cursor-pointer")}
+                className={cn(graphViz == Viz.SETTINGS ? "bg-blue-800 text-white" : "text-gray-500", "flex gap-2 flex-row items-center p-2 rounded-lg cursor-pointer")}
                 onClick={() => {
-                    setGraphViz(false)
+                    setGraphViz(Viz.SETTINGS)
                 }}
             >
                 <FaSquare/>
-                Operator
+                Settings
             </div>
         </div>
         {/* Hidden instead of not rendered to avoid re-rendering the ReactFlow diagram each time */}
-        <NodeGraph hidden={!graphViz} current={current} compare={compare}/>
-        {/* TODO: add diff with custom version to NodeList changes */}
-        {graphViz ? (<></>) : (<NodeList changes={changes} current={current}/>)}
+        <NodeGraph hidden={graphViz != Viz.GRAPH} current={current} compare={compare}/>
+        {graphViz != Viz.SETTINGS ? (<></>) : (<NodeList changes={changes} current={current}/>)}
     </div>);
 }
 

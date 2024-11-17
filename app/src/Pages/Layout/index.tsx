@@ -10,6 +10,7 @@ import LogIn from "./LogIn";
 import MarianaHelper from "../../components/ui/MarianaHelper";
 import Spinner from "../../components/ui/Spinner";
 import {ApiResponse} from "../../../electron/errors/ApiResponse";
+import {User} from "../../../electron/models/api/User"
 
 
 const Layout: React.FC = () => {
@@ -19,11 +20,11 @@ const Layout: React.FC = () => {
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.getUser().then((response: ApiResponse) => {
+        window.api.getUser().then((response: ApiResponse<User>) => {
             if(response.errorCode) {
                 setUser(undefined);
             } else {
-                setUser(user);
+                setUser(response.result);
             }
         }).finally(() => {
             setUserStateReady(true)

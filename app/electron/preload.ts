@@ -45,4 +45,7 @@ contextBridge.exposeInMainWorld('api', {
   getUser:            async() => ipcRenderer.invoke(API_METHODS.GET_USER),
   getRemoteProjects:  async() => ipcRenderer.invoke(API_METHODS.GET_REMOTE_PROJECTS),
   logout:             async() => ipcRenderer.invoke(API_METHODS.LOGOUT),
+  getCollaborators:   async(owner: string, projectName: string) => ipcRenderer.invoke(API_METHODS.GET_COLLABORATORS, owner, projectName),
+  addCollaborator:    async(owner: string, projectName: string, collaborator: string, permissions: "read" | "write" | "admin") => ipcRenderer.invoke(API_METHODS.ADD_COLLABORATOR, owner, projectName, collaborator, permissions),
+  removeCollaborator: async(owner: string, projectName: string, collaborator: string) => ipcRenderer.invoke(API_METHODS.REMOVE_COLLABORATOR, owner, projectName, collaborator),
 });

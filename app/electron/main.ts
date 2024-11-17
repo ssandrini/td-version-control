@@ -58,8 +58,7 @@ function createWindow() {
   });
 
   win.maximize();
-  // TODO: get user correctly
-  const tracker = new SimpleGitTracker("tduser", "tduser@example.com");
+  const tracker = new SimpleGitTracker();
   const processor = new TDProcessor();
   const projectManager = new TDProjectManager(processor, tracker, ".mar");
 
@@ -225,5 +224,17 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
 
   ipcMain.handle(API_METHODS.LOGOUT, async () => {
     return authService.logout();
+  })
+
+  ipcMain.handle(API_METHODS.GET_COLLABORATORS, async(_, owner: string, projectName: string) => {
+    return remoteRepoService.getCollaborators(owner, projectName);
+  })
+
+  ipcMain.handle(API_METHODS.ADD_COLLABORATOR, async(_, owner: string, projectName: string, collaborator: string, permissions: "read" | "write" | "admin") => {
+    return remoteRepoService.addCollaborator(owner, projectName, collaborator, permissions);
+  })
+
+  ipcMain.handle(API_METHODS.REMOVE_COLLABORATOR, async(_, owner: string, projectName: string, collaborator: string) => {
+    return remoteRepoService.removeCollaborator(owner, projectName, collaborator);
   })
 };

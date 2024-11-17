@@ -1,6 +1,8 @@
 import Store from "electron-store";
 import Project from "../models/Project";
 import log from "electron-log/main";
+import { User } from "../models/api/User";
+import { AuthToken } from "../models/api/AuthToken";
 
 class UserDataManager {
     private store: Store;
@@ -62,17 +64,17 @@ class UserDataManager {
         return path;
     }
 
-    saveAuthToken(token: string): void {
+    saveAuthToken(token: AuthToken): void {
         log.info("Saving authentication token.");
         this.store.set("authToken", token);
-        log.info("Authentication token saved.");
+        log.info(`Authentication token for ${token.name} saved.`);
     }
 
-    getAuthToken(): string | null {
+    getAuthToken(): AuthToken | null {
         log.info("Retrieving authentication token.");
-        const token = this.store.get("authToken", null) as string | null;
+        const token = this.store.get("authToken", null) as AuthToken | null;
         if (token) {
-            log.info("Authentication token retrieved.");
+            log.info(`Authentication token retrieved: ${token.name}`);
         } else {
             log.warn("No authentication token found.");
         }
@@ -116,6 +118,31 @@ class UserDataManager {
         log.info("Clearing user credentials.");
         this.store.delete("userCredentials");
         log.info("User credentials cleared.");
+    }
+
+    saveUser(user: User): void {
+        log.info(`Saving user with ID: ${user.id} and username: ${user.username}`);
+        this.store.set("user", user);
+        log.info("User saved successfully.");
+    }
+
+    getUser(): User | null {
+        log.info("Retrieving user from store.");
+        const user = this.store.get("user", null) as User | null;
+
+        if (user) {
+            log.info(`User retrieved: ${user.username}`);
+            return user;
+        } else {
+            log.warn("No user found in store.");
+            return null;
+        }
+    }
+
+    clearUser(): void {
+        log.info("Clearing user from store.");
+        this.store.delete("user");
+        log.info("User cleared successfully.");
     }
 }
 

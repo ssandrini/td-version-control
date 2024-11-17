@@ -2,6 +2,7 @@ import {AxiosResponse, InternalAxiosRequestConfig} from "axios";
 import log from "electron-log/main";
 import userDataManager from "../managers/UserDataManager";
 import MissingAuthenticationToken from "../errors/MissingAuthenticationToken";
+import {AuthToken} from "../models/api/AuthToken";
 
 export const successResponseInterceptor = (response: AxiosResponse) => {
     log.debug(`Response from: ${response.config.url}`);
@@ -36,17 +37,17 @@ export const addAuthenticationTokenInterceptor = (config: InternalAxiosRequestCo
     log.debug(`Request body: ${JSON.stringify(config.data)}`);
     log.debug(`Request headers: ${JSON.stringify(config.headers)}`);
 
-    if (config.url && config.url.includes("/tokens")) {
+    if (config.url && config.url.includes("/tokens") && config.method!.toLowerCase() === "post") {
         log.debug("Skipping auth token for authentication request.");
         return config;
     }
 
-    const token = userDataManager.getAuthToken();
+    const token : AuthToken|null = userDataManager.getAuthToken();
     if (!token) {
         log.error("Missing authentication token");
         return Promise.reject(MissingAuthenticationToken);
     }
     log.debug("Adding Authorization header with token:", token);
-    config.headers.Authorization = `token ${token}`;
+    config.headers.Authorization = `token ${token.sha1}`;
     return config;
 };

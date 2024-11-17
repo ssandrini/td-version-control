@@ -10,28 +10,26 @@ import {Content, Filename, MergeStatus, TrackerMergeResult} from "../merge/Track
 import {parseMergeConflicts, resolveFileConflicts, resolveWithCurrentBranch} from "../merge/MergeParser";
 import {extractFileName} from "../utils/utils";
 import userDataManager from "../managers/UserDataManager";
+import {User} from "../models/api/User";
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
-    readonly username: string;
-    readonly email: string;
     readonly separator = '//';
     readonly EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
     readonly ignoredFiles = ['diff', 'workingState.json'];
 
-    constructor(username: string, email: string) {
+    constructor() {
         this.git = simpleGit();
-        this.username = username;
-        this.email = email;
     }
 
 
     async init(dir: string, dst?: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.init();
-        // TODO: uncomment this and add CRLF
-        await this.git.raw(['config', '--local', 'user.name', "BraveJero"]);
-        await this.git.raw(['config', '--local', 'user.email', "jbrave@itba.edu.ar"]);
+        // TODO: add CRLF
+        const user : User = userDataManager.getUser()!;
+        await this.git.raw(['config', '--local', 'user.name', user.username]);
+        await this.git.raw(['config', '--local', 'user.email', user.email]);
         await this.git.raw(['config', '--local', 'push.autoSetupRemote', "true"])
         const gitignorePath = path.join(dir, '.gitignore');
         await fs.writeFile(gitignorePath, this.ignoredFiles.join('\n'), 'utf-8');

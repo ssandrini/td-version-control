@@ -115,7 +115,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
     function handleCloneProject(project: Project) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.createProject('/home/jbrave/Desktop/ITBA/PF/td-version-control', project.name, false, project.remote).then((response) => {
+        window.api.createProject('C:\\Users\\user\\Desktop\\proyectos\\REMOTOS\\hardcoded', project.name, false, project.remote).then((response) => {
             console.log(response);
             window.location.reload();
         })

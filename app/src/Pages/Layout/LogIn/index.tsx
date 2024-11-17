@@ -17,10 +17,6 @@ const LogIn: React.FC<LogInProps> = () => {
     const {isLoggedIn, setUser} = useVariableContext();
     const navigate = useNavigate();
 
-<<<<<<< Updated upstream
-=======
-    const [showMiddleDiv, setShowMiddleDiv] = useState(false);
->>>>>>> Stashed changes
     const [username, setUsername] = useState<string>('');
     const [isUsernameValid, setIsUsernameValid] = useState<boolean>(false);
     const [password, setPassword] = useState<string>('');

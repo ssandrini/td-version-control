@@ -7,11 +7,28 @@ import {
 import {Button} from "../../components/ui/button.tsx";
 import log from 'electron-log/renderer';
 import LogIn from "./LogIn";
+import MarianaHelper from "../../components/ui/MarianaHelper";
+import Spinner from "../../components/ui/Spinner";
 
 
 const Layout: React.FC = () => {
-    const {hasTDL, setTouchDesignerLocation, isLoggedIn, user} = useVariableContext();
+    const {hasTDL, setTouchDesignerLocation, isLoggedIn, user, setUser} = useVariableContext();
     const [showLogin, setShowLogin] = useState<boolean>(!isLoggedIn());
+    const [userStateReady, setUserStateReady] = useState<boolean>(false);
+
+    useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.getUser().then((user) => {
+            setUser(user);
+            setShowLogin(false);
+        }).catch(() => {
+            setUser(undefined);
+            setShowLogin(true);
+        }).finally(() => {
+            setUserStateReady(true)
+        });
+    }, []);
 
     useEffect(() => {
         setShowLogin(!isLoggedIn());
@@ -63,7 +80,13 @@ const Layout: React.FC = () => {
                 </DialogContent>
             </Dialog>
         </div>)}
-        {showLogin ? (<LogIn/>) : (<Outlet/>)}
+        {!userStateReady ? (<div
+            className="flex flex-col items-center justify-evenly pt-10 h-screen bg-gradient-to-r from-blue-950 to-blue-900 text-white overflow-y-auto">
+            <MarianaHelper/>
+            <Spinner/>
+        </div>) : (<>
+            {showLogin ? (<LogIn/>) : (<Outlet/>)}
+        </>)}
     </>);
 };
 

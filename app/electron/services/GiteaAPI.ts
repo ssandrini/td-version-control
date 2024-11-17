@@ -70,7 +70,7 @@ export default class GiteaAPI {
 
         try {
             const response = await this.apiClient.post(
-                `api/v1/users/${username}/tokens`,
+                `/users/${username}/tokens`,
                 {
                     name: crypto.randomUUID().toString(),
                     scopes: ["write:user", "write:repository"],
@@ -103,7 +103,7 @@ export default class GiteaAPI {
     async getUserDetails(): Promise<User> {
         log.debug("Fetching user details...");
         try {
-            const response = await this.apiClient.get("/api/v1/user");
+            const response = await this.apiClient.get("/user");
 
             if (response.status !== 200) {
                 log.error(`Failed to fetch user details, status code: ${response.status}`);
@@ -123,6 +123,17 @@ export default class GiteaAPI {
         } catch (error) {
             log.error("Error fetching user details:", error);
             return Promise.reject(new APIError("Get user failed", 500));
+        }
+    }
+
+    async logout(): Promise<void> {
+        log.debug("Logging out user...");
+        try {
+            this.userDataManager.clearAuthToken();
+            log.debug("User successfully logged out. Authentication token cleared.");
+        } catch (error) {
+            log.error("Error during logout:", error);
+            return Promise.reject(new APIError("Logout failed", 500));
         }
     }
 

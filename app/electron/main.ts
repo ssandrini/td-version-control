@@ -60,7 +60,7 @@ function createWindow() {
   const processor = new TDProcessor();
   const userDataMgr = new UserDataManager();
   const projectManager = new TDProjectManager(processor, tracker, ".mar");
-  const giteaApi = new GiteaAPI("http://34.44.41.60", userDataMgr);
+  const giteaApi = new GiteaAPI("http://34.44.41.60/api/v1", userDataMgr);
 
   setupProject(projectManager, giteaApi, userDataMgr);
 

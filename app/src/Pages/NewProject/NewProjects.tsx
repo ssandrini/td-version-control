@@ -13,7 +13,7 @@ const NewProject: React.FC = () => {
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
     const [step, setStep] = useState<"select" | "form">("select");
     const [isFormValid, setIsFormValid] = useState<boolean>(false);
-    const [formData, setFormData] = useState<{ title: string; description: string; location: string } | null>(null);
+    const [formData, setFormData] = useState<{ title: string; description: string; location: string, pushOnLoad: boolean } | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<boolean>(false);
@@ -37,7 +37,7 @@ const NewProject: React.FC = () => {
         setSuccess(false);
     };
 
-    const handleFormSubmit = (formData: { title: string; description: string; location: string }) => {
+    const handleFormSubmit = (formData: { title: string; description: string; location: string, pushOnLoad: boolean }) => {
         setLoading(true);
         setError(null);
         setSuccess(false);
@@ -58,7 +58,7 @@ const NewProject: React.FC = () => {
         });
     };
 
-    const handleFormUpdate = (data: { title: string; description: string; location: string }) => {
+    const handleFormUpdate = (data: { title: string; description: string; location: string, pushOnLoad: boolean }) => {
         setFormData(data);
         setIsFormValid(data.title.trim() !== "" && data.location.trim() !== "");
     };

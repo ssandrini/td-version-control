@@ -1,20 +1,41 @@
-import React, {useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import {useVariableContext} from "../../hooks/Variables/useVariableContext.tsx";
-import Sidebar from "../../components/ui/Sidebar.tsx";
 import {Outlet} from "react-router-dom";
 import {
-    Dialog,
-    DialogFooter,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription
+    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
 } from "../../components/ui/dialog.tsx";
 import {Button} from "../../components/ui/button.tsx";
+import log from 'electron-log/renderer';
+import LogIn from "./LogIn";
+import MarianaHelper from "../../components/ui/MarianaHelper";
+import Spinner from "../../components/ui/Spinner";
+import {ApiResponse} from "../../../electron/errors/ApiResponse";
 
 
 const Layout: React.FC = () => {
-    const {hasTDL, setTouchDesignerLocation} = useVariableContext();
+    const {hasTDL, setTouchDesignerLocation, isLoggedIn, user, setUser} = useVariableContext();
+    const [showLogin, setShowLogin] = useState<boolean>(!isLoggedIn());
+    const [userStateReady, setUserStateReady] = useState<boolean>(false);
+
+    useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.getUser().then((response: ApiResponse) => {
+            if(response.errorCode) {
+                setUser(undefined);
+                setShowLogin(true);
+            } else {
+                setUser(user);
+                setShowLogin(false);
+            }
+        }).finally(() => {
+            setUserStateReady(true)
+        });
+    }, []);
+
+    useEffect(() => {
+        setShowLogin(!isLoggedIn());
+    }, [isLoggedIn, user]);
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -39,15 +60,15 @@ const Layout: React.FC = () => {
                 await window.api.saveTDBinPath(selectedPath);
                 setTouchDesignerLocation(selectedPath);
             } else {
-                console.log("No file was selected.");
+                log.info("No file was selected.");
             }
         } catch (error) {
-            console.error("Error selecting file:", error);
+            log.error("Error selecting file:", error);
         }
     };
 
     return (<>
-        {!hasTDL() && (<div>
+        {!hasTDL() && !showLogin && (<div>
             <Dialog open>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
@@ -62,15 +83,14 @@ const Layout: React.FC = () => {
                 </DialogContent>
             </Dialog>
         </div>)}
-        <div className="flex h-screen">
-            <div className="min-w-40 max-w-40 h-full">
-                <Sidebar/>
-            </div>
-            <div className="w-full h-screen overflow-auto">
-                <Outlet/>
-            </div>
-        </div>
+        {!userStateReady ? (<div
+            className="flex flex-col items-center justify-evenly pt-10 h-screen bg-gradient-to-r from-blue-950 to-blue-900 text-white overflow-y-auto">
+            <MarianaHelper/>
+            <Spinner/>
+        </div>) : (<>
+            {showLogin ? (<LogIn/>) : (<Outlet/>)}
+        </>)}
     </>);
 };
 
-export default Layout
+export default Layout;

@@ -2,11 +2,16 @@ import React, { useState, useEffect, MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { FaFolderOpen, FaPlay, FaTrashAlt } from "react-icons/fa";
-import Project from "../../models/Project.ts";
 import { Dialog, DialogFooter, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog.tsx";
 import {localPaths} from "../../const";
+import log from 'electron-log/renderer';
+import Project from "../../../electron/models/Project.ts";
 
-const Projects: React.FC = () => {
+interface ProjectsProps {
+    hideHeader?:boolean
+}
+
+const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
     const [projects, setProjects] = useState<Project[]>([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
@@ -22,13 +27,6 @@ const Projects: React.FC = () => {
             }
         });
     }, []);
-
-    const handleRowClick = (projectName: string) => {
-        const project = projects.find(p => p.name === projectName);
-        if (project) {
-            navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: project.path, projectName: projectName } });
-        }
-    };
 
     const handleFilePick = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -54,46 +52,18 @@ const Projects: React.FC = () => {
     };
 
     const handleNewProject = () => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api.filePicker().then((files) => {
-            const selectedPath = files.filePaths[0];
-            const projectName = selectedPath.split('\\').pop() || 'Untitled'; // WARNING: EN WINDOWS USO ESA BARRA, EN LINUX/MAC LA OTRA
-            const newProject: Project = {
-                name: projectName,
-                author: "Unknown Author",
-                lastModified: new Date().toLocaleDateString(),
-                lastVersion: "0.0.1",
-                path: selectedPath,
-            };
-            const projectExists = projects.some(proj => proj.path === selectedPath);
-            if (!projectExists) {
-                setProjects([...projects, newProject]);
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                window.api.saveProject(newProject);
-            }
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            window.api.createProjectFromTemplate(selectedPath, "template0").then((created) => {
-                console.log("se creo: "+ created);
-            })
-        });
+        navigate(localPaths.HOME + localPaths.NEW_PROJECT);
     };
 
     const handlePlayProject = async (project: Project) => {
-        setLoadingProject(true); // Mostrar loader
+        setLoadingProject(true);
         try {
-            const success = await // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                window.api.openToe(project.path);
-            if (success) {
-                navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { path: project.path, projectName: project.name } }); // Navegar a la página del proyecto
-            } else {
-                alert('Error: No se pudo abrir el proyecto debido a un problema con el archivo.');
-            }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            await window.api.openToe(project.path);
+            navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { project: project } });
         } catch (error) {
-            console.error('Unexpected error:', error);
+            log.error('Unexpected error:', error);
             alert('Error: Ocurrió un problema inesperado al intentar abrir el proyecto.');
         } finally {
             setLoadingProject(false); // Ocultar loader
@@ -117,31 +87,33 @@ const Projects: React.FC = () => {
         setDeleteDialogOpen(true);
     };
 
-    const handleCellClick = (event: MouseEvent, projectName: string) => {
+    const handleCellClick = (event: MouseEvent, project: Project) => {
         // Prevents the row click if the click is within a button
         if ((event.target as HTMLElement).closest('button')) {
             return;
         }
-        handleRowClick(projectName);
+        navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, { state: { project: project } });
     };
 
     return (
-        <div className="flex bg-gray-900 w-full overflow-auto h-full">
+        <div className="flex w-full overflow-auto h-full">
             {/* Main Content */}
             <div className="flex-1 p-8 text-white">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-3xl font-semibold">Projects</h2>
-                    <div className="flex space-x-4">
-                        <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleNewProject}>Create</Button>
-                        <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleFilePick}>Open</Button>
+                {!hideHeader && (
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-3xl font-semibold">Projects</h2>
+                        <div className="flex space-x-4">
+                            <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleNewProject}>Create</Button>
+                            <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleFilePick}>Open</Button>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="overflow-auto">
                     {/* Projects Table or No Projects Message */}
                     {projects.length > 0 ? (
-                        <div className="bg-gray-800 rounded-lg shadow">
+                        <div className="bg-gray-800 rounded-lg">
                             <table className="min-w-full divide-y divide-gray-700">
                                 <thead>
                                     <tr>
@@ -158,7 +130,7 @@ const Projects: React.FC = () => {
                                             Last version
                                         </th>
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                            Actions
+
                                         </th>
                                     </tr>
                                 </thead>
@@ -166,7 +138,7 @@ const Projects: React.FC = () => {
                                     {projects.map((project, index) => (
                                         <tr
                                             key={index}
-                                            onClick={(event) => handleCellClick(event, project.name)}
+                                            onClick={(event) => handleCellClick(event, project)}
                                             className="cursor-pointer hover:bg-gray-700"
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">{project.name}</td>

@@ -7,6 +7,7 @@ import {Input} from "../../../components/ui/input";
 import {MdOutlineVisibility, MdOutlineVisibilityOff} from "react-icons/md";
 import MarianaHelper from "../../../components/ui/MarianaHelper";
 import Spinner from "../../../components/ui/Spinner";
+import {ApiResponse} from "../../../../electron/errors/ApiResponse";
 
 
 interface LogInProps {
@@ -44,28 +45,29 @@ const LogIn: React.FC<LogInProps> = () => {
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
         setIsLoadingLogin(true);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.authenticate(username, password).then(() => {
+        window.api.authenticate(username, password).then((apiResponse: ApiResponse<void>) => {
             setSubmitted(true);
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            window.api.getUser().then((user) => {
-                setUser(user);
-            }).catch(() => {
-                setSubmitted(true);
+            if(apiResponse.errorCode) {
                 setUserError(true);
-            }).finally(() => {
                 setIsLoadingLogin(false);
-            });
-        }).catch(() => {
-            setSubmitted(true);
-            setUserError(true);
-            setIsLoadingLogin(false);
+            } else {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                window.api.getUser().then((apiResponse: ApiResponse<User>) => {
+                    if(apiResponse.result) {
+                        setUser(apiResponse.result);
+                    } else {
+                        setSubmitted(true);
+                        setUserError(true);
+                    }
+                });
+                setIsLoadingLogin(false);
+            }
         });
-
+        setIsLoadingLogin(false);
     };
 
     const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {

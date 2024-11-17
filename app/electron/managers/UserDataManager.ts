@@ -2,7 +2,7 @@ import Store from "electron-store";
 import Project from "../models/Project";
 import log from "electron-log/main";
 
-export class UserDataManager {
+class UserDataManager {
     private store: Store;
 
     constructor() {
@@ -96,3 +96,5 @@ export class UserDataManager {
         log.info("Authentication token cleared.");
     }
 }
+
+export default new UserDataManager();

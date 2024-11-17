@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, screen } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import {UserDataManager} from "./managers/UserDataManager";
+import userDataMgr from "./managers/UserDataManager";
 import Project from "./models/Project";
 import watcherMgr from "./managers/WatcherManager"
 import log from "electron-log/main";
@@ -14,7 +14,8 @@ import { API_METHODS } from "./apiMethods";
 import { filePicker, openToeFile, getTemplates } from "./utils/utils";
 import { TDState } from "./models/TDState";
 import {TDMergeResult} from "./models/TDMergeResult";
-import GiteaAPI from "./services/GiteaAPI";
+import {HasKey} from "./utils/Set";
+import authService from "./services/AuthService"
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -58,11 +59,9 @@ function createWindow() {
   // TODO: get user correctly
   const tracker = new SimpleGitTracker("tduser", "tduser@example.com");
   const processor = new TDProcessor();
-  const userDataMgr = new UserDataManager();
   const projectManager = new TDProjectManager(processor, tracker, ".mar");
-  const giteaApi = new GiteaAPI("http://34.44.41.60/api/v1", userDataMgr);
 
-  setupProject(projectManager, giteaApi, userDataMgr);
+  setupProject(projectManager);
 
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
@@ -96,7 +95,7 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>, api: GiteaAPI, userDataMgr: UserDataManager): void => {
+const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>): void => {
   ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
     projectManager.listVersions(dir)
   );
@@ -111,8 +110,10 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>,
     projectManager.currentVersion(dir)
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ipcMain.handle(API_METHODS.FILE_PICKER, (_) => filePicker());
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ipcMain.handle(API_METHODS.RECENT_PROJECTS, (_) => userDataMgr.getRecentProjects());
 
   ipcMain.handle(API_METHODS.SAVE_PROJECT, (_, project: Project) =>
@@ -127,6 +128,7 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>,
     userDataMgr.setTouchDesignerBinPath(path)
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ipcMain.handle(API_METHODS.GET_TD_PATH, (_) => userDataMgr.getTouchDesignerBinPath());
 
   ipcMain.handle(API_METHODS.OPEN_TD, (_, path: string) => openToeFile(path));
@@ -139,6 +141,7 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>,
     projectManager.goToVersion(dir, versionId)
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
   // Remote handling
@@ -149,6 +152,8 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>,
 
   ipcMain.handle(API_METHODS.PUSH, (_, dir: string) => projectManager.push(dir));
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
   ipcMain.handle(API_METHODS.FINISH_MERGE, (_, dir: string, state: S) => projectManager.finishMerge(dir, state));
   // -----*-----
 
@@ -167,15 +172,15 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>,
 
   ipcMain.handle(API_METHODS.GET_STATE, async (_, path: string, versionId?: string) => {
     log.debug('get state main handler');
-    const state = await projectManager.getVersionState(path, versionId) as TDState;
+    const state = await projectManager.getVersionState(path, versionId) as unknown as TDState;
     return state.serialize();
   });
 
   ipcMain.handle(API_METHODS.AUTHENTICATE_USER, async (_, username: string, password: string) => {
-    return api.authenticate(username, password);
+    return authService.authenticate(username, password);
   });
 
   ipcMain.handle(API_METHODS.GET_USER, async () => {
-    return api.getUserDetails();
+    return authService.getUserDetails();
   });
 };

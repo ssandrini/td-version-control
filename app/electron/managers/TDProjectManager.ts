@@ -55,7 +55,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     ];
   }
 
-  async init(dir: string, src?: string): Promise<Version> {
+  async init(dir: string, dst?: string, src?: string): Promise<Version> {
     await validateDirectory(dir);
 
     if (src) {
@@ -84,12 +84,16 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     }
 
     try {
-      await this.tracker.init(hiddenDirPath);
-      return this.createVersion(
+      await this.tracker.init(hiddenDirPath, dst);
+      const version = await this.createVersion(
         dir,
         'Initial Version',
         'This is the initial version of your project'
       );
+      if(dst) {
+        await this.tracker.push(hiddenDirPath);
+      }
+      return Promise.resolve(version);
     } catch (error) {
       log.error(
         `Error initializing tracker at ${hiddenDirPath}. Cause:`,
@@ -354,6 +358,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     }
   }
 
+  // TO DO: este metodo no devuelve la initialVersion, de vuelve la current (diferente de init)
   private async initFromUrl(dir: string, url: string): Promise<Version> {
     const hiddenDirPath = this.hiddenDirPath(dir);
     await this.tracker.clone(hiddenDirPath, url);

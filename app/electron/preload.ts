@@ -32,7 +32,7 @@ contextBridge.exposeInMainWorld('api', {
   saveTDBinPath:      async (path: string) => ipcRenderer.invoke(API_METHODS.SAVE_TD_PATH, path),
   getTDBinPath:       async() => ipcRenderer.invoke(API_METHODS.GET_TD_PATH),
   openToe:            async(path: string) => ipcRenderer.invoke(API_METHODS.OPEN_TD, path),
-  createProject:      async(dir: string, src?: string) => ipcRenderer.invoke(API_METHODS.CREATE_PROJECT, dir, src),
+  createProject:      async(dir: string, name: string, remote: boolean, src?: string) => ipcRenderer.invoke(API_METHODS.CREATE_PROJECT, dir, name, remote, src),
   createNewVersion:   async(dir: string, name:string, description: string) => ipcRenderer.invoke(API_METHODS.CREATE_VERSION, dir, name, description),
   getCurrentVersion:  async(path: string) => ipcRenderer.invoke(API_METHODS.CURRENT_VERSION, path),
   goToVersion:        async(dir: string, versionId: string) => ipcRenderer.invoke(API_METHODS.GO_TO_VERSION, dir, versionId),
@@ -43,4 +43,5 @@ contextBridge.exposeInMainWorld('api', {
   finishMerge:        async(dir:string, state: TDState) => ipcRenderer.invoke(API_METHODS.FINISH_MERGE, dir, state),
   authenticate:       async(username: string, password: string) => ipcRenderer.invoke(API_METHODS.AUTHENTICATE_USER, username, password),
   getUser:            async() => ipcRenderer.invoke(API_METHODS.GET_USER),
+  getRemoteProjects:  async() => ipcRenderer.invoke(API_METHODS.GET_REMOTE_PROJECTS),
 });

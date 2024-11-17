@@ -6,7 +6,6 @@ import { localPaths } from "../../const";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineCheckCircle, AiOutlineCloseCircle } from "react-icons/ai";
 import Spinner from "../../components/ui/Spinner";
-import { Version } from "../../../electron/models/Version";
 import Template from "../../../electron/models/Template";
 import Project from "../../../electron/models/Project";
 
@@ -45,23 +44,10 @@ const NewProject: React.FC = () => {
         
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.createProject(formData.location, selectedTemplate?.dir).then((initialVersion: Version) => {
+        window.api.createProject(formData.location, formData.title, true, selectedTemplate?.dir).then((project: Project) => {
             setLoading(false);
-            const newProject: Project = {
-                name: formData.title,
-                author: initialVersion.author.name,
-                lastModified: new Date().toLocaleDateString(),
-                lastVersion: initialVersion.name,
-                path: formData.location,
-            };
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            window.api.saveProject(newProject).then(() => {
-                setSuccess(true);
-                setTimeout(() => {
-                    navigate(localPaths.HOME + localPaths.PROJECT_DETAIL,  { state: { project: newProject } });
-                }, 1500);
-            });
+            setSuccess(true);
+            setTimeout(() => navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, {state: {project: project}}), 1500);
         }).catch((err: unknown) => {
             setLoading(false);
             if (Object.prototype.hasOwnProperty.call(err, "message")) {

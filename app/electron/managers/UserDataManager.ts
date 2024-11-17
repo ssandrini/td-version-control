@@ -62,20 +62,12 @@ class UserDataManager {
         return path;
     }
 
-    /**
-     * Saves the authentication token to the store.
-     * @param {string} token - The authentication token to save.
-     */
     saveAuthToken(token: string): void {
         log.info("Saving authentication token.");
         this.store.set("authToken", token);
         log.info("Authentication token saved.");
     }
 
-    /**
-     * Retrieves the stored authentication token.
-     * @returns {string | null} - The authentication token, or null if not set.
-     */
     getAuthToken(): string | null {
         log.info("Retrieving authentication token.");
         const token = this.store.get("authToken", null) as string | null;
@@ -87,13 +79,43 @@ class UserDataManager {
         return token;
     }
 
-    /**
-     * Removes the authentication token from the store.
-     */
     clearAuthToken(): void {
         log.info("Clearing authentication token.");
         this.store.delete("authToken");
         log.info("Authentication token cleared.");
+    }
+
+    saveUserCredentials(username: string, password: string): void {
+        log.info("Saving user credentials in Base64.");
+        const encodedCredentials = btoa(`${username}:${password}`);
+        this.store.set("userCredentials", encodedCredentials);
+        log.info("User credentials saved.");
+    }
+
+    getUserCredentials(): { username: string; password: string } | null {
+        log.info("Retrieving user credentials from store.");
+        const encodedCredentials = this.store.get("userCredentials", null) as string | null;
+
+        if (encodedCredentials) {
+            const decodedCredentials = atob(encodedCredentials);
+            const [username, password] = decodedCredentials.split(":");
+            if (username && password) {
+                log.info("User credentials successfully retrieved.");
+                return { username, password };
+            } else {
+                log.warn("Stored user credentials are malformed.");
+            }
+        } else {
+            log.warn("No user credentials found.");
+        }
+
+        return null;
+    }
+
+    clearUserCredentials(): void {
+        log.info("Clearing user credentials.");
+        this.store.delete("userCredentials");
+        log.info("User credentials cleared.");
     }
 }
 

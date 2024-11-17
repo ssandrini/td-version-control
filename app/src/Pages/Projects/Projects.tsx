@@ -113,7 +113,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                 <div className="overflow-auto">
                     {/* Projects Table or No Projects Message */}
                     {projects.length > 0 ? (
-                        <div className="bg-gray-800 rounded-lg shadow">
+                        <div className="bg-gray-800 rounded-lg">
                             <table className="min-w-full divide-y divide-gray-700">
                                 <thead>
                                     <tr>

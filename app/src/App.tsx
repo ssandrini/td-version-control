@@ -16,7 +16,9 @@ const App: React.FC = () => {
         <BrowserRouter>
             <Routes>
                 <Route path={localPaths.HOME} element={<Layout/>}>
-                    <Route path="" element={<Main/>}/>
+                    <Route path="" element={<InnerLayout/>}>
+                        <Route path="" element={<Main/>}/>
+                    </Route>
                     <Route path={localPaths.PROJECTS} element={<InnerLayout/>}>
                         <Route path="" element={<Projects/>}/>
                     </Route>

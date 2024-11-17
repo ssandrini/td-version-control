@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { app, BrowserWindow, ipcMain, screen } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
@@ -15,6 +14,8 @@ import { API_METHODS } from "./apiMethods";
 import { filePicker, openToeFile, getTemplates } from "./utils/utils";
 import { TDState } from "./models/TDState";
 import {TDMergeResult} from "./models/TDMergeResult";
+import {HasKey} from "./utils/Set";
+import authService from "./services/AuthService"
 
 createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -94,7 +95,7 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-const setupProject = <S,R>(projectManager: ProjectManager<S,R>): void => {
+const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>): void => {
   ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
     projectManager.listVersions(dir)
   );
@@ -109,8 +110,10 @@ const setupProject = <S,R>(projectManager: ProjectManager<S,R>): void => {
     projectManager.currentVersion(dir)
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ipcMain.handle(API_METHODS.FILE_PICKER, (_) => filePicker());
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ipcMain.handle(API_METHODS.RECENT_PROJECTS, (_) => userDataMgr.getRecentProjects());
 
   ipcMain.handle(API_METHODS.SAVE_PROJECT, (_, project: Project) =>
@@ -125,6 +128,7 @@ const setupProject = <S,R>(projectManager: ProjectManager<S,R>): void => {
     userDataMgr.setTouchDesignerBinPath(path)
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ipcMain.handle(API_METHODS.GET_TD_PATH, (_) => userDataMgr.getTouchDesignerBinPath());
 
   ipcMain.handle(API_METHODS.OPEN_TD, (_, path: string) => openToeFile(path));
@@ -137,6 +141,7 @@ const setupProject = <S,R>(projectManager: ProjectManager<S,R>): void => {
     projectManager.goToVersion(dir, versionId)
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
   // Remote handling
@@ -147,6 +152,8 @@ const setupProject = <S,R>(projectManager: ProjectManager<S,R>): void => {
 
   ipcMain.handle(API_METHODS.PUSH, (_, dir: string) => projectManager.push(dir));
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
   ipcMain.handle(API_METHODS.FINISH_MERGE, (_, dir: string, state: S) => projectManager.finishMerge(dir, state));
   // -----*-----
 
@@ -165,7 +172,15 @@ const setupProject = <S,R>(projectManager: ProjectManager<S,R>): void => {
 
   ipcMain.handle(API_METHODS.GET_STATE, async (_, path: string, versionId?: string) => {
     log.debug('get state main handler');
-    const state = await projectManager.getVersionState(path, versionId) as TDState;
+    const state = await projectManager.getVersionState(path, versionId) as unknown as TDState;
     return state.serialize();
+  });
+
+  ipcMain.handle(API_METHODS.AUTHENTICATE_USER, async (_, username: string, password: string) => {
+    return authService.authenticate(username, password);
+  });
+
+  ipcMain.handle(API_METHODS.GET_USER, async () => {
+    return authService.getUserDetails();
   });
 };

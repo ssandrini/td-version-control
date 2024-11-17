@@ -7,7 +7,7 @@ import {HttpMethod} from "../types/HttpMethod";
 import {ApiResponse} from "../errors/ApiResponse";
 
 export class AuthService {
-    async authenticate(username: string, password: string): Promise<ApiResponse<void>> {
+    async authenticate(username: string, password: string): Promise<ApiResponse> {
         log.debug("Authenticating user:", username);
         const encodedCredentials = btoa(`${username}:${password}`);
         const response = await giteaAPIConnector.apiRequest<{ sha1: string }>(
@@ -22,8 +22,8 @@ export class AuthService {
             }
         );
 
-        log.debug("Authentication successful, saving token");
         if (response.result) {
+            log.debug("Authentication successful, saving token");
             userDataManager.saveAuthToken(response.result.sha1);
         } else {
             log.error(`Error retrieving token due to ${response.errorCode}`);
@@ -37,7 +37,7 @@ export class AuthService {
         return giteaAPIConnector.apiRequest<User>('/user', HttpMethod.GET);
     }
 
-    async logout(): Promise<ApiResponse<void>> {
+    async logout(): Promise<ApiResponse> {
         log.debug("Logging out user...");
         // TO DO: api call DELETE token
         userDataManager.clearAuthToken();

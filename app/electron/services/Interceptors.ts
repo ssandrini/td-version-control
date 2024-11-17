@@ -27,7 +27,7 @@ export const errorResponseInterceptor = (error: any) => {
     }
 
     // Something happened in setting up the request that triggered an Error
-    log.error('General error : ', error.message);
+    log.error('General error: ', error.message);
     return Promise.reject(error);
 };
 

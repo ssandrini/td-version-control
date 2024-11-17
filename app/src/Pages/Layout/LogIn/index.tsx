@@ -63,11 +63,11 @@ const LogIn: React.FC<LogInProps> = () => {
                         setSubmitted(true);
                         setUserError(true);
                     }
-                });
-                setIsLoadingLogin(false);
+                }).finally(() => {
+                    setIsLoadingLogin(false);
+                })
             }
-        });
-        setIsLoadingLogin(false);
+        })
     };
 
     const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {

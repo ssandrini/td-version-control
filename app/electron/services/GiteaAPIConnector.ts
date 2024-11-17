@@ -8,11 +8,11 @@ import {APIErrorCode} from "../errors/APIErrorCode";
 
 export class GiteaAPIConnector {
     private readonly apiClient: AxiosInstance;
-    private readonly baseURL: string = "http://34.44.41.60/api/v1";
+    private readonly baseURL: string = "http://34.44.41.60/api/v1/";
 
     constructor() {
         this.apiClient = axios.create({
-            url: this.baseURL,
+            baseURL: this.baseURL,
             headers: { "Content-Type": "application/json" },
         });
         log.debug("Initializing GiteaAPI with baseURL:", this.baseURL);
@@ -38,16 +38,16 @@ export class GiteaAPIConnector {
             return Promise.resolve(ApiResponse.fromResult(response.data));
         } catch(error: any) {
             if (error === missingAuthenticationToken) {
-                return Promise.reject(ApiResponse.fromErrorCode(APIErrorCode.MissingAuthenticationToken));
+                return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.MissingAuthenticationToken));
             }
             if (error.response) {
                 log.error(`Response status: ${error.response.status}`);
-                return Promise.reject(ApiResponse.fromErrorCode(this.mapStatusCode(error.response.status)));
+                return Promise.resolve(ApiResponse.fromErrorCode(this.mapStatusCode(error.response.status)));
             } else if (error.request) {
-                return Promise.reject(ApiResponse.fromErrorCode(APIErrorCode.CommunicationError));
+                return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.CommunicationError));
             }
 
-            return Promise.reject(ApiResponse.fromErrorCode(APIErrorCode.UnknownError));
+            return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.UnknownError));
         }
     }
 

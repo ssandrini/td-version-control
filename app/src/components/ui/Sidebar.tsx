@@ -55,7 +55,13 @@ const Sidebar: React.FC = () => {
             </Link>
             <div className="flex h-full w-full">
                 <div
-                    onClick={() => setUser(undefined)}
+                    onClick={() => {
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-expect-error
+                        window.api.logout().finally(() => {
+                            setUser(undefined);
+                        })
+                    }}
                     className={cn(!expanded ? "h-10 flex items-center justify-center" : "", "text-red mt-auto hover:cursor-pointer", "rounded hover:bg-red-600 hover:bg-opacity-40 w-full")}>
                     <div className={cn("flex items-center py-2", expanded ? "px-4" : "justify-center")}>
                         <CiLogout className={cn("text-xl text-red-600 font-bold", expanded ? "mr-3" : "")}/>

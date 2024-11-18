@@ -1,4 +1,5 @@
 export enum MergeStatus {
+    UP_TO_DATE,
     FINISHED,
     IN_PROGRESS,
 }

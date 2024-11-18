@@ -10,32 +10,26 @@ import LogIn from "./LogIn";
 import MarianaHelper from "../../components/ui/MarianaHelper";
 import Spinner from "../../components/ui/Spinner";
 import {ApiResponse} from "../../../electron/errors/ApiResponse";
+import {User} from "../../../electron/models/api/User"
 
 
 const Layout: React.FC = () => {
-    const {hasTDL, setTouchDesignerLocation, isLoggedIn, user, setUser} = useVariableContext();
-    const [showLogin, setShowLogin] = useState<boolean>(!isLoggedIn());
+    const {hasTDL, setTouchDesignerLocation, user, setUser} = useVariableContext();
     const [userStateReady, setUserStateReady] = useState<boolean>(false);
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.getUser().then((response: ApiResponse) => {
+        window.api.getUser().then((response: ApiResponse<User>) => {
             if(response.errorCode) {
                 setUser(undefined);
-                setShowLogin(true);
             } else {
-                setUser(user);
-                setShowLogin(false);
+                setUser(response.result);
             }
         }).finally(() => {
             setUserStateReady(true)
         });
     }, []);
-
-    useEffect(() => {
-        setShowLogin(!isLoggedIn());
-    }, [isLoggedIn, user]);
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -68,7 +62,7 @@ const Layout: React.FC = () => {
     };
 
     return (<>
-        {!hasTDL() && !showLogin && (<div>
+        {!hasTDL() && (user != undefined) && (<div>
             <Dialog open>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
@@ -88,7 +82,7 @@ const Layout: React.FC = () => {
             <MarianaHelper/>
             <Spinner/>
         </div>) : (<>
-            {showLogin ? (<LogIn/>) : (<Outlet/>)}
+            {user == undefined ? (<LogIn/>) : (<Outlet/>)}
         </>)}
     </>);
 };

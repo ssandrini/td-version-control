@@ -1,6 +1,6 @@
 import React, {createContext, type ReactNode, useContext, useState} from "react";
 import VariableContextType from "../../models/VariableContextType.ts";
-import User from "../../models/User.ts";
+import {User} from "../../../electron/models/api/User";
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 export const VariableContext: React.Context<VariableContextType> = createContext<VariableContextType>(null!)

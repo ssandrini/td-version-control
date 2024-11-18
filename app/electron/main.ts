@@ -14,7 +14,6 @@ import { API_METHODS } from "./apiMethods";
 import { filePicker, openToeFile, getTemplates } from "./utils/utils";
 import { TDState } from "./models/TDState";
 import {TDMergeResult} from "./models/TDMergeResult";
-import {HasKey} from "./utils/Set";
 import authService from "./services/AuthService"
 import remoteRepoService from "./services/RemoteRepoService";
 import {Version} from "./models/Version";
@@ -58,8 +57,7 @@ function createWindow() {
   });
 
   win.maximize();
-  // TODO: get user correctly
-  const tracker = new SimpleGitTracker("tduser", "tduser@example.com");
+  const tracker = new SimpleGitTracker();
   const processor = new TDProcessor();
   const projectManager = new TDProjectManager(processor, tracker, ".mar");
 
@@ -97,7 +95,7 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>): void => {
+const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
   ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
     projectManager.listVersions(dir)
   );
@@ -162,7 +160,7 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
 
     const newProject: Project = {
       name: name,
-      author: initialVersion.author.name,
+      owner: initialVersion.author.name,
       lastModified: new Date().toLocaleDateString(),
       lastVersion: initialVersion.name,
       path: dir,
@@ -221,5 +219,21 @@ const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>)
 
   ipcMain.handle(API_METHODS.GET_REMOTE_PROJECTS, async () => {
     return remoteRepoService.getProjects();
+  })
+
+  ipcMain.handle(API_METHODS.LOGOUT, async () => {
+    return authService.logout();
+  })
+
+  ipcMain.handle(API_METHODS.GET_COLLABORATORS, async(_, owner: string, projectName: string) => {
+    return remoteRepoService.getCollaborators(owner, projectName);
+  })
+
+  ipcMain.handle(API_METHODS.ADD_COLLABORATOR, async(_, owner: string, projectName: string, collaborator: string, permissions: "read" | "write" | "admin") => {
+    return remoteRepoService.addCollaborator(owner, projectName, collaborator, permissions);
+  })
+
+  ipcMain.handle(API_METHODS.REMOVE_COLLABORATOR, async(_, owner: string, projectName: string, collaborator: string) => {
+    return remoteRepoService.removeCollaborator(owner, projectName, collaborator);
   })
 };

@@ -7,7 +7,7 @@ const InnerLayout: React.FC = () => {
 
     return (<div className="flex h-screen">
             <Sidebar/>
-            <div className="w-full h-screen overflow-auto bg-gray-900">
+            <div className="w-full h-screen overflow-auto no-scrollbar bg-gray-900">
                 <Outlet/>
             </div>
         </div>);

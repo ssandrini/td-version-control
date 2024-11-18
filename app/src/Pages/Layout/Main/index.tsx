@@ -10,7 +10,7 @@ import MarianaHelper from "../../../components/ui/MarianaHelper";
 const Main: React.FC = () => {
 
     return (<div
-        className="flex flex-col items-center pt-10 h-screen bg-gradient-to-r from-blue-950 to-blue-900 text-white overflow-y-auto">
+        className="flex flex-col items-center pt-10 h-screen bg-gradient-to-r from-blue-950 to-blue-900 text-white overflow-y-auto no-scrollbar">
         <MarianaHelper/>
         <div className="flex flex-row items-center justify-center w-full gap-10 mt-10">
             <Link to={localPaths.PROJECTS}
@@ -28,7 +28,7 @@ const Main: React.FC = () => {
         <div className="w-full flex flex-col">
             <h2 className="pl-10 font-bold">
                 {/* TODO: Add recent projects to back */}
-                Recently opened:
+                Local:
             </h2>
             <Projects hideHeader={true}/>
         </div>

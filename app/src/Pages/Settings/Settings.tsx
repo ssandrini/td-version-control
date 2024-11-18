@@ -26,13 +26,15 @@ const Settings: React.FC = () => {
         }
     };
 
+    console.log(user);
+
     return (
         <div className="flex h-full bg-gray-50">
             <div className="max-w-4xl mx-auto my-8 p-6 w-full bg-white rounded-lg shadow-md">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                     <div className="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center text-xl font-bold">
-                            <img className={user?.avatarUrl && "w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center text-xl font-bold"} src={user?.avatarUrl} alt={user?.username?.charAt(0) || "NN"}></img>
+                            <img className={user?.avatar_url && "w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center text-xl font-bold"} src={user?.avatar_url} alt={user?.username?.charAt(0) || "NN"}></img>
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800">Settings</h1>

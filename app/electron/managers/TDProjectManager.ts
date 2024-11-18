@@ -13,7 +13,8 @@ import {
   extractNodeNameFromToc,
   findContainers,
   findFileByExt,
-  getNodeInfoFromNFile, splitSet,
+  getNodeInfoFromNFile,
+  splitSet,
   validateDirectory,
 } from '../utils/utils';
 import {MissingFileError} from '../errors/MissingFileError';
@@ -183,6 +184,10 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
   async pull(dir: string): Promise<TDMergeResult> {
     const hiddenDirPath = this.hiddenDirPath(dir);
     const result: TrackerMergeResult = await this.tracker.pull(hiddenDirPath, this.excludedFiles);
+
+    if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
+      return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
+    }
 
     if (result.mergeStatus === MergeStatus.FINISHED) {
       await this.processor.postprocess(hiddenDirPath, dir);

@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {useLocation} from "react-router-dom";
-import {FaArrowDown, FaCheck, FaCloud} from "react-icons/fa";
+import {FaArrowDown, FaCheck, FaCloud, FaPlay} from "react-icons/fa";
 import {Version} from "../../../../main/models/Version";
 import log from "electron-log/renderer.js";
 import {TDNode} from "../../../../main/models/TDNode";
@@ -33,8 +33,7 @@ const ProjectDetail: React.FC = () => {
   const [expandDetails, setExpandDetails] = useState<boolean>(false);
 
   const [mergeConflicts, setMergeConflicts] = useState<{
-    currentState: TDState | null,
-    incomingState: TDState | null
+    currentState: TDState | null, incomingState: TDState | null
   } | undefined>(undefined);
 
   useEffect(() => {
@@ -201,6 +200,35 @@ const ProjectDetail: React.FC = () => {
     });
   }
 
+  const handlePlayProject = (project: Project | undefined) => {
+    if (!project) return;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    window.api.openToe(project.path).catch((error) => {
+      log.error('Unexpected error:', error);
+      toast({
+        className: "", style: {
+          borderTop: "0.35rem solid transparent",
+          borderBottom: "transparent",
+          borderRight: "transparent",
+          borderLeft: "transparent",
+          borderImage: "linear-gradient(to right, rgb(255, 0, 0), rgb(252, 80, 80))",
+          borderImageSlice: "1"
+        }, description: (<div className="w-full h-full flex flex-row items-start gap-2">
+          <CiWarning
+            className="bg-gradient-to-r from-red-400 to-red-600 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8"/>
+          <div className="flex flex-col">
+            <div className="font-p1_bold text-h3">Error on project open</div>
+            <div className="font-p1_regular">Please try again or contact the mariana team @
+              marianamasabra@gmail.com.
+            </div>
+          </div>
+        </div>)
+      })
+    })
+
+  };
+
   return (<div className="bg-gray-800 p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar">
     {selectedVersion ? (<div
       className="w-full rounded-lg bg-gray-700 cursor-pointer text-white p-4 flex flex-col transition-all duration-600 ease-in-out"
@@ -215,6 +243,15 @@ const ProjectDetail: React.FC = () => {
               {project?.name}
             </h2>
             <div className="flex flex-row gap-4">
+              <Button
+                className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePlayProject(project);
+                }}
+              >
+                <FaPlay/>
+              </Button>
               {project?.remote ? (<>
                 <Button
                   variant="secondary"
@@ -239,7 +276,7 @@ const ProjectDetail: React.FC = () => {
                   className="w-fit hover:scale-105 transform ease-in-out duration-600 transition-all"
                   onClick={() => handlePush()}
                 >
-                  Publicar en&nbsp;
+                  Publish in&nbsp;
                   <div className="flex font-bold italic">Mariana Cloud &copy;</div>
                 </Button>
               </>)}
@@ -272,36 +309,37 @@ const ProjectDetail: React.FC = () => {
       />)}
     </div>) : (<p>Select a version to see details.</p>)}
     {mergeConflicts && (<Dialog open>
-        <DialogContent
-          className="min-w-[90%] max-w-[90%] w-[90%] min-h-[90%] max-h-[90%] h-[90%] flex flex-col bg-gray-600">
-          <div className="w-full flex flex-row justify-between">
-            <Button
-              onClick={() => {
-                handleResolveConflict(mergeConflicts?.currentState ?? undefined);
-              }}
-            >
-              Resolver
-            </Button>
-            <Button
-              onClick={() => {
-                handleResolveConflict(mergeConflicts?.incomingState ?? undefined);
-              }}
-            >
-              Resolver
-            </Button>
-          </div>
-          <div className="flex flex-row gap-5 w-full h-full">
-            <NodeGraph current={mergeConflicts?.currentState ?? undefined}
-                       compare={mergeConflicts?.incomingState ?? undefined}/>
-            <NodeGraph current={mergeConflicts?.incomingState ?? undefined}
-                       compare={mergeConflicts?.currentState ?? undefined}/>
-          </div>
-        </DialogContent>
-      </Dialog>)}
+      <DialogContent
+        className="min-w-[90%] max-w-[90%] w-[90%] min-h-[90%] max-h-[90%] h-[90%] flex flex-col bg-gray-600">
+        <div className="w-full flex flex-row justify-between">
+          <Button
+            onClick={() => {
+              handleResolveConflict(mergeConflicts?.currentState ?? undefined);
+            }}
+          >
+            Resolver
+          </Button>
+          <Button
+            onClick={() => {
+              handleResolveConflict(mergeConflicts?.incomingState ?? undefined);
+            }}
+          >
+            Resolver
+          </Button>
+        </div>
+        <div className="flex flex-row gap-5 w-full h-full">
+          <NodeGraph current={mergeConflicts?.currentState ?? undefined}
+                     compare={mergeConflicts?.incomingState ?? undefined}/>
+          <NodeGraph current={mergeConflicts?.incomingState ?? undefined}
+                     compare={mergeConflicts?.currentState ?? undefined}/>
+        </div>
+      </DialogContent>
+    </Dialog>)}
     <div className="h-[85%]">
       <Nodes changes={changes} current={currentState} compare={compareState} project={project}/>
     </div>
   </div>);
-};
+}
+
 
 export default ProjectDetail;

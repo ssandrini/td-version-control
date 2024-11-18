@@ -26,10 +26,6 @@ const Main: React.FC = () => {
         </div>
 
         <div className="w-full flex flex-col">
-            <h2 className="pl-10 font-bold">
-                {/* TODO: Add recent projects to back */}
-                Local:
-            </h2>
             <Projects hideHeader={true}/>
         </div>
     </div>);

@@ -1,19 +1,30 @@
 import React, {MouseEvent, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {Button} from "../../components/ui/button";
-import {FaDownload, FaFolderOpen, FaPlay, FaTrashAlt} from "react-icons/fa";
-import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from "../../components/ui/dialog.tsx";
+import {FaCheck, FaCross, FaDownload, FaFolderOpen, FaPlay, FaTrashAlt} from "react-icons/fa";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from "../../components/ui/dialog.tsx";
 import {localPaths} from "../../const";
 import log from 'electron-log/renderer';
 import Project from "../../../electron/models/Project.ts";
 import {ApiResponse} from "../../../electron/errors/ApiResponse";
 import Spinner from "../../components/ui/Spinner";
+import {useToast} from "../../hooks/use-toast";
+import {CiWarning} from "react-icons/ci";
 
 interface ProjectsProps {
     hideHeader?: boolean
 }
 
 const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
+    const {toast} = useToast();
+
     const [projects, setProjects] = useState<Project[]>([]);
     const [remoteProjects, setRemoteProjects] = useState<Project[]>([]);
 
@@ -22,6 +33,11 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
     const [loadingProject, setLoadingProject] = useState<boolean>(false);
+
+    const [projectToClone, setProjectToClone] = useState<Project | undefined>(undefined);
+
+    const [reload, setReload] = useState(false);
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -43,7 +59,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
         }).finally(() => {
             setIsLoadingRemote(false);
         });
-    }, []);
+    }, [reload]);
 
     const handleFilePick = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -112,12 +128,62 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
         navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, {state: {project: project}});
     };
 
-    function handleCloneProject(project: Project) {
+    function handleCloneProject() {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.createProject('C:\\Users\\user\\Desktop\\proyectos\\REMOTOS\\hardcoded', project.name, false, project.remote).then((response) => {
-            console.log(response);
-            window.location.reload();
+        window.api.filePicker().then((files) => {
+            if (files.filePaths.length > 0) {
+                const selectedPath = files.filePaths[0];
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                window.api.createProject(selectedPath, projectToClone.name, false, projectToClone.remote).then((response) => {
+                    console.log(response);
+                    setReload(!reload);
+                    toast({
+                        className: "", style: {
+                            borderTop: "0.35rem solid transparent",
+                            borderBottom: "transparent",
+                            borderRight: "transparent",
+                            borderLeft: "transparent",
+                            borderImage: "linear-gradient(to right, rgb(10, 27, 182), rgb(0, 0, 255))",
+                            borderImageSlice: "1"
+                        }, description: (<div className="w-full h-full flex flex-row items-start gap-2">
+                            <FaCheck
+                                className="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8"/>
+                            <div className="flex flex-col">
+                                <div className="font-p1_bold text-h3">Project downloaded</div>
+                                <div className="font-p1_regular">You can now see the project in your &#39;Local Projects&#39; tab.
+                                </div>
+                            </div>
+                        </div>)
+                    })
+                }).catch(() => {
+                    toast({
+                        className: "", style: {
+                            borderTop: "0.35rem solid transparent",
+                            borderBottom: "transparent",
+                            borderRight: "transparent",
+                            borderLeft: "transparent",
+                            borderImage: "linear-gradient(to right, rgb(255, 0, 0), rgb(252, 80, 80))",
+                            borderImageSlice: "1"
+                        }, description: (<div className="w-full h-full flex flex-row items-start gap-2">
+                            <CiWarning
+                                className="bg-gradient-to-r from-red-400 to-red-600 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8"/>
+                            <div className="flex flex-col">
+                                <div className="font-p1_bold text-h3">Error on download</div>
+                                <div className="font-p1_regular">Please try again or contact the mariana team @ marianamasabra@gmail.com.
+                                </div>
+                            </div>
+                        </div>)
+                    })
+                }).finally(() => {
+                    setProjectToClone(undefined);
+                })
+            } else {
+                setProjectToClone(undefined);
+            }
+        }).catch(() => {
+            setProjectToClone(undefined);
         })
     }
 
@@ -243,7 +309,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                                     className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleCloneProject(project);
+                                        setProjectToClone(project);
                                     }}
                                 >
                                     <FaDownload/>
@@ -261,10 +327,24 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                         </tr>))}
                         </tbody>
                     </table>
-                </div>) : (<>{isLoadingRemote ? (<Spinner/>) : (<div className="flex flex-col items-center justify-center">
-                    <FaFolderOpen className="text-6xl text-gray-300 mb-4"/>
-                    <h1 className="text-2xl text-gray-200 mb-2">No remote projects, yet</h1>
-                </div>)}</>)}
+                </div>) : (<>{isLoadingRemote ? (<Spinner/>) : (
+                    <div className="flex flex-col items-center justify-center">
+                        <FaFolderOpen className="text-6xl text-gray-300 mb-4"/>
+                        <h1 className="text-2xl text-gray-200 mb-2">No remote projects, yet</h1>
+                    </div>)}</>)}
+                {projectToClone && (<Dialog open>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Select location for download</DialogTitle>
+                            <DialogDescription>
+                                Please select a location to store the project.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button type="button" onClick={handleCloneProject}>Select location</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>)}
             </div>
         </div>
 

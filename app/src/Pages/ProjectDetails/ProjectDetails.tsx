@@ -88,7 +88,7 @@ const ProjectDetail: React.FC = () => {
         if (project?.remote) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            window.api.getCollaborators("ssandrini", project.name)
+            window.api.getCollaborators(project.owner ?? 'BraveJero', project.name)
                 .then((response: ApiResponse<User[]>) => {
                     if(response.result) {
                         setCollaborators(response.result);

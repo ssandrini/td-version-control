@@ -1,8 +1,6 @@
 export default interface Project {
     name: string;
-    author: string;
-    lastModified?: string;
-    lastVersion?: string;
+    owner: string;
     path?: string;
     remote?: string;
 }

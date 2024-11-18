@@ -1,7 +1,7 @@
 import React, {MouseEvent, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {Button} from "../../components/ui/button";
-import {FaCheck, FaCross, FaDownload, FaFolderOpen, FaPlay, FaTrashAlt} from "react-icons/fa";
+import {FaCheck, FaDownload, FaFolderOpen, FaPlay, FaTrashAlt} from "react-icons/fa";
 import {
     Dialog,
     DialogContent,
@@ -17,6 +17,7 @@ import {ApiResponse} from "../../../electron/errors/ApiResponse";
 import Spinner from "../../components/ui/Spinner";
 import {useToast} from "../../hooks/use-toast";
 import {CiWarning} from "react-icons/ci";
+import {useVariableContext} from "../../hooks/Variables/useVariableContext";
 
 interface ProjectsProps {
     hideHeader?: boolean
@@ -24,6 +25,7 @@ interface ProjectsProps {
 
 const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
     const {toast} = useToast();
+    const {user} = useVariableContext();
 
     const [projects, setProjects] = useState<Project[]>([]);
     const [remoteProjects, setRemoteProjects] = useState<Project[]>([]);
@@ -69,9 +71,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
             const projectName = selectedPath.split('\\').pop() || 'Untitled'; // WARNING: EN WINDOWS USO ESA BARRA, EN LINUX/MAC LA OTRA
             const newProject: Project = {
                 name: projectName,
-                author: "Unknown Author",
-                lastModified: new Date().toLocaleDateString(),
-                lastVersion: "0.0.1",
+                owner: user!.username,
                 path: selectedPath,
             };
             const projectExists = projects.some(proj => proj.path === selectedPath);
@@ -211,12 +211,6 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                 Author
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                Last modified
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                Last version
-                            </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
 
                             </th>
@@ -229,9 +223,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                             className="cursor-pointer hover:bg-gray-700"
                         >
                             <td className="px-6 py-4 whitespace-nowrap">{project.name}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{project.author}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{project.lastModified}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{project.lastVersion}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{project.owner}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                 <Button
                                     className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
@@ -283,12 +275,6 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                 Author
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                Last modified
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                Last version
-                            </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
 
                             </th>
@@ -301,9 +287,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                             className="cursor-pointer hover:bg-gray-700"
                         >
                             <td className="px-6 py-4 whitespace-nowrap">{project.name}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{project.author}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{project.lastModified}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{project.lastVersion}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{project.owner}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                 <Button
                                     className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"

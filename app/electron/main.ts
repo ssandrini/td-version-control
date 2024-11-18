@@ -160,7 +160,7 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     const newProject: Project = {
       name: name,
-      author: initialVersion.author.name,
+      owner: initialVersion.author.name,
       lastModified: new Date().toLocaleDateString(),
       lastVersion: initialVersion.name,
       path: dir,

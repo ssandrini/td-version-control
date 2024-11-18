@@ -43,21 +43,14 @@ export class RemoteRepoService {
         );
 
         if (response.result) {
-            const remote_projects = response.result.map(repo => ({
+            const remote_projects: Project[] = response.result.map(repo => ({
                 name: repo.name,
-                author: repo.owner.username,
-                clone_url: repo.clone_url
+                owner: repo.owner.username,
+                remote: repo.clone_url
             }));
 
             log.debug("Projects fetched successfully:", remote_projects);
-
-            const projects: Project[] = remote_projects.map((p) => ({
-                name: p.name,
-                author: p.author,
-                remote: p.clone_url,
-            }));
-
-            return ApiResponse.fromResult(projects);
+            return ApiResponse.fromResult(remote_projects);
         } else {
             log.error("Error fetching projects due to", response.errorCode);
             return ApiResponse.fromErrorCode(response.errorCode!);

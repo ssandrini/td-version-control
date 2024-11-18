@@ -1,5 +1,5 @@
 import {Dispatch, SetStateAction} from "react";
-import User from "./User";
+import {User} from "../../electron/models/api/User";
 
 export default interface VariableContextType {
     touchDesignerLocation: string,

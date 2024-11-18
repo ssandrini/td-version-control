@@ -10,8 +10,8 @@ import {cn} from "../../../../lib/utils";
 import {nodeState} from "../../../../models/OperatorNodeVariant";
 
 interface NodeGraphProps {
-    current: TDState | undefined
-    compare: TDState | undefined
+    current?: TDState | undefined
+    compare?: TDState | undefined
     hidden?: boolean
 }
 

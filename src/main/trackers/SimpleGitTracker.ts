@@ -1,4 +1,4 @@
-import simpleGit, {GitResponseError, MergeResult, SimpleGit, StatusResult} from 'simple-git';
+import simpleGit, {GitResponseError, MergeConflict, MergeResult, SimpleGit, StatusResult} from 'simple-git';
 import { Tracker } from './interfaces/Tracker';
 import { Version } from '../models/Version';
 import { TrackerError } from '../errors/TrackerError';
@@ -22,12 +22,11 @@ export class SimpleGitTracker implements Tracker {
         this.git = simpleGit();
     }
 
-
     async init(dir: string, dst?: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.init();
-        // TODO: add CRLF
         const user : User = userDataManager.getUser()!;
+        await this.git.raw(['config', '--local', 'core.autocrlf', "false"]);
         await this.git.raw(['config', '--local', 'user.name', user.username]);
         await this.git.raw(['config', '--local', 'user.email', user.email]);
         await this.git.raw(['config', '--local', 'push.autoSetupRemote', "true"])
@@ -122,7 +121,7 @@ export class SimpleGitTracker implements Tracker {
         try {
             hasParent = await this.git.raw(['rev-list', '--parents', '-n', '1', commit.hash]);
 
-            if (!hasParent || typeof hasParent !== 'string') {
+            if (!hasParent) {
                 log.error(`Invalid response from git rev-list for commit "${commit.hash}".`);
             }
         } catch (error) {
@@ -165,78 +164,74 @@ export class SimpleGitTracker implements Tracker {
         }
     }
 
-    async pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult> {
-        this.git.cwd(dir);
-        log.info("Starting pull operation with fetch");
+  async pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult> {
+    this.git.cwd(dir);
+    log.info("Starting pull operation");
 
-        try {
-            const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            const fetchResult = await this.git.fetch(remoteUrl);
-            log.info("Fetch completed successfully.");
-
-            if (fetchResult.updated.length === 0) {
-                log.info("No changes detected in fetch. Repository is up-to-date.");
-                return Promise.resolve({ mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null });
-            }
-        } catch (fetchError) {
-            const errorMessage = "Fetch failed in pull operation";
-            this.handleError(fetchError, errorMessage);
-        }
-
-        let conflicts;
-        try {
-            const mergeSummary = await this.git.merge(['FETCH_HEAD']);
-            log.info(`Merged ${mergeSummary.merges.length} files without conflicts.`);
-            return Promise.resolve({ mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null });
-        } catch (error) {
-            const gitError = error as GitResponseError<MergeResult>;
-            const mergeSummary = gitError.git;
-            if (!mergeSummary) {
-                const errorMessage = "Merge failed, but no conflict details were available.";
-                this.handleError(error, errorMessage);
-            }
-            conflicts = mergeSummary.conflicts;
-        }
-
-        log.info(`Merge encountered ${conflicts.length} conflict(s)`);
-        const conflictMap = new Map<Filename, Set<[Content, Content]>>();
-
-        for (const conflict of conflicts) {
-            const filePath = path.join(dir, conflict.file!);
-            let currentContent = this.readFileContent(filePath);
-
-            log.info(`Conflict detected in file "${conflict.file}" due to: ${conflict.reason}`);
-
-            // Automatic conflict resolution
-            if (excludedFiles.some((regex) => regex.test(filePath))) {
-                log.info(`Auto-resolving conflict for excluded file: ${filePath}`);
-                currentContent = resolveWithCurrentBranch(currentContent);
-                fs.writeFileSync(filePath, currentContent);
-                await this.git.add(conflict.file!);
-                continue;
-            }
-
-            // Non-automatic conflicts
-            log.info(`Unable to auto-resolve conflict in file "${conflict.file}". Marking as unresolved.`);
-            conflictMap.set(extractFileName(conflict.file!)!, parseMergeConflicts(currentContent));
-        }
-
-        if (conflictMap.size > 0) {
-            log.info("Merge status: IN_PROGRESS with unresolved conflicts");
-            return Promise.resolve({ mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap });
-        }
-
-        return Promise.resolve({ mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null });
+    try {
+      const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
+      await this.git.fetch(remoteUrl);
+      log.info("Fetch completed successfully.");
+    } catch (fetchError) {
+      this.handleError(fetchError, "Fetch failed during pull operation");
     }
 
+    let conflicts : MergeConflict[];
+    try {
+      const mergeSummary = await this.git.merge(['FETCH_HEAD']);
+      if (mergeSummary.merges.length === 0) {
+        log.info("Merge indicates repository is up-to-date.");
+        return { mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null };
+      }
 
-    async push(dir: string): Promise<void> {
+      log.info(`Merged ${mergeSummary.merges.length} files without conflicts.`);
+      return { mergeStatus: MergeStatus.FINISHED_WITHOUT_CONFLICTS, unresolvedConflicts: null };
+    } catch (error) {
+      const gitError = error as GitResponseError<MergeResult>;
+      const mergeSummary = gitError.git;
+      if (!mergeSummary) {
+        this.handleError(error, "Merge failed without conflict details.");
+      }
+      conflicts = mergeSummary.conflicts;
+    }
+
+    log.info(`Merge encountered ${conflicts.length} conflict(s)`);
+    const conflictMap = new Map<Filename, Set<[Content, Content]>>();
+
+    for (const conflict of conflicts) {
+      const filePath = path.join(dir, conflict.file!);
+      let currentContent = this.readFileContent(filePath);
+
+      log.info(`Conflict detected in file "${conflict.file}" due to: ${conflict.reason}`);
+
+      if (excludedFiles.some((regex) => regex.test(filePath))) {
+        log.info(`Auto-resolving conflict for excluded file: ${filePath}`);
+        currentContent = resolveWithCurrentBranch(currentContent);
+        fs.writeFileSync(filePath, currentContent);
+        await this.git.add(conflict.file!);
+        continue;
+      }
+
+      log.info(`Unable to auto-resolve conflict in file "${conflict.file}". Marking as unresolved.`);
+      conflictMap.set(extractFileName(conflict.file!)!, parseMergeConflicts(currentContent));
+    }
+
+    if (conflictMap.size > 0) {
+      log.info("Merge status: IN_PROGRESS with unresolved conflicts");
+      return { mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap };
+    }
+
+    return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
+  }
+
+
+
+  async push(dir: string): Promise<void> {
         log.info(`Pushing changes from ${dir}`);
         await this.git.cwd(dir);
         try {
-            let result;
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            result = await this.git.push(remoteUrl);
+            const result = await this.git.push(remoteUrl);
             log.info(`Push successful: ${result.pushed.length} references updated.`);
         } catch (error) {
             const errorMessage = `Failed to push changes from ${dir}`;
@@ -336,6 +331,7 @@ export class SimpleGitTracker implements Tracker {
             log.debug("remote with cred: ", remoteWithCredentials);
             return remoteWithCredentials;
         } catch (e) {
+            log.error("addCredentialsToRemoteUrl failed: ", e);
             throw e;
         }
     }

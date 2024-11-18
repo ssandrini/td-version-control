@@ -8,6 +8,7 @@ import path from 'node:path';
 
 export class TDProcessor implements Processor {
     async preprocess(dir: string, outDir?: string): Promise<string[]> {
+        const originalDir = process.cwd();
         try {
             process.chdir(dir);
         } catch (error) {
@@ -18,11 +19,13 @@ export class TDProcessor implements Processor {
         if (toePath === undefined) {
             const msg = `No toe file found in project dir (${dir}).`;
             log.error(msg);
+            process.chdir(originalDir);
             return Promise.reject(new MissingFileError(msg));
         }
 
         try {
             execSync(`toeexpand.exe ${toePath}`, { stdio: ['ignore', 'ignore', 'inherit'] });
+            process.chdir(originalDir);
             return Promise.reject();
         } catch (error) {
             // This is not a mistake. toeexpand is implemented in a way such that it returns
@@ -36,6 +39,7 @@ export class TDProcessor implements Processor {
         const files = await fs.readdir(dir);
         if ((files.filter(file => file === tocPath || file === dirPath).length) != 2) {
             log.error(`Missing ${tocPath} or ${dirPath} in ${dir}`);
+            process.chdir(originalDir);
             return Promise.reject(new MissingFileError(`Could not find ${tocPath} or ${dirPath}`));
         }
 
@@ -45,14 +49,17 @@ export class TDProcessor implements Processor {
                 await fs.move(dirPath, path.join(outDir, dirPath), { overwrite: true });
             } catch (error) {
                 log.error(`Error moving ${tocPath} and ${dirPath} to ${outDir}`);
+                process.chdir(originalDir);
                 return Promise.reject(error);
             }
         }
         log.info(`${toePath} expanded and moved to ${path.join(dir, outDir!)} successfully.`);
+        process.chdir(originalDir);
         return Promise.resolve([tocPath, dirPath]);
     }
 
     postprocess(dir: string, outDir?: string): Promise<string[]> {
+        const originalDir = process.cwd();
         try {
             process.chdir(dir);
         } catch (error) {
@@ -64,6 +71,7 @@ export class TDProcessor implements Processor {
         if (!tocPath) {
             const msg = `Could not find toc file at ${dir}`;
             log.error(msg);
+            process.chdir(originalDir);
             return Promise.reject(new MissingFileError(msg));
         }
 
@@ -73,6 +81,7 @@ export class TDProcessor implements Processor {
             execSync(`toecollapse.exe ${toePath}`, { stdio: ['ignore', 'ignore', 'inherit'] });
         } catch (error) {
             log.error(`Error collapsing ${tocPath}.`);
+             process.chdir(originalDir);
             return Promise.reject(error);
         }
 
@@ -80,10 +89,12 @@ export class TDProcessor implements Processor {
         if (!files.find(file => file === toePath)) {
             const msg = `Could not find toe file at ${dir}`;
             log.error(msg);
+            process.chdir(originalDir);
             return Promise.reject(new MissingFileError(msg));
         }
 
         if (!outDir) {
+            process.chdir(originalDir);
             return Promise.resolve([toePath]);
         }
 
@@ -91,9 +102,11 @@ export class TDProcessor implements Processor {
             fs.moveSync(toePath, path.join(outDir, toePath), { overwrite: true });
         } catch (error) {
             log.error(`Error moving ${toePath} to ${outDir}`);
+            process.chdir(originalDir);
             return Promise.reject(error);
         }
 
+        process.chdir(originalDir);
         return Promise.resolve([path.join(outDir, toePath)]);
     }
 }

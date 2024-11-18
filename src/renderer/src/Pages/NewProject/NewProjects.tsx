@@ -42,9 +42,11 @@ const NewProject: React.FC = () => {
         setError(null);
         setSuccess(false);
 
+        console.log("PUSH ON LOAD: ", formData.pushOnLoad);
+
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.createProject(formData.location, formData.title, formData.pushOnLoad, selectedTemplate?.dir).then((project: Project) => {
+        window.api.createProject(formData.location, formData.title, true, selectedTemplate?.dir).then((project: Project) => {
             setLoading(false);
             setSuccess(true);
             setTimeout(() => navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, {state: {project: project}}), 1500);

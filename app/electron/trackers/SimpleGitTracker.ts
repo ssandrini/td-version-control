@@ -171,8 +171,13 @@ export class SimpleGitTracker implements Tracker {
 
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            await this.git.fetch(remoteUrl);
+            const fetchResult = await this.git.fetch(remoteUrl);
             log.info("Fetch completed successfully.");
+
+            if (fetchResult.updated.length === 0) {
+                log.info("No changes detected in fetch. Repository is up-to-date.");
+                return Promise.resolve({ mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null });
+            }
         } catch (fetchError) {
             const errorMessage = "Fetch failed in pull operation";
             this.handleError(fetchError, errorMessage);
@@ -182,12 +187,12 @@ export class SimpleGitTracker implements Tracker {
         try {
             const mergeSummary = await this.git.merge(['FETCH_HEAD']);
             log.info(`Merged ${mergeSummary.merges.length} files without conflicts.`);
-            return Promise.resolve({mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null});
+            return Promise.resolve({ mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null });
         } catch (error) {
             const gitError = error as GitResponseError<MergeResult>;
             const mergeSummary = gitError.git;
             if (!mergeSummary) {
-                const errorMessage = "Merge failed, but no conflict details were available."
+                const errorMessage = "Merge failed, but no conflict details were available.";
                 this.handleError(error, errorMessage);
             }
             conflicts = mergeSummary.conflicts;
@@ -201,7 +206,6 @@ export class SimpleGitTracker implements Tracker {
             let currentContent = this.readFileContent(filePath);
 
             log.info(`Conflict detected in file "${conflict.file}" due to: ${conflict.reason}`);
-            // log.debug(`Current content:\n${currentContent}`);
 
             // Automatic conflict resolution
             if (excludedFiles.some((regex) => regex.test(filePath))) {
@@ -219,11 +223,12 @@ export class SimpleGitTracker implements Tracker {
 
         if (conflictMap.size > 0) {
             log.info("Merge status: IN_PROGRESS with unresolved conflicts");
-            return Promise.resolve({mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap});
+            return Promise.resolve({ mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap });
         }
 
-        return Promise.resolve({mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null});
+        return Promise.resolve({ mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null });
     }
+
 
     async push(dir: string): Promise<void> {
         log.info(`Pushing changes from ${dir}`);

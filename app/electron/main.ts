@@ -14,7 +14,6 @@ import { API_METHODS } from "./apiMethods";
 import { filePicker, openToeFile, getTemplates } from "./utils/utils";
 import { TDState } from "./models/TDState";
 import {TDMergeResult} from "./models/TDMergeResult";
-import {HasKey} from "./utils/Set";
 import authService from "./services/AuthService"
 import remoteRepoService from "./services/RemoteRepoService";
 import {Version} from "./models/Version";
@@ -96,7 +95,7 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-const setupProject = <T extends HasKey, S>(projectManager: ProjectManager<T, S>): void => {
+const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
   ipcMain.handle(API_METHODS.LIST_VERSIONS, (_, dir: string) =>
     projectManager.listVersions(dir)
   );

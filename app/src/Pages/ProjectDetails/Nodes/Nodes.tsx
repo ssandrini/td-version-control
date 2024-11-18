@@ -7,8 +7,12 @@ import {cn} from "../../../lib/utils";
 import {FaCircleNodes} from "react-icons/fa6";
 import {FaSquare} from "react-icons/fa";
 import NodeGraph from "./NodeGraph/NodeGraph";
+import {GoPeople} from "react-icons/go";
+import Colaborators from "./Colaborators";
+import Project from "../../../../electron/models/Project";
 
 interface NodesProps {
+    project?: Project;
     changes: ChangeSet<TDNode>
     current: TDState | undefined
     compare: TDState | undefined
@@ -26,7 +30,7 @@ const Viz: {
     CONFLICTS: 'CONFLICTS',
 }
 
-const Nodes: React.FC<NodesProps> = ({changes, current, compare}) => {
+const Nodes: React.FC<NodesProps> = ({changes, current, compare, project}) => {
     const [graphViz, setGraphViz] = useState<string>(Viz.GRAPH);
 
     return (<div
@@ -42,6 +46,17 @@ const Nodes: React.FC<NodesProps> = ({changes, current, compare}) => {
                 <FaCircleNodes/>
                 Graph
             </div>
+            {project?.remote && (
+                <div
+                    className={cn(graphViz == Viz.COLLABORATORS ? "bg-blue-800 text-white" : "text-gray-500", "flex gap-2 flex-row items-center p-2 rounded-lg cursor-pointer")}
+                    onClick={() => {
+                        setGraphViz(Viz.COLLABORATORS)
+                    }}
+                >
+                    <GoPeople/>
+                    Collaborators
+                </div>
+            )}
             <div
                 className={cn(graphViz == Viz.SETTINGS ? "bg-blue-800 text-white" : "text-gray-500", "flex gap-2 flex-row items-center p-2 rounded-lg cursor-pointer")}
                 onClick={() => {
@@ -55,6 +70,7 @@ const Nodes: React.FC<NodesProps> = ({changes, current, compare}) => {
         {/* Hidden instead of not rendered to avoid re-rendering the ReactFlow diagram each time */}
         <NodeGraph hidden={graphViz != Viz.GRAPH} current={current} compare={compare}/>
         {graphViz != Viz.SETTINGS ? (<></>) : (<NodeList changes={changes} current={current}/>)}
+        {graphViz != Viz.COLLABORATORS ? (<></>) : (<Colaborators project={project}/>)}
     </div>);
 }
 

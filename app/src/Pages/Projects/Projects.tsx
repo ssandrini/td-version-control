@@ -223,7 +223,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                             className="cursor-pointer hover:bg-gray-700"
                         >
                             <td className="px-6 py-4 whitespace-nowrap">{project.name}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{project.owner}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{project.owner ?? user?.username ?? "N/A"}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                 <Button
                                     className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"

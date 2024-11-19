@@ -417,13 +417,12 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         }
     }
 
-    // TO DO: este metodo no devuelve la initialVersion, de vuelve la current (diferente de init)
     private async initFromUrl(dir: string, url: string): Promise<Version> {
         const hiddenDirPath = this.hiddenDirPath(dir);
         await this.tracker.clone(hiddenDirPath, url);
         hidefile.hideSync(hiddenDirPath);
         await this.processor.postprocess(hiddenDirPath, dir);
-        return await this.currentVersion(dir);
+        return await this.tracker.initialVersion(hiddenDirPath);
     }
 
     private async createStatesFromConflicts(dir: string): Promise<[TDState, TDState]> {

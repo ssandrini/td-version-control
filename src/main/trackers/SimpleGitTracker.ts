@@ -65,6 +65,28 @@ export class SimpleGitTracker implements Tracker {
         );
     }
 
+    async initialVersion(dir: string): Promise<Version> {
+        await this.git.cwd(dir);
+
+        const initialCommitHash = await this.git.firstCommit();
+
+        const log = await this.git.log();
+        const initialCommit = log.all.find((log) => log.hash === initialCommitHash);
+
+        if (!initialCommit) {
+            throw new TrackerError('No initial version found');
+        }
+
+        const [name, ...description] = initialCommit.message.split(this.separator);
+        return new Version(
+            name,
+            new Author(initialCommit.author_name, initialCommit.author_email),
+            initialCommit.hash,
+            new Date(initialCommit.date),
+            description.join(this.separator)
+        );
+    }
+
     async listVersions(dir: string): Promise<Version[]> {
         await this.git.cwd(dir);
         const log = await this.git.log(['--branches']);

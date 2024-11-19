@@ -4,6 +4,7 @@ import { Content, Filename, TrackerMergeResult } from '../../merge/TrackerMergeR
 export interface Tracker {
     init(dir: string, dst?: string): Promise<void>;
     currentVersion(dir: string): Promise<Version>;
+    initialVersion(dir: string): Promise<Version>;
     listVersions(dir: string): Promise<Version[]>;
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;
     goToVersion(dir: string, versionId: string): Promise<Version>;

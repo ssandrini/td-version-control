@@ -15,7 +15,7 @@ const ProjectDetailsForm: React.FC<ProjectDetailsFormProps> = ({ onFormChange })
 
     useEffect(() => {
         onFormChange({title: title, location: location, description: description, pushOnLoad: pushOnLoad});
-    }, [title, location, description]);
+    }, [title, location, description, pushOnLoad]);
 
     const handleLocationPick = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -70,7 +70,7 @@ const ProjectDetailsForm: React.FC<ProjectDetailsFormProps> = ({ onFormChange })
                         htmlFor="push_on_load"
                         className="text-black flex flex-row text-gray2 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 hover:cursor-pointer mr-auto"
                     >
-                        Publicar en&nbsp;<div className="flex font-bold italic">Mariana Cloud &copy; </div>
+                        Publish in &nbsp;<div className="flex font-bold italic">Mariana Cloud &copy; </div>
                     </label>
                 </div>
             </div>

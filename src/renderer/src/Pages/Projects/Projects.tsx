@@ -189,79 +189,82 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
 
     return (<div className="flex flex-col w-full overflow-auto h-full">
         {/* Main Content */}
-        <div className="flex-1 p-8 text-white">
-            {/* Header */}
-            {!hideHeader && (<div className="flex justify-between items-center mb-8">
-                <h2 className="text-3xl font-semibold">Projects</h2>
-                <div className="flex space-x-4">
-                    <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleNewProject}>Create</Button>
-                    <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleFilePick}>Open</Button>
-                </div>
-            </div>)}
-
-            <div className="overflow-auto">
-                {/* Projects Table or No Projects Message */}
-                {projects.length > 0 ? (<div className="bg-gray-800 rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-700">
-                        <thead>
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                Name
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                Author
-                            </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-700">
-                        {projects.map((project, index) => (<tr
-                            key={index}
-                            onClick={(event) => handleCellClick(event, project)}
-                            className="cursor-pointer hover:bg-gray-700"
-                        >
-                            <td className="px-6 py-4 whitespace-nowrap">{project.name}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{project.owner ?? user?.username ?? "N/A"}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                <Button
-                                    className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handlePlayProject(project);
-                                    }}
-                                >
-                                    <FaPlay/>
-                                </Button>
-                                <Button
-                                    className="p-2 bg-transparent text-red-600 hover:text-red-500"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        confirmDeleteProject(project);
-                                    }}
-                                >
-                                    <FaTrashAlt/>
-                                </Button>
-                            </td>
-                        </tr>))}
-                        </tbody>
-                    </table>
-                </div>) : (<div className="flex flex-col items-center justify-center">
-                    <FaFolderOpen className="text-6xl text-gray-300 mb-4"/>
-                    <h1 className="text-2xl text-gray-200 mb-2">No projects, yet</h1>
-                    <p className="text-lg text-gray-300">
-                        To get started, create or open a project.
-                    </p>
-                </div>)}
-            </div>
+      <div className="flex-1 p-8 text-white">
+        {/* Header */}
+        {!hideHeader && (<div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-semibold">Projects</h2>
+          <div className="flex space-x-4">
+            <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleNewProject}>Create</Button>
+            <Button className="bg-gray-600 hover:bg-gray-500" onClick={handleFilePick}>Open</Button>
+          </div>
+        </div>)}
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-semibold">Local Projects</h3>
         </div>
 
-        <div className="flex-1 p-8 text-white">
-            {/* Header */}
-            {!hideHeader && (<div className="flex justify-between items-center mb-8">
-                <h2 className="text-3xl font-semibold">Remote Projects</h2>
-            </div>)}
+        <div className="overflow-auto">
+          {/* Projects Table or No Projects Message */}
+          {projects.length > 0 ? (<div className="bg-gray-800 rounded-lg">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead>
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Author
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+
+                </th>
+              </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+              {projects.map((project, index) => (<tr
+                key={index}
+                onClick={(event) => handleCellClick(event, project)}
+                className="cursor-pointer hover:bg-gray-700"
+              >
+                <td className="px-6 py-4 whitespace-nowrap">{project.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{project.owner ?? user?.username ?? "N/A"}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <Button
+                    className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePlayProject(project);
+                    }}
+                  >
+                    <FaPlay/>
+                  </Button>
+                  <Button
+                    className="p-2 bg-transparent text-red-600 hover:text-red-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDeleteProject(project);
+                    }}
+                  >
+                    <FaTrashAlt/>
+                  </Button>
+                </td>
+              </tr>))}
+              </tbody>
+            </table>
+          </div>) : (<div className="flex flex-col items-center justify-center">
+            <FaFolderOpen className="text-6xl text-gray-300 mb-4"/>
+            <h1 className="text-2xl text-gray-200 mb-2">No projects, yet</h1>
+            <p className="text-lg text-gray-300">
+              To get started, create or open a project.
+            </p>
+          </div>)}
+        </div>
+      </div>
+
+      <div className="flex-1 p-8 text-white">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold">Remote Projects</h3>
+            </div>
 
             <div className="overflow-auto">
                 {/* Projects Table or No Projects Message */}
@@ -283,29 +286,18 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                         <tbody className="divide-y divide-gray-700">
                         {remoteProjects.map((project, index) => (<tr
                             key={index}
-                            onClick={(event) => handleCellClick(event, project)}
-                            className="cursor-pointer hover:bg-gray-700"
                         >
                             <td className="px-6 py-4 whitespace-nowrap">{project.name}</td>
                             <td className="px-6 py-4 whitespace-nowrap">{project.owner}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <td className="py-4 whitespace-nowrap text-center">
                                 <Button
-                                    className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
+                                    className="mr-2 bg-green-500 bg-opacity-40 border border-green-500 w-20 p-2 bg-transparent text-green-500 hover:text-green-400"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setProjectToClone(project);
                                     }}
                                 >
                                     <FaDownload/>
-                                </Button>
-                                <Button
-                                    className="p-2 bg-transparent text-red-600 hover:text-red-500"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        confirmDeleteProject(project);
-                                    }}
-                                >
-                                    <FaTrashAlt/>
                                 </Button>
                             </td>
                         </tr>))}
@@ -321,7 +313,7 @@ const Projects: React.FC<ProjectsProps> = ({hideHeader}) => {
                         <DialogHeader>
                             <DialogTitle>Select location for download</DialogTitle>
                             <DialogDescription>
-                                Please select a location to store the project.
+                                Please select a location to store the project. It must be an empty folder.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>

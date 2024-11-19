@@ -7,7 +7,6 @@ import path from 'node:path';
 import { Tracker } from '../trackers/interfaces/Tracker';
 import { TDNode } from '../models/TDNode';
 import {
-    buildNodeMap,
     dumpDiffToFile,
     dumpTDStateToFile,
     extractNodeNameFromToc,
@@ -26,6 +25,7 @@ import { InputRuleEngine } from '../rules/inputs/InputRuleEngine';
 import { TDEdge } from '../models/TDEdge';
 import { MergeStatus, TrackerMergeResult } from '../merge/TrackerMergeResult';
 import { TDMergeResult, TDMergeStatus } from '../models/TDMergeResult';
+import { resolveWithCurrentBranch, resolveWithIncomingBranch } from '../merge/MergeParser';
 
 export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> {
     readonly processor: Processor;
@@ -153,7 +153,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
         // Currently on working directory
         await this.processor.preprocess(dir, hiddenDir);
-        let workingState, lastDiff: string;
+        let workingState: string, lastDiff: string;
         try {
             workingState = await this.tracker.readFile(
                 this.hiddenDirPath(dir),
@@ -215,9 +215,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             return Promise.reject(new TDError('MergeStatus IN_PROGRESS, unresolvedConflicts null'));
         }
 
-        const [currentState, incomingState] = this.createStatesFromConflicts(
-            result.unresolvedConflicts!
-        );
+        const [currentState, incomingState] = await this.createStatesFromConflicts(dir);
 
         log.debug(
             `MergeResult: IN_PROGRESS, currentState: ${currentState.toString()}, incomingState: ${incomingState.toString()}`
@@ -245,7 +243,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         }
 
         log.debug('Merge status is IN_PROGRESS; proceeding with merge resolution.');
-        const [currentState, _] = this.createStatesFromConflicts(result.unresolvedConflicts!);
+        const [currentState, _] = await this.createStatesFromConflicts(dir);
         log.debug(`Unresolved conflicts count: ${currentState.nodes.length}`);
 
         const resolvedContents = new Map<string, string[]>();
@@ -283,7 +281,11 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         return state;
     }
 
-    private async createVersionState(dir: string, versionId?: string): Promise<TDState> {
+    private async createVersionState(
+        dir: string,
+        versionId?: string,
+        transformContent: (content: string) => string = (content) => content
+    ): Promise<TDState> {
         await validateDirectory(dir);
         const hiddenDirPath = this.hiddenDirPath(dir);
 
@@ -306,7 +308,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
                     toeDir,
                     container,
                     nodeName,
-                    versionId
+                    versionId,
+                    transformContent
                 );
                 state.nodes.push(node);
                 state.inputs.set(node.name, nodeInputs);
@@ -324,7 +327,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         toeDir: string,
         container: string,
         nodeName: string,
-        versionId?: string
+        versionId?: string,
+        transformContent: (content: string) => string = (content) => content
     ): Promise<[TDNode, TDEdge[]]> {
         const files = [
             { ext: 'n', required: true },
@@ -339,7 +343,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         const fileContents = await Promise.all(
             filePaths.map(async (filePath, index) => {
                 try {
-                    return await this.tracker.readFile(hiddenDirPath, filePath, versionId);
+                    const content = await this.tracker.readFile(hiddenDirPath, filePath, versionId);
+                    return transformContent(content);
                 } catch (error) {
                     if (files[index].required) {
                         return Promise.reject(
@@ -421,24 +426,17 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         return await this.currentVersion(dir);
     }
 
-    private createStatesFromConflicts(
-        unresolvedConflicts: Map<string, Set<[string, string]>>
-    ): [TDState, TDState] {
-        const currentState = new TDState(),
-            incomingState = new TDState();
-        const nodeMap = buildNodeMap(unresolvedConflicts);
-
-        for (const [nodeName, contentSet] of nodeMap) {
-            const [contentsA, contentsB] = splitSet(contentSet);
-            const [nodeA, nodeInputsA] = this.extractNodeAndInputs(nodeName, contentsA, false);
-            const [nodeB, nodeInputsB] = this.extractNodeAndInputs(nodeName, contentsB, false);
-
-            currentState.nodes.push(nodeA);
-            currentState.inputs.set(nodeA.name, nodeInputsA);
-            incomingState.nodes.push(nodeB);
-            incomingState.inputs.set(nodeB.name, nodeInputsB);
-        }
-
+    private async createStatesFromConflicts(dir: string): Promise<[TDState, TDState]> {
+        const currentState = await this.createVersionState(
+            dir,
+            undefined,
+            resolveWithCurrentBranch
+        );
+        const incomingState = await this.createVersionState(
+            dir,
+            undefined,
+            resolveWithIncomingBranch
+        );
         return [currentState, incomingState];
     }
 }

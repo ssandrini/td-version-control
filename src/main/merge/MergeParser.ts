@@ -4,7 +4,7 @@ const conflictRegex = /<<<<<<< HEAD\s*([\s\S]*?)\s*=======\s*([\s\S]*?)\s*>>>>>>
 
 export const parseMergeConflicts = (fileContent: Content): Set<[Content, Content]> => {
     const conflicts = new Set<[Content, Content]>();
-    let match;
+    let match: RegExpExecArray | null;
 
     while ((match = conflictRegex.exec(fileContent)) !== null) {
         const leftContent = match[1].trim();

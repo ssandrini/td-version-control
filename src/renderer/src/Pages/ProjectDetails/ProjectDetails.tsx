@@ -220,7 +220,7 @@ const ProjectDetail: React.FC = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
-            .finishMerge(project.path, resolvedState)
+            .finishMerge(project?.path, resolvedState)
             .then((response) => {
                 console.log(response);
             })

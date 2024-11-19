@@ -8,6 +8,7 @@ import { MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
 import MarianaHelper from '../../../components/ui/MarianaHelper';
 import Spinner from '../../../components/ui/Spinner';
 import { ApiResponse } from '../../../../../main/errors/ApiResponse';
+import { User } from 'src/main/models/api/User';
 
 interface LogInProps {}
 

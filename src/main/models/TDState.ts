@@ -41,9 +41,9 @@ export class TDState {
 
         const inputs = new Map<string, TDEdge[]>();
         for (const [key, value] of Object.entries(data.inputs)) {
-            // @ts-ignore
             inputs.set(
                 key,
+                // @ts-ignore
                 value.map((edgeData: any) => TDEdge.deserialize(edgeData))
             );
         }

@@ -213,9 +213,7 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     ipcMain.handle(API_METHODS.PUSH, (_, dir: string) => projectManager.push(dir));
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    ipcMain.handle(API_METHODS.FINISH_MERGE, (_, dir: string, state: S) =>
+    ipcMain.handle(API_METHODS.FINISH_MERGE, (_, dir: string, state: T) =>
         projectManager.finishMerge(dir, state)
     );
     // -----*-----

@@ -144,9 +144,9 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader }) => {
                     window.api
                         .createProject(
                             selectedPath,
-                            projectToClone.name,
+                            projectToClone?.name,
                             false,
-                            projectToClone.remote
+                            projectToClone?.remote
                         )
                         .then((response) => {
                             console.log(response);

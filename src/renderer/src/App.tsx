@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import Main from "./Pages/Layout/Main";
-import {BrowserRouter, Route, Routes} from 'react-router-dom';
+import {HashRouter, Route, Routes} from 'react-router-dom';
 import Projects from './Pages/Projects/Projects';
 import Settings from './Pages/Settings/Settings';
 import ProjectDetail from './Pages/ProjectDetails/ProjectDetails';
@@ -13,7 +13,7 @@ import InnerLayout from "./Pages/InnerLayout";
 
 const App: React.FC = () => {
     return (<VariableProvider>
-        <BrowserRouter>
+        <HashRouter>
             <Routes>
                 <Route path={localPaths.HOME} element={<Layout/>}>
                     <Route path="" element={<InnerLayout/>}>
@@ -33,7 +33,7 @@ const App: React.FC = () => {
                     </Route>
                 </Route>
             </Routes>
-        </BrowserRouter>
+        </HashRouter>
     </VariableProvider>);
 }
 

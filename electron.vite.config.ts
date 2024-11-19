@@ -5,7 +5,10 @@ import path from "node:path";
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      copyPublicDir: true
+    }
   },
   preload: {
     plugins: [externalizeDepsPlugin()]

@@ -24,7 +24,7 @@ const Sidebar: React.FC = () => {
         onMouseLeave={() => setExpanded(false)}
     >
         <div className="flex items-center pl-2.5 h-16 border-b border-gray-700">
-            <img src="public/img.png" alt="" className="w-11 h-11 rounded-full"/>
+            <img src="icon.png" alt="" className="w-11 h-11 rounded-full"/>
             {expanded && (
                 <h1 className="text-xl font-semibold ml-2 transition-all duration-600 ease-in-out">Mariana</h1>)}
         </div>

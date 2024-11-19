@@ -5,6 +5,7 @@ import Template from '../models/Template';
 import path from 'node:path'
 import {TDState} from "../models/TDState";
 import {Content, Filename} from "../merge/TrackerMergeResult";
+import { app } from "electron";
 
 /**
  * Searches for the first file in the current directory with the specified extension.
@@ -38,7 +39,11 @@ export const filePicker = async (): Promise<Electron.OpenDialogReturnValue> => {
  * @returns {Promise<Template[]>} - A promise that resolves to an array of Template objects.
  */
 export const getTemplates = async (): Promise<Template[]> => {
-    const templatesListPath = path.join('resources', 'templates');
+    const isDev = !app.isPackaged;
+    const templatesListPath = isDev
+  ? path.join(__dirname, "../../resources/templates")
+  : path.join(process.resourcesPath, "resources/templates");
+    console.log("Templates Path:", templatesListPath);
     log.info(`Loading templates from path: ${templatesListPath}`);
     const templateDirs = await fs.promises.readdir(templatesListPath);
     const templates: Template[] = [];
@@ -58,7 +63,7 @@ export const getTemplates = async (): Promise<Template[]> => {
             const detailsData = await fs.promises.readFile(detailsPath, 'utf-8');
             const details = JSON.parse(detailsData);
 
-            const imagePath = await getImagePath(templatePath);
+            const imagePath = await getImageName(templatePath);
 
             templates.push({
                 id: details.id as string || dir,
@@ -78,28 +83,25 @@ export const getTemplates = async (): Promise<Template[]> => {
     return Promise.resolve(templates);
 }
 
-/**
- * Finds the image path in the given template directory by looking for image.gif or image.png files.
- * @param {string} templatePath - The path to the template directory.
- * @returns {Promise<string>} - A promise that resolves to the path of the found image.
- */
-const getImagePath = async (templatePath: string): Promise<string> => {
+const getImageName = async (templatePath: string): Promise<string> => {
     const imageExtensions = ['.gif', '.png'];
-    log.info(`Searching for images in template path: ${templatePath}`);
+    const folderName = path.basename(templatePath);
+    log.info(`Searching for images in template folder: ${folderName}`);
 
     for (const ext of imageExtensions) {
-        const imagePath = path.join(templatePath, `image${ext}`);
+        const imagePath = path.join(templatePath, `${folderName}${ext}`);
         const imageExists = await fs.promises.access(imagePath).then(() => true).catch(() => false);
 
         if (imageExists) {
             log.info(`Image found: ${imagePath}`);
-            return Promise.resolve(imagePath);
+            return Promise.resolve(`${folderName}${ext}`);
         }
     }
 
-    log.warn(`No image found in template: ${templatePath}`);
+    log.warn(`No image found in template folder: ${folderName}`);
     return Promise.reject(new Error('No image found.'));
-}
+};
+
 
 /**
  * Opens the first `.toe` file found in the specified project folder.

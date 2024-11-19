@@ -15,19 +15,19 @@ const OperatorCard: React.FC<OperatorCardProps> = ({node, Icon, iconColor, compa
     const getFileImage = (type?: string) => {
         switch (type) {
             case TD_OPERATOR_TYPES.COMPONENT_OPERATOR:
-                return '/public/COMP.png'
+                return 'COMP.png'
             case TD_OPERATOR_TYPES.CHANNEL_OPERATOR:
-                return '/public/CHOP.png'
+                return 'CHOP.png'
             case TD_OPERATOR_TYPES.TEXTURE_OPERATOR:
-                return '/public/TOP.png'
+                return 'TOP.png'
             case TD_OPERATOR_TYPES.SURFACE_OPERATOR:
-                return '/public/SOP.png'
+                return 'SOP.png'
             case TD_OPERATOR_TYPES.MATERIAL_OPERATOR:
-                return '/public/MAT.png'
+                return 'MAT.png'
             case TD_OPERATOR_TYPES.DATA_OPERATOR:
-                return '/public/DAT.png'
+                return 'DAT.png'
             default:
-                return '/public/geo.png' // TODO: Add all remaining supported operators.
+                return '/geo.png' // TODO: Add all remaining supported operators.
         }
     };
 

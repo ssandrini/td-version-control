@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen } from "electron";
+import { app, BrowserWindow, ipcMain, screen, session } from "electron";
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -17,6 +17,8 @@ import {TDMergeResult} from "./models/TDMergeResult";
 import authService from "./services/AuthService"
 import remoteRepoService from "./services/RemoteRepoService";
 import {Version} from "./models/Version";
+// @ts-ignore
+import appIcon from '../../resources/icon.ico?asset'
 
 createRequire(import.meta.url);
 
@@ -41,13 +43,18 @@ function createWindow() {
   const finalWidth = Math.min(screenWidth, minWidth);
   const finalHeight = Math.min(screenHeight, minHeight);
 
+  const iconPath = process.platform === 'darwin'
+    ? path.join(__dirname, '../../resources/icon.icns')
+    : appIcon;
+
   win = new BrowserWindow({
-    icon: "../renderer/public/img.png",
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, "../preload/index.mjs"),
-      sandbox: false
+      sandbox: false,
+      allowRunningInsecureContent: true, // TO DO: cambiar cuando usemos HTTPS
     },
     show: false,
     autoHideMenuBar: true,
@@ -83,6 +90,11 @@ function createWindow() {
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = details.responseHeaders || {};
+    responseHeaders['Content-Security-Policy'] = ["img-src 'self' http://34.44.41.60 data:"];
+    callback({ responseHeaders });
+  });
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

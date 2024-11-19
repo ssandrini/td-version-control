@@ -26,7 +26,9 @@ const Settings: React.FC = () => {
         }
     };
 
+    console.log("EL USER");
     console.log(user);
+    console.log(user?.avatar_url);
 
     return (
         <div className="flex h-full bg-gray-50">

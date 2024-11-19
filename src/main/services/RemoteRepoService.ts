@@ -14,7 +14,7 @@ export class RemoteRepoService {
             default_branch: 'master',
             name,
             object_format_name: 'sha1',
-            private: true,
+            private: false,
             template: false,
             trust_model: 'default'
         };
@@ -77,7 +77,7 @@ export class RemoteRepoService {
             requestData
         );
 
-        if (response.result) {
+        if (!response.errorCode) {
             log.debug(
                 `Collaborator ${collaborator} added successfully to ${repoOwner}/${repoName}`
             );

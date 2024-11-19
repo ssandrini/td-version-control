@@ -194,16 +194,23 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
         if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
             return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
-        }
-
-        if (result.mergeStatus === MergeStatus.FINISHED) {
+        } else if (
+            result.mergeStatus === MergeStatus.FINISHED_WITHOUT_CONFLICTS ||
+            result.mergeStatus === MergeStatus.FINISHED_WITHOUT_ACTIONS
+        ) {
             await this.processor.postprocess(hiddenDirPath, dir);
             await this.saveVersionState(dir, this.stateFile);
-            await this.tracker.createVersion(dir, 'MergeVersion');
             return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
-        }
-
-        if (result.mergeStatus === MergeStatus.IN_PROGRESS && result.unresolvedConflicts === null) {
+        } else if (result.mergeStatus === MergeStatus.FINISHED) {
+            await this.processor.postprocess(hiddenDirPath, dir);
+            await this.saveVersionState(dir, this.stateFile);
+            await this.tracker.createVersion(hiddenDirPath, 'MergeVersion');
+            await this.tracker.push(hiddenDirPath);
+            return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
+        } else if (
+            result.mergeStatus === MergeStatus.IN_PROGRESS &&
+            result.unresolvedConflicts === null
+        ) {
             log.error('MergeStatus IN_PROGRESS, unresolvedConflicts null');
             return Promise.reject(new TDError('MergeStatus IN_PROGRESS, unresolvedConflicts null'));
         }
@@ -265,7 +272,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await this.tracker.settleConflicts(hiddenDirPath, resolvedContents);
         await this.processor.postprocess(hiddenDirPath, dir);
         await this.saveVersionState(dir, this.stateFile);
-        await this.tracker.createVersion(dir, 'MergeVersion');
+        await this.tracker.createVersion(hiddenDirPath, 'MergeVersion');
+        await this.tracker.push(hiddenDirPath);
         log.debug('Merge resolution complete.');
     }
 
@@ -397,8 +405,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     private verifyUrl(url: string): boolean {
         try {
-            new URL(url);
-            return true;
+            const parsedUrl = new URL(url);
+            return parsedUrl.href.includes('git');
         } catch (error) {
             return false;
         }

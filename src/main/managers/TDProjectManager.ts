@@ -194,7 +194,10 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
         if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
             return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
-        } else if (result.mergeStatus === MergeStatus.FINISHED_WITHOUT_CONFLICTS) {
+        } else if (
+            result.mergeStatus === MergeStatus.FINISHED_WITHOUT_CONFLICTS ||
+            result.mergeStatus === MergeStatus.FINISHED_WITHOUT_ACTIONS
+        ) {
             await this.processor.postprocess(hiddenDirPath, dir);
             await this.saveVersionState(dir, this.stateFile);
             return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
@@ -402,8 +405,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     private verifyUrl(url: string): boolean {
         try {
-            new URL(url);
-            return true;
+            const parsedUrl = new URL(url);
+            return parsedUrl.href.includes('git');
         } catch (error) {
             return false;
         }

@@ -1,4 +1,5 @@
 import simpleGit, {
+    FetchResult,
     GitResponseError,
     MergeConflict,
     MergeResult,
@@ -187,22 +188,42 @@ export class SimpleGitTracker implements Tracker {
         this.git.cwd(dir);
         log.info('Starting pull operation');
 
+        let fetchResult: FetchResult;
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            await this.git.fetch(remoteUrl);
+            fetchResult = await this.git.fetch(remoteUrl);
             log.info('Fetch completed successfully.');
         } catch (fetchError) {
             this.handleError(fetchError, 'Fetch failed during pull operation');
+        }
+
+        log.debug('Fetch result: ', fetchResult);
+
+        const revResult: string = await this.git.raw([
+            'rev-list',
+            '--left-right',
+            'HEAD...FETCH_HEAD'
+        ]);
+        log.debug('revResult: ', revResult);
+        if (
+            fetchResult.updated.length === 0 &&
+            fetchResult.deleted.length === 0 &&
+            revResult.trim().length === 0
+        ) {
+            log.info('FETCH indicates repository is up-to-date.');
+            return { mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null };
         }
 
         let conflicts: MergeConflict[];
         try {
             const mergeSummary = await this.git.merge(['FETCH_HEAD']);
             if (mergeSummary.merges.length === 0) {
-                log.info('Merge indicates repository is up-to-date.');
-                return { mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null };
+                log.info('Merge finished without actions.');
+                return {
+                    mergeStatus: MergeStatus.FINISHED_WITHOUT_ACTIONS,
+                    unresolvedConflicts: null
+                };
             }
-
             log.info(`Merged ${mergeSummary.merges.length} files without conflicts.`);
             return {
                 mergeStatus: MergeStatus.FINISHED_WITHOUT_CONFLICTS,

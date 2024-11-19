@@ -1,8 +1,8 @@
-import {AxiosResponse, InternalAxiosRequestConfig} from "axios";
-import log from "electron-log/main.js";
-import userDataManager from "../managers/UserDataManager";
-import MissingAuthenticationToken from "../errors/MissingAuthenticationToken";
-import {AuthToken} from "../models/api/AuthToken";
+import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import log from 'electron-log/main.js';
+import userDataManager from '../managers/UserDataManager';
+import MissingAuthenticationToken from '../errors/MissingAuthenticationToken';
+import { AuthToken } from '../models/api/AuthToken';
 
 export const successResponseInterceptor = (response: AxiosResponse) => {
     log.debug(`Response from: ${response.config.url}`);
@@ -23,7 +23,7 @@ export const errorResponseInterceptor = (error: any) => {
         // The request was made but no response was received
         // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
         // http.ClientRequest in node.js
-        log.error("No response was received:", error.request);
+        log.error('No response was received:', error.request);
         return Promise.reject(error);
     }
 
@@ -37,17 +37,17 @@ export const addAuthenticationTokenInterceptor = (config: InternalAxiosRequestCo
     log.debug(`Request body: ${JSON.stringify(config.data)}`);
     log.debug(`Request headers: ${JSON.stringify(config.headers)}`);
 
-    if (config.url && config.url.includes("/tokens") && config.method!.toLowerCase() === "post") {
-        log.debug("Skipping auth token for authentication request.");
+    if (config.url && config.url.includes('/tokens') && config.method!.toLowerCase() === 'post') {
+        log.debug('Skipping auth token for authentication request.');
         return config;
     }
 
-    const token : AuthToken|null = userDataManager.getAuthToken();
+    const token: AuthToken | null = userDataManager.getAuthToken();
     if (!token) {
-        log.error("Missing authentication token");
+        log.error('Missing authentication token');
         return Promise.reject(MissingAuthenticationToken);
     }
-    log.debug("Adding Authorization header with token:", token);
+    log.debug('Adding Authorization header with token:', token);
     config.headers.Authorization = `token ${token.sha1}`;
     return config;
 };

@@ -1,4 +1,4 @@
-import { HasKey, Set } from "../utils/Set";
+import { HasKey, Set } from '../utils/Set';
 
 export class ChangeSet<T extends HasKey> {
     public added: Set<T>;
@@ -13,9 +13,9 @@ export class ChangeSet<T extends HasKey> {
 
     static fromValues<T extends HasKey>(added: T[], modified: T[], deleted: T[]): ChangeSet<T> {
         const changeset = new ChangeSet<T>();
-        added?.forEach(item => changeset.added.add(item));
-        modified?.forEach(item => changeset.modified.add(item));
-        deleted?.forEach(item => changeset.deleted.add(item));
+        added?.forEach((item) => changeset.added.add(item));
+        modified?.forEach((item) => changeset.modified.add(item));
+        deleted?.forEach((item) => changeset.deleted.add(item));
         return changeset;
     }
 
@@ -23,11 +23,14 @@ export class ChangeSet<T extends HasKey> {
         return {
             added: this.added.serialize(),
             modified: this.modified.serialize(),
-            deleted: this.deleted.serialize(),
+            deleted: this.deleted.serialize()
         };
     }
 
-    static deserialize<T extends HasKey>(data: any, itemDeserializer: (data: any) => T): ChangeSet<T> {
+    static deserialize<T extends HasKey>(
+        data: any,
+        itemDeserializer: (data: any) => T
+    ): ChangeSet<T> {
         const changeSet = new ChangeSet<T>();
         changeSet.added = Set.deserialize(data.added, itemDeserializer);
         changeSet.modified = Set.deserialize(data.modified, itemDeserializer);

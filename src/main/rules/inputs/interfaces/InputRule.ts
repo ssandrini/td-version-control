@@ -1,4 +1,4 @@
-import { TDEdge } from "../../../models/TDEdge";
+import { TDEdge } from '../../../models/TDEdge';
 
 /**
  * Represents a rule for extracting input nodes from a TouchDesigner file.

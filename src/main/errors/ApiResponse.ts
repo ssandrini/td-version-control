@@ -1,4 +1,4 @@
-import { APIErrorCode } from "./APIErrorCode";
+import { APIErrorCode } from './APIErrorCode';
 
 export class ApiResponse<T = void> {
     private constructor(

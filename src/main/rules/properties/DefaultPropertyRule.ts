@@ -1,4 +1,4 @@
-import {PropertyRule} from "../../models/Rule";
+import { PropertyRule } from '../../models/Rule';
 
 export class DefaultPropertyRule implements PropertyRule {
     name: string;

@@ -1,9 +1,9 @@
-import { TDEdge } from "../../models/TDEdge";
-import { InputRule } from "./interfaces/InputRule";
-import { NetworkFileRule } from "./NetworkFileRule";
-import { NFileRule } from "./NFileRule";
-import { ParmFileApplyOperatorRule } from "./ParmFileApplyOperatorRule";
-import { ParmFileChangeOperatorRule } from "./ParmFileChangeOperatorRule";
+import { TDEdge } from '../../models/TDEdge';
+import { InputRule } from './interfaces/InputRule';
+import { NetworkFileRule } from './NetworkFileRule';
+import { NFileRule } from './NFileRule';
+import { ParmFileApplyOperatorRule } from './ParmFileApplyOperatorRule';
+import { ParmFileChangeOperatorRule } from './ParmFileChangeOperatorRule';
 
 export class InputRuleEngine {
     private readonly rules: InputRule[];
@@ -13,7 +13,7 @@ export class InputRuleEngine {
             new NetworkFileRule(),
             new NFileRule(),
             new ParmFileApplyOperatorRule(),
-            new ParmFileChangeOperatorRule(),
+            new ParmFileChangeOperatorRule()
         ];
     }
 
@@ -30,8 +30,9 @@ export class InputRuleEngine {
             extractedInputs.push(...inputs);
         }
 
-        return extractedInputs.filter((edge, index, self) =>
-            index === self.findIndex(e => e.destination === edge.destination)
+        return extractedInputs.filter(
+            (edge, index, self) =>
+                index === self.findIndex((e) => e.destination === edge.destination)
         );
     }
 }

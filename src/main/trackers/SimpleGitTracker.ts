@@ -1,4 +1,10 @@
-import simpleGit, {GitResponseError, MergeConflict, MergeResult, SimpleGit, StatusResult} from 'simple-git';
+import simpleGit, {
+    GitResponseError,
+    MergeConflict,
+    MergeResult,
+    SimpleGit,
+    StatusResult
+} from 'simple-git';
 import { Tracker } from './interfaces/Tracker';
 import { Version } from '../models/Version';
 import { TrackerError } from '../errors/TrackerError';
@@ -6,11 +12,15 @@ import log from 'electron-log/main.js';
 import { Author } from '../models/Author';
 import fs from 'fs-extra';
 import path from 'node:path';
-import {Content, Filename, MergeStatus, TrackerMergeResult} from "../merge/TrackerMergeResult";
-import {parseMergeConflicts, resolveFileConflicts, resolveWithCurrentBranch} from "../merge/MergeParser";
-import {extractFileName} from "../utils/utils";
-import userDataManager from "../managers/UserDataManager";
-import {User} from "../models/api/User";
+import { Content, Filename, MergeStatus, TrackerMergeResult } from '../merge/TrackerMergeResult';
+import {
+    parseMergeConflicts,
+    resolveFileConflicts,
+    resolveWithCurrentBranch
+} from '../merge/MergeParser';
+import { extractFileName } from '../utils/utils';
+import userDataManager from '../managers/UserDataManager';
+import { User } from '../models/api/User';
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
@@ -25,14 +35,14 @@ export class SimpleGitTracker implements Tracker {
     async init(dir: string, dst?: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.init();
-        const user : User = userDataManager.getUser()!;
-        await this.git.raw(['config', '--local', 'core.autocrlf', "false"]);
+        const user: User = userDataManager.getUser()!;
+        await this.git.raw(['config', '--local', 'core.autocrlf', 'false']);
         await this.git.raw(['config', '--local', 'user.name', user.username]);
         await this.git.raw(['config', '--local', 'user.email', user.email]);
-        await this.git.raw(['config', '--local', 'push.autoSetupRemote', "true"])
+        await this.git.raw(['config', '--local', 'push.autoSetupRemote', 'true']);
         const gitignorePath = path.join(dir, '.gitignore');
         await fs.writeFile(gitignorePath, this.ignoredFiles.join('\n'), 'utf-8');
-        if(dst) {
+        if (dst) {
             await this.git.addRemote('origin', dst);
         }
     }
@@ -57,7 +67,7 @@ export class SimpleGitTracker implements Tracker {
     async listVersions(dir: string): Promise<Version[]> {
         await this.git.cwd(dir);
         const log = await this.git.log(['--branches']);
-        return log.all.map(commit => {
+        return log.all.map((commit) => {
             const [name, ...description] = commit.message.split(this.separator);
             return new Version(
                 name,
@@ -81,7 +91,7 @@ export class SimpleGitTracker implements Tracker {
     async goToVersion(dir: string, versionId: string): Promise<Version> {
         await this.git.cwd(dir);
         const log = await this.git.log(['--all']);
-        const commit = log.all.find(c => c.hash === versionId);
+        const commit = log.all.find((c) => c.hash === versionId);
         if (!commit) {
             throw new TrackerError(`Version with id "${versionId}" not found.`);
         }
@@ -96,7 +106,12 @@ export class SimpleGitTracker implements Tracker {
         );
     }
 
-    async compare(dir: string, versionId?: string, file?: string, modified = false): Promise<string> {
+    async compare(
+        dir: string,
+        versionId?: string,
+        file?: string,
+        modified = false
+    ): Promise<string> {
         await this.git.cwd(dir);
 
         const diffParams = ['--unified=0', ':!*.dir/.*', ':!*.dir/local/*'];
@@ -111,7 +126,7 @@ export class SimpleGitTracker implements Tracker {
         }
 
         const gitLog = await this.git.log(['--all']);
-        const commit = gitLog.all.find(c => c.hash === versionId);
+        const commit = gitLog.all.find((c) => c.hash === versionId);
 
         if (!commit) {
             throw new TrackerError(`Commit "${versionId}" not found.`);
@@ -130,7 +145,11 @@ export class SimpleGitTracker implements Tracker {
         }
 
         const parents = hasParent.trim().split(' ');
-        diffParams.push(parents.length === 1 ? this.EMPTY_TREE_HASH : `${commit.hash}^`, commit.hash, file);
+        diffParams.push(
+            parents.length === 1 ? this.EMPTY_TREE_HASH : `${commit.hash}^`,
+            commit.hash,
+            file
+        );
         return this.git.diff(diffParams);
     }
 
@@ -156,77 +175,80 @@ export class SimpleGitTracker implements Tracker {
             normalizedUrl.username = username;
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();
-            log.debug("remote with cred: ", remoteWithCredentials);
+            log.debug('remote with cred: ', remoteWithCredentials);
             await this.git.clone(remoteWithCredentials, dir);
-        } catch(error) {
+        } catch (error) {
             const errorMessage = `Failed cloning ${url} into ${dir}`;
             this.handleError(error, errorMessage);
         }
     }
 
-  async pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult> {
-    this.git.cwd(dir);
-    log.info("Starting pull operation");
+    async pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult> {
+        this.git.cwd(dir);
+        log.info('Starting pull operation');
 
-    try {
-      const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-      await this.git.fetch(remoteUrl);
-      log.info("Fetch completed successfully.");
-    } catch (fetchError) {
-      this.handleError(fetchError, "Fetch failed during pull operation");
+        try {
+            const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
+            await this.git.fetch(remoteUrl);
+            log.info('Fetch completed successfully.');
+        } catch (fetchError) {
+            this.handleError(fetchError, 'Fetch failed during pull operation');
+        }
+
+        let conflicts: MergeConflict[];
+        try {
+            const mergeSummary = await this.git.merge(['FETCH_HEAD']);
+            if (mergeSummary.merges.length === 0) {
+                log.info('Merge indicates repository is up-to-date.');
+                return { mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null };
+            }
+
+            log.info(`Merged ${mergeSummary.merges.length} files without conflicts.`);
+            return {
+                mergeStatus: MergeStatus.FINISHED_WITHOUT_CONFLICTS,
+                unresolvedConflicts: null
+            };
+        } catch (error) {
+            const gitError = error as GitResponseError<MergeResult>;
+            const mergeSummary = gitError.git;
+            if (!mergeSummary) {
+                this.handleError(error, 'Merge failed without conflict details.');
+            }
+            conflicts = mergeSummary.conflicts;
+        }
+
+        log.info(`Merge encountered ${conflicts.length} conflict(s)`);
+        const conflictMap = new Map<Filename, Set<[Content, Content]>>();
+
+        for (const conflict of conflicts) {
+            const filePath = path.join(dir, conflict.file!);
+            let currentContent = this.readFileContent(filePath);
+
+            log.info(`Conflict detected in file "${conflict.file}" due to: ${conflict.reason}`);
+
+            if (excludedFiles.some((regex) => regex.test(filePath))) {
+                log.info(`Auto-resolving conflict for excluded file: ${filePath}`);
+                currentContent = resolveWithCurrentBranch(currentContent);
+                fs.writeFileSync(filePath, currentContent);
+                await this.git.add(conflict.file!);
+                continue;
+            }
+
+            log.info(
+                `Unable to auto-resolve conflict in file "${conflict.file}". Marking as unresolved.`
+            );
+            conflictMap.set(extractFileName(conflict.file!)!, parseMergeConflicts(currentContent));
+        }
+
+        if (conflictMap.size > 0) {
+            log.info('Merge status: IN_PROGRESS with unresolved conflicts');
+            return { mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap };
+        }
+
+        return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
     }
 
-    let conflicts : MergeConflict[];
-    try {
-      const mergeSummary = await this.git.merge(['FETCH_HEAD']);
-      if (mergeSummary.merges.length === 0) {
-        log.info("Merge indicates repository is up-to-date.");
-        return { mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null };
-      }
-
-      log.info(`Merged ${mergeSummary.merges.length} files without conflicts.`);
-      return { mergeStatus: MergeStatus.FINISHED_WITHOUT_CONFLICTS, unresolvedConflicts: null };
-    } catch (error) {
-      const gitError = error as GitResponseError<MergeResult>;
-      const mergeSummary = gitError.git;
-      if (!mergeSummary) {
-        this.handleError(error, "Merge failed without conflict details.");
-      }
-      conflicts = mergeSummary.conflicts;
-    }
-
-    log.info(`Merge encountered ${conflicts.length} conflict(s)`);
-    const conflictMap = new Map<Filename, Set<[Content, Content]>>();
-
-    for (const conflict of conflicts) {
-      const filePath = path.join(dir, conflict.file!);
-      let currentContent = this.readFileContent(filePath);
-
-      log.info(`Conflict detected in file "${conflict.file}" due to: ${conflict.reason}`);
-
-      if (excludedFiles.some((regex) => regex.test(filePath))) {
-        log.info(`Auto-resolving conflict for excluded file: ${filePath}`);
-        currentContent = resolveWithCurrentBranch(currentContent);
-        fs.writeFileSync(filePath, currentContent);
-        await this.git.add(conflict.file!);
-        continue;
-      }
-
-      log.info(`Unable to auto-resolve conflict in file "${conflict.file}". Marking as unresolved.`);
-      conflictMap.set(extractFileName(conflict.file!)!, parseMergeConflicts(currentContent));
-    }
-
-    if (conflictMap.size > 0) {
-      log.info("Merge status: IN_PROGRESS with unresolved conflicts");
-      return { mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap };
-    }
-
-    return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
-  }
-
-
-
-  async push(dir: string): Promise<void> {
+    async push(dir: string): Promise<void> {
         log.info(`Pushing changes from ${dir}`);
         await this.git.cwd(dir);
         try {
@@ -241,14 +263,14 @@ export class SimpleGitTracker implements Tracker {
 
     async settleConflicts(dir: string, userInput: Map<Filename, Content[]>): Promise<void> {
         this.git.cwd(dir);
-        log.info("Starting merge finalization");
+        log.info('Starting merge finalization');
         try {
             const status: StatusResult = await this.git.status();
             const conflictedFiles = status.conflicted;
             await this.checkConflicts(conflictedFiles, userInput);
             await this.resolveConflictsForFiles(dir, conflictedFiles, userInput);
         } catch (error) {
-            const errorMessage = "Error in finish merge";
+            const errorMessage = 'Error in finish merge';
             this.handleError(error, errorMessage);
         }
     }
@@ -256,7 +278,7 @@ export class SimpleGitTracker implements Tracker {
     async abortMerge(dir: string): Promise<void> {
         try {
             await this.git.cwd(dir);
-            log.info("Attempting to abort the current merge");
+            log.info('Attempting to abort the current merge');
             await this.git.merge(['--abort']);
             log.info('Merge aborted successfully');
         } catch (error) {
@@ -289,7 +311,11 @@ export class SimpleGitTracker implements Tracker {
         }
     }
 
-    private async resolveConflictsForFiles(dir: string, conflictedFiles: string[], userInput: Map<Filename, Content[]>): Promise<void> {
+    private async resolveConflictsForFiles(
+        dir: string,
+        conflictedFiles: string[],
+        userInput: Map<Filename, Content[]>
+    ): Promise<void> {
         for (const file of conflictedFiles) {
             const filePath = path.join(dir, file);
             const currentContent = this.readFileContent(filePath);
@@ -309,7 +335,10 @@ export class SimpleGitTracker implements Tracker {
         }
     }
 
-    private async checkConflicts(conflictedFiles: string[], userInput: Map<Filename, Content[]>): Promise<void> {
+    private async checkConflicts(
+        conflictedFiles: string[],
+        userInput: Map<Filename, Content[]>
+    ): Promise<void> {
         if (conflictedFiles.length !== userInput.size) {
             log.error();
             const errorMessage = `Mismatch between conflicted files (${conflictedFiles.length}) and user input (${userInput.size})`;
@@ -328,14 +357,13 @@ export class SimpleGitTracker implements Tracker {
             normalizedUrl.username = username;
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();
-            log.debug("remote with cred: ", remoteWithCredentials);
+            log.debug('remote with cred: ', remoteWithCredentials);
             return remoteWithCredentials;
         } catch (e) {
-            log.error("addCredentialsToRemoteUrl failed: ", e);
+            log.error('addCredentialsToRemoteUrl failed: ', e);
             throw e;
         }
     }
-
 
     async getMergeResult(dir: string): Promise<TrackerMergeResult> {
         await this.git.cwd(dir);
@@ -362,5 +390,4 @@ export class SimpleGitTracker implements Tracker {
 
         return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
     }
-
 }

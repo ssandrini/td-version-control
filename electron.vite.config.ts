@@ -1,27 +1,30 @@
-import { resolve } from 'path'
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import react from '@vitejs/plugin-react'
-import path from "node:path";
+import { resolve } from 'path';
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
+import react from '@vitejs/plugin-react';
+import path from 'node:path';
 
 export default defineConfig({
-  main: {
-    plugins: [externalizeDepsPlugin()]
-  },
-  preload: {
-    plugins: [externalizeDepsPlugin()]
-  },
-  renderer: {
-    resolve: {
-      alias: {
-        '@renderer': resolve('src/renderer/src')
-      }
+    main: {
+        plugins: [externalizeDepsPlugin()],
+        build: {
+            copyPublicDir: true
+        }
     },
-    build: {
-      rollupOptions: {
-        input: resolve(path.join('src', 'renderer', 'index.html'))
-      },
-      outDir: path.join('out', 'renderer'),
+    preload: {
+        plugins: [externalizeDepsPlugin()]
     },
-    plugins: [react()]
-  }
-})
+    renderer: {
+        resolve: {
+            alias: {
+                '@renderer': resolve('src/renderer/src')
+            }
+        },
+        build: {
+            rollupOptions: {
+                input: resolve(path.join('src', 'renderer', 'index.html'))
+            },
+            outDir: path.join('out', 'renderer')
+        },
+        plugins: [react()]
+    }
+});

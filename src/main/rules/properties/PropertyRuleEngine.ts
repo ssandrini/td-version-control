@@ -2,7 +2,7 @@ import * as RuleNames from '../Constants';
 import { IgnorePropertyRule } from './IgnorePropertyRule';
 import { TilePropertyRule } from './TilePropertyRule';
 import { DefaultPropertyRule } from './DefaultPropertyRule';
-import { PropertyRule } from '../../models/Rule';
+import { PropertyRule } from './interfaces/PropertyRule';
 
 export class PropertyRuleEngine {
     private readonly rules: PropertyRule[];

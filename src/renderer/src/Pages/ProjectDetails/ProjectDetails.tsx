@@ -157,6 +157,31 @@ const ProjectDetail: React.FC = () => {
         window.api
             .pull(project?.path)
             .then((result: TDMergeResult) => {
+                if (result.status === TDMergeStatus.UP_TO_DATE) {
+                    toast({
+                        className: '',
+                        style: {
+                            borderTop: '0.35rem solid transparent',
+                            borderBottom: 'transparent',
+                            borderRight: 'transparent',
+                            borderLeft: 'transparent',
+                            borderImage:
+                                'linear-gradient(to right, rgb(10, 27, 182), rgb(0, 0, 255))',
+                            borderImageSlice: '1'
+                        },
+                        description: (
+                            <div className="w-full h-full flex flex-row items-start gap-2">
+                                <FaCheck className="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                                <div className="flex flex-col">
+                                    <div className="font-p1_bold text-h3">Project updated</div>
+                                    <div className="font-p1_regular">
+                                        Already up to date with the cloud.
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    });
+                }
                 if (result.status === TDMergeStatus.FINISHED) {
                     toast({
                         className: '',

@@ -1,4 +1,4 @@
-import { PropertyRule } from '../../models/Rule';
+import { PropertyRule } from './interfaces/PropertyRule';
 
 export class TilePropertyRule implements PropertyRule {
     name: string;

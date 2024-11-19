@@ -193,7 +193,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         );
 
         if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
-            return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
+            return new TDMergeResult(TDMergeStatus.UP_TO_DATE, null, null);
         } else if (
             result.mergeStatus === MergeStatus.FINISHED_WITHOUT_CONFLICTS ||
             result.mergeStatus === MergeStatus.FINISHED_WITHOUT_ACTIONS

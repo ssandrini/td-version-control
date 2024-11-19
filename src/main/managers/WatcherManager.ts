@@ -75,6 +75,17 @@ class WatcherManager {
     }
 
     /**
+     * Clears all registered watchers and stops watching all files.
+     */
+    public clearWatchers(): void {
+        log.info('Clearing all watchers.');
+
+        this.watchers.clear();
+        this.watcherInstance.unwatch('*');
+        log.info('All watchers cleared.');
+    }
+
+    /**
      * Returns a list of all currently registered watchers.
      * @returns {string[]} - An array of file paths being watched.
      */

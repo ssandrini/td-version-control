@@ -18,12 +18,12 @@ export const API_METHODS = {
     GET_STATE: 'get-state',
     PULL: 'pull',
     PUSH: 'push',
-    FINISH_MERGE: "finish-merge",
+    FINISH_MERGE: 'finish-merge',
     AUTHENTICATE_USER: 'authenticate-user',
     GET_USER: 'get-user',
     GET_REMOTE_PROJECTS: 'get-remote-projects',
     LOGOUT: 'logout',
     GET_COLLABORATORS: 'get-collaborators',
     ADD_COLLABORATOR: 'add-collaborator',
-    REMOVE_COLLABORATOR: 'remove-collaborator',
-}
+    REMOVE_COLLABORATOR: 'remove-collaborator'
+};

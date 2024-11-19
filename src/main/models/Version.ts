@@ -1,9 +1,9 @@
-import {Author} from "./Author";
+import { Author } from './Author';
 
 export class Version {
     name: string;
     author: Author;
-    id: string
+    id: string;
     description?: string;
     date: Date;
 

@@ -34,7 +34,7 @@ export class TDProcessor implements Processor {
         const dirPath = `${toePath}.dir`;
 
         const files = await fs.readdir(dir);
-        if ((files.filter(file => file === tocPath || file === dirPath).length) != 2) {
+        if (files.filter((file) => file === tocPath || file === dirPath).length != 2) {
             log.error(`Missing ${tocPath} or ${dirPath} in ${dir}`);
             return Promise.reject(new MissingFileError(`Could not find ${tocPath} or ${dirPath}`));
         }
@@ -77,7 +77,7 @@ export class TDProcessor implements Processor {
         }
 
         const files = fs.readdirSync(dir);
-        if (!files.find(file => file === toePath)) {
+        if (!files.find((file) => file === toePath)) {
             const msg = `Could not find toe file at ${dir}`;
             log.error(msg);
             return Promise.reject(new MissingFileError(msg));

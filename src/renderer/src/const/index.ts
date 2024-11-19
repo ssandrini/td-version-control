@@ -9,7 +9,7 @@ export const localPaths: {
     PROJECTS: 'projects',
     SETTINGS: 'settings',
     PROJECT_DETAIL: 'project_details',
-    NEW_PROJECT: 'new_project',
+    NEW_PROJECT: 'new_project'
 };
 
 export const TD_OPERATOR_TYPES = {
@@ -18,10 +18,9 @@ export const TD_OPERATOR_TYPES = {
     CHANNEL_OPERATOR: 'CHOP',
     SURFACE_OPERATOR: 'SOP',
     DATA_OPERATOR: 'DAT',
-    MATERIAL_OPERATOR: 'MAT',
+    MATERIAL_OPERATOR: 'MAT'
     // TO DO: custom?
-}
-
+};
 
 /**
  * - Solo se pueda crear una nueva version desde la ultima

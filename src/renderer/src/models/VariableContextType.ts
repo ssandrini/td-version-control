@@ -1,11 +1,11 @@
-import {Dispatch, SetStateAction} from "react";
-import {User} from "../../../main/models/api/User";
+import { Dispatch, SetStateAction } from 'react';
+import { User } from '../../../main/models/api/User';
 
 export default interface VariableContextType {
-    touchDesignerLocation: string,
-    setTouchDesignerLocation: Dispatch<SetStateAction<string>>,
-    hasTDL: () => boolean
-    isLoggedIn: () => boolean,
-    user: User | undefined,
-    setUser: Dispatch<SetStateAction<User | undefined>>,
+    touchDesignerLocation: string;
+    setTouchDesignerLocation: Dispatch<SetStateAction<string>>;
+    hasTDL: () => boolean;
+    isLoggedIn: () => boolean;
+    user: User | undefined;
+    setUser: Dispatch<SetStateAction<User | undefined>>;
 }

@@ -1,4 +1,4 @@
-import { Content } from "./TrackerMergeResult";
+import { Content } from './TrackerMergeResult';
 
 const conflictRegex = /<<<<<<< HEAD\s*([\s\S]*?)\s*=======\s*([\s\S]*?)\s*>>>>>>> \w+/g;
 

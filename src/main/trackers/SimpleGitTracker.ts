@@ -341,7 +341,7 @@ export class SimpleGitTracker implements Tracker {
             return fs.readFileSync(filePath, 'utf-8');
         } catch (error) {
             const errorMessage = `Failed to read file: ${filePath}.`;
-            this.handleError(error, errorMessage);
+            throw new TrackerError(errorMessage);
         }
     }
 

@@ -8,7 +8,7 @@ import { FaCircleNodes } from 'react-icons/fa6';
 import { FaSquare } from 'react-icons/fa';
 import NodeGraph from './NodeGraph/NodeGraph';
 import { GoPeople } from 'react-icons/go';
-import Colaborators from './Colaborators';
+import Collaborators from './Collaborators';
 import Project from '../../../../../main/models/Project';
 
 interface NodesProps {
@@ -80,7 +80,7 @@ const Nodes: React.FC<NodesProps> = ({ changes, current, compare, project }) => 
             {/* Hidden instead of not rendered to avoid re-rendering the ReactFlow diagram each time */}
             <NodeGraph hidden={graphViz != Viz.GRAPH} current={current} compare={compare} />
             {graphViz != Viz.SETTINGS ? <></> : <NodeList changes={changes} current={current} />}
-            {graphViz != Viz.COLLABORATORS ? <></> : <Colaborators project={project} />}
+            {graphViz != Viz.COLLABORATORS ? <></> : <Collaborators project={project} />}
         </div>
     );
 };

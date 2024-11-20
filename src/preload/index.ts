@@ -49,7 +49,8 @@ const api = {
             permissions
         ),
     removeCollaborator: async (owner: string, projectName: string, collaborator: string) =>
-        ipcRenderer.invoke(API_METHODS.REMOVE_COLLABORATOR, owner, projectName, collaborator)
+        ipcRenderer.invoke(API_METHODS.REMOVE_COLLABORATOR, owner, projectName, collaborator),
+    searchUser: async (username: string) => ipcRenderer.invoke(API_METHODS.SEARCH_USER, username)
 };
 
 if (process.contextIsolated) {

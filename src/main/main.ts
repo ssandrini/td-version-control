@@ -17,6 +17,7 @@ import { TDMergeResult } from './models/TDMergeResult';
 import authService from './services/AuthService';
 import remoteRepoService from './services/RemoteRepoService';
 import { Version } from './models/Version';
+import userService from './services/UserService';
 // @ts-ignore
 import appIcon from '../../resources/icon.ico?asset';
 
@@ -277,5 +278,9 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     ipcMain.handle(API_METHODS.OPEN_DIRECTORY, async (_, dir: string) => {
         return openDirectory(dir);
+    });
+
+    ipcMain.handle(API_METHODS.SEARCH_USER, async (_, username: string) => {
+        return userService.searchUser(username);
     });
 };

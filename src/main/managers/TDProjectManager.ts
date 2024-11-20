@@ -60,7 +60,13 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
             try {
                 await validateDirectory(src);
-                fs.copySync(src, dir, { recursive: true });
+                fs.copySync(src, dir, {
+                    recursive: true,
+                    filter: (file) => {
+                        const isToeFile = file.endsWith('.toe');
+                        return isToeFile || fs.lstatSync(file).isDirectory();
+                    }
+                });
                 log.info(`Copied ${src} into ${dir}`);
             } catch (error) {
                 log.error(`Error copying ${src} into ${dir}. Cause:`, error);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FaArrowDown, FaCheck, FaCloud, FaPlay } from 'react-icons/fa';
+import { FaArrowDown, FaCheck, FaCloud, FaFolderOpen, FaPlay } from 'react-icons/fa';
 import { Version } from '../../../../main/models/Version';
 import log from 'electron-log/renderer.js';
 import { TDNode } from '../../../../main/models/TDNode';
@@ -289,6 +289,36 @@ const ProjectDetail: React.FC = () => {
         });
     };
 
+    const handleOpenDirectory = (project: Project | undefined) => {
+        if (!project) return;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.openDirectory(project.path).catch((error) => {
+            log.error('Unexpected error:', error);
+            toast({
+                className: '',
+                style: {
+                    borderTop: '0.35rem solid transparent',
+                    borderBottom: 'transparent',
+                    borderRight: 'transparent',
+                    borderLeft: 'transparent',
+                    borderImage: 'linear-gradient(to right, rgb(255, 0, 0), rgb(252, 80, 80))',
+                    borderImageSlice: '1'
+                },
+                description: (
+                    <div className="w-full h-full flex flex-row items-start gap-2">
+                        <CiWarning className="bg-gradient-to-r from-red-400 to-red-600 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                        <div className="flex flex-col">
+                            <div className="font-p1_bold text-h3">Error opening directory</div>
+                            <div className="font-p1_regular">
+                                Please try again or contact support.
+                            </div>
+                        </div>
+                    </div>
+                )
+            });
+        });
+    };
     return (
         <div className="bg-gray-800 p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar">
             {selectedVersion ? (
@@ -313,6 +343,12 @@ const ProjectDetail: React.FC = () => {
                                         }}
                                     >
                                         <FaPlay />
+                                    </Button>
+                                    <Button
+                                        onClick={() => handleOpenDirectory(project)}
+                                        className="mr-2 p-2 bg-transparent"
+                                    >
+                                        <FaFolderOpen />
                                     </Button>
                                     {project?.remote ? (
                                         <>

@@ -64,9 +64,12 @@ export class GiteaAPIConnector {
 
     private mapStatusCode(statusCode: number): APIErrorCode {
         switch (statusCode) {
-            // TO DO: mapear más casos.
+            case 400:
+                return APIErrorCode.BadRequest;
             case 401:
                 return APIErrorCode.InvalidCredentials;
+            case 404:
+                return APIErrorCode.NotFound;
             case 503:
                 return APIErrorCode.CommunicationError;
             default:

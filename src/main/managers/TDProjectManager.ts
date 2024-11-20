@@ -60,7 +60,13 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
             try {
                 await validateDirectory(src);
-                fs.copySync(src, dir, { recursive: true });
+                fs.copySync(src, dir, {
+                    recursive: true,
+                    filter: (file) => {
+                        const isToeFile = file.endsWith('.toe');
+                        return isToeFile || fs.lstatSync(file).isDirectory();
+                    }
+                });
                 log.info(`Copied ${src} into ${dir}`);
             } catch (error) {
                 log.error(`Error copying ${src} into ${dir}. Cause:`, error);
@@ -193,7 +199,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         );
 
         if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
-            return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
+            return new TDMergeResult(TDMergeStatus.UP_TO_DATE, null, null);
         } else if (
             result.mergeStatus === MergeStatus.FINISHED_WITHOUT_CONFLICTS ||
             result.mergeStatus === MergeStatus.FINISHED_WITHOUT_ACTIONS

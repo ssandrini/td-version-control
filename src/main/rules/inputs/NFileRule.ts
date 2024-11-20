@@ -24,6 +24,9 @@ export class NFileRule implements InputRule {
             .filter((line) => line)
             .map((line) => line.split(/\s+/))
             .filter((parts) => parts.length > 1 && parts[1])
-            .map((parts) => new TDEdge(parts[1], false));
+            .map((parts) => {
+                const inputName = parts[1].split('/')[0];
+                return new TDEdge(inputName, false);
+            });
     }
 }

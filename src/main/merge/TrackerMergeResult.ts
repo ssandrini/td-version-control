@@ -6,6 +6,12 @@ export enum MergeStatus {
     IN_PROGRESS
 }
 
+export enum PushStatus {
+    OK,
+    FAILED,
+    UP_TO_DATE
+}
+
 export type Filename = string;
 export type Content = string;
 

@@ -1,6 +1,7 @@
 import { TDState } from './TDState';
 
 export enum TDMergeStatus {
+    UP_TO_DATE,
     FINISHED,
     IN_PROGRESS
 }

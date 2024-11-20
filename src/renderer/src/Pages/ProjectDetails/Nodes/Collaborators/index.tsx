@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaSearch } from 'react-icons/fa';
 import { ApiResponse } from '../../../../../../main/errors/ApiResponse';
 import { User } from '../../../../../../main/models/api/User';
 import Project from '../../../../../../main/models/Project';
 
-interface ColaboratorsProps {
+interface CollaboratorProps {
     project?: Project;
 }
 
-const Colaborators: React.FC<ColaboratorsProps> = ({ project }) => {
+const Collaborators: React.FC<CollaboratorProps> = ({ project }) => {
     const [collaborators, setCollaborators] = useState<User[]>([]);
     const [showAddPopup, setShowAddPopup] = useState<boolean>(false);
-    const [newCollaborator, setNewCollaborator] = useState<string>('');
+    const [searchUsername, setSearchUsername] = useState<string>('');
+    const [foundUser, setFoundUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (project?.remote) {
@@ -24,7 +27,6 @@ const Colaborators: React.FC<ColaboratorsProps> = ({ project }) => {
                         setCollaborators(response.result);
                     } else {
                         setCollaborators([]);
-                        // To do: error?
                     }
                 });
         }
@@ -41,22 +43,47 @@ const Colaborators: React.FC<ColaboratorsProps> = ({ project }) => {
                         prev.filter((collaborator) => collaborator.username !== username)
                     );
                 }
-                // TO DO: error
             });
     };
 
+    const handleSearchUser = async () => {
+        if (searchUsername.trim() === '') return;
+
+        setLoading(true);
+        setError(null);
+        setFoundUser(null);
+
+        try {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            const response: ApiResponse<User> = await window.api.searchUser(searchUsername);
+
+            setLoading(false);
+            if (response.result) {
+                setFoundUser(response.result);
+            } else {
+                setError('User not found');
+            }
+        } catch {
+            setLoading(false);
+            setError('Connection error. Please try again later.');
+        }
+    };
+
     const handleAddCollaborator = () => {
-        if (newCollaborator.trim() === '') return;
+        if (!foundUser) return;
+
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
-            .addCollaborator(project?.owner, project?.name, newCollaborator, 'write')
+            .addCollaborator(project?.owner, project?.name, foundUser.username, 'write')
             .then((response: ApiResponse) => {
                 if (!response.errorCode) {
                     setShowAddPopup(false);
-                    setNewCollaborator('');
+                    setSearchUsername('');
+                    setFoundUser(null);
+                    setCollaborators((prev) => [...prev, foundUser]);
                 }
-                // TO DO: algo falló
             });
     };
 
@@ -98,22 +125,43 @@ const Colaborators: React.FC<ColaboratorsProps> = ({ project }) => {
             </div>
             {showAddPopup && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-gray-700 p-4 rounded-lg">
-                        <h3 className="text-white text-lg mb-2">Add Collaborator</h3>
-                        <input
-                            type="text"
-                            value={newCollaborator}
-                            onChange={(e) => setNewCollaborator(e.target.value)}
-                            placeholder="Enter username"
-                            className="bg-gray-800 text-white p-2 rounded-lg mb-2 w-full"
-                        />
-                        <div className="flex gap-2">
+                    <div className="bg-gray-700 p-6 rounded-lg w-96 max-w-full">
+                        <h3 className="text-white text-lg mb-4">Add Collaborator</h3>
+                        <div className="flex items-center gap-2 mb-4">
+                            <input
+                                type="text"
+                                value={searchUsername}
+                                onChange={(e) => setSearchUsername(e.target.value)}
+                                placeholder="Enter username"
+                                className="bg-gray-800 text-white p-2 rounded-lg w-full"
+                            />
                             <button
-                                onClick={handleAddCollaborator}
-                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                                onClick={handleSearchUser}
+                                className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600"
+                                disabled={loading}
                             >
-                                Add
+                                <FaSearch />
                             </button>
+                        </div>
+                        {loading && <p className="text-white mb-4">Searching...</p>}
+                        {error && <p className="text-red-500 mb-4">{error}</p>}
+                        {foundUser && (
+                            <div className="flex items-center gap-4 mb-4">
+                                <img
+                                    src={foundUser.avatar_url || '/default-avatar.png'}
+                                    alt={`${foundUser.username}'s avatar`}
+                                    className="w-10 h-10 rounded-full"
+                                />
+                                <span className="text-white">{foundUser.username}</span>
+                                <button
+                                    onClick={handleAddCollaborator}
+                                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        )}
+                        <div className="flex gap-2">
                             <button
                                 onClick={() => setShowAddPopup(false)}
                                 className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
@@ -128,4 +176,4 @@ const Colaborators: React.FC<ColaboratorsProps> = ({ project }) => {
     );
 };
 
-export default Colaborators;
+export default Collaborators;

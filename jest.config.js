@@ -2,6 +2,9 @@
 export default {
     testEnvironment: 'node',
     transform: {
-        '^.+.tsx?$': ['ts-jest', {}]
-    }
+        '^.+\\.tsx?$': ['ts-jest', {}]
+    },
+    testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
+    moduleFileExtensions: ['ts', 'js'],
+    extensionsToTreatAsEsm: ['.ts']
 };

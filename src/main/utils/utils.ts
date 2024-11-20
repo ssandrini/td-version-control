@@ -4,12 +4,12 @@ import fs from 'fs-extra';
 import Template from '../models/Template';
 import path from 'node:path';
 import { TDState } from '../models/TDState';
-import { Content, Filename } from '../merge/TrackerMergeResult';
 import { app } from 'electron';
 
 /**
  * Searches for the first file in the current directory with the specified extension.
  * @param {string} ext - The file extension to search for (e.g., 'txt', 'json').
+ * @param dir - optional dir
  * @returns {string | undefined} - The first matching file's name if found, otherwise undefined.
  */
 export const findFileByExt = (ext: string, dir?: string): string | undefined => {
@@ -160,44 +160,6 @@ export const extractNodeNameFromToc = (container: string, diffLine: string): str
     return '';
 };
 
-export const extractNodeNameFromDiffLine = (container: string, diffLine: string): string => {
-    //log.debug("extractnodenamefromdiffline: ", container, diffLine)
-    const parts = diffLine.split(' ');
-    if (parts.length > 2) {
-        const pathA = parts[2];
-        const pathParts = pathA.split('/');
-        const containerIndex = pathParts.indexOf(container);
-        if (containerIndex !== -1 && containerIndex + 1 < pathParts.length) {
-            const nodeNameWithExt = pathParts[containerIndex + 1];
-            return nodeNameWithExt.split('.')[0];
-        }
-    }
-    return '';
-};
-
-/**
- * Gets the information of a given node
- *
- * @param {string} toeDir - The path to the base directory, as returned by toeexpand.
- * @param {string} container - The name of the container to search within.
- * @param {string} node - The name of the node.
- * @returns {Promise<string | undefined>} - Returns the first line of the node file or undefined if not found.
- */
-export const getNodeInfo = async (
-    toeDir: string,
-    container: string,
-    node: string
-): Promise<[string, string] | undefined> => {
-    try {
-        const containerDir = path.join(toeDir, container);
-        const nodePath = path.join(containerDir, `${node}.n`);
-        const fileContent = await fs.readFile(nodePath, 'utf-8');
-        return getNodeInfoFromNFile(fileContent);
-    } catch (error) {
-        return undefined;
-    }
-};
-
 export const getNodeInfoFromNFile = (content: string): [string, string] | undefined => {
     const firstLine = content.split('\n')[0].trim();
     const [type, subtype] = firstLine.split(':');
@@ -252,22 +214,6 @@ export const dumpDiffToFile = async (filePath: string, content: string): Promise
     await fs.writeFile(filePath, content, 'utf8');
 };
 
-export const buildNodeMap = (
-    inputMap: Map<Filename, Set<[Content, Content]>>
-): Map<string, Set<[string, string]>> => {
-    const outputMap = new Map<string, Set<[string, string]>>();
-    for (const [filename, valueSet] of inputMap.entries()) {
-        const nodeName = filename.split('.')[0];
-        if (outputMap.has(nodeName)) {
-            const existingSet = outputMap.get(nodeName)!;
-            valueSet.forEach((item) => existingSet.add(item));
-        } else {
-            outputMap.set(nodeName, new Set(valueSet));
-        }
-    }
-    return outputMap;
-};
-
 export const splitSet = (set: Set<[string, string]>): [string[], string[]] => {
     const firstElements: string[] = [];
     const secondElements: string[] = [];
@@ -283,4 +229,29 @@ export const splitSet = (set: Set<[string, string]>): [string[], string[]] => {
 export const extractFileName = (filePath: string): string | null => {
     const match = filePath.match(/[^\/\\]+$/);
     return match ? match[0] : null;
+};
+
+/**
+ * Opens a directory in the system's file explorer (Explorer on Windows or Finder on macOS).
+ *
+ * @param {string} directoryPath - The path to the directory to be opened.
+ * @returns {Promise<void>} - A promise that resolves if the directory opens successfully or rejects if an error occurs.
+ * @throws {Error} - Throws an error if the directory fails to open.
+ */
+export const openDirectory = async (directoryPath: string): Promise<void> => {
+    try {
+        const absolutePath = path.resolve(directoryPath);
+
+        const result = await shell.openPath(absolutePath);
+        if (result) {
+            log.error('Error opening directory:', result);
+            return Promise.reject(new Error(`Error opening directory: ${result}`));
+        }
+
+        log.info('Directory opened successfully:', absolutePath);
+        return Promise.resolve();
+    } catch (error) {
+        log.error('Unexpected error while opening directory:', error);
+        return Promise.reject(new Error('Unexpected error while opening directory.'));
+    }
 };

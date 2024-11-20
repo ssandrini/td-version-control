@@ -25,5 +25,7 @@ export const API_METHODS = {
     LOGOUT: 'logout',
     GET_COLLABORATORS: 'get-collaborators',
     ADD_COLLABORATOR: 'add-collaborator',
-    REMOVE_COLLABORATOR: 'remove-collaborator'
+    REMOVE_COLLABORATOR: 'remove-collaborator',
+    OPEN_DIRECTORY: 'open-directory',
+    SEARCH_USER: 'search-user'
 };

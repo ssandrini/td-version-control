@@ -9,4 +9,4 @@ resource "google_artifact_registry_repository" "masabra_ar_repository" {
   }
 }
 
-# Images will be stored in "${var.registry_region}-docker.pkg.dev/${var.project_id}/${output.ar_repository_name}/hidden-layer"
+# Images will be stored in "${var.registry_region}-docker.pkg.dev/${var.project_id}/${output.ar_repository_name}/{image_name}"

@@ -80,6 +80,7 @@ gitea_port           = 3000
 gitea_admin_username = "admin"
 gitea_admin_password = "strongpassword"
 gitea_db_password    = "your-secure-password"
+repository_id        = "ar-repository-id"
 ```
 
 ### 3. Initialize Terraform
@@ -195,6 +196,7 @@ To interact with GCP resources, and depliy the infraestructure, ensure the Googl
 
     ```bash
     gcloud services enable compute.googleapis.com
+    gcloud services enable artifactregistry.googleapis.com
     ```
 
 6. **Test your connection**:

@@ -30,3 +30,11 @@ variable "gitea_admin_password" {}
 variable "gitea_db_password" {
   description = "Password for the Gitea PostgreSQL database"
 }
+
+variable "repository_id" {}
+variable "description" {
+  default = "Masabra's docker registry"
+}
+variable "format" {
+  default = "DOCKER"
+}

@@ -91,9 +91,9 @@ const Layout: React.FC = () => {
                 </div>
             )}
             {!userStateReady ? (
-                <div className="flex flex-col items-center justify-evenly pt-10 h-screen bg-gradient-to-r from-blue-950 to-blue-900 text-white overflow-y-auto">
+                <div className="flex flex-col items-center justify-evenly pt-10 h-screen bg-gray-800 text-white overflow-y-auto">
                     <MarianaHelper />
-                    <Spinner />
+                    <Spinner white />
                 </div>
             ) : (
                 <>{user == undefined ? <LogIn /> : <Outlet />}</>

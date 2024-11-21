@@ -16,6 +16,8 @@ import { CiWarning } from 'react-icons/ci';
 import { Dialog } from '@radix-ui/react-dialog';
 import { DialogContent } from '../../components/ui/dialog';
 import NodeGraph from './Nodes/NodeGraph/NodeGraph';
+import { cn } from '@renderer/lib/utils';
+import Spinner from '@renderer/components/ui/Spinner';
 
 const ProjectDetail: React.FC = () => {
     const { toast } = useToast();
@@ -95,7 +97,10 @@ const ProjectDetail: React.FC = () => {
             });
     }, [compareVersion]);
 
+    const [isLoadingPush, setIsLoadingPush] = useState(false);
+
     const handlePush = () => {
+        setIsLoadingPush(true);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
@@ -148,6 +153,9 @@ const ProjectDetail: React.FC = () => {
                         </div>
                     )
                 });
+            })
+            .finally(() => {
+                setIsLoadingPush(false);
             });
     };
 
@@ -354,11 +362,20 @@ const ProjectDetail: React.FC = () => {
                                         <>
                                             <Button
                                                 variant="secondary"
-                                                className="w-fit flex flex-row gap-2"
+                                                className="w-fit min-w-48 flex flex-row gap-2"
                                                 onClick={() => handlePush()}
+                                                disabled={isLoadingPush}
                                             >
-                                                <div>Upload changes</div>
-                                                <FaCloud />
+                                                {isLoadingPush ? (
+                                                    <div className="scale-75">
+                                                        <Spinner />
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <div>Upload changes</div>
+                                                        <FaCloud />
+                                                    </>
+                                                )}
                                             </Button>
                                             <Button
                                                 variant="default"
@@ -372,13 +389,24 @@ const ProjectDetail: React.FC = () => {
                                         <>
                                             <Button
                                                 variant="default"
-                                                className="w-fit hover:scale-105 transform ease-in-out duration-600 transition-all"
+                                                className={cn(
+                                                    'w-fit min-w-48 hover:scale-105 transform ease-in-out duration-600 transition-all'
+                                                )}
+                                                disabled={isLoadingPush}
                                                 onClick={() => handlePush()}
                                             >
-                                                Publish in&nbsp;
-                                                <div className="flex font-bold italic">
-                                                    Mariana Cloud &copy;
-                                                </div>
+                                                {isLoadingPush ? (
+                                                    <div className="scale-75">
+                                                        <Spinner white />
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        Publish in &nbsp;
+                                                        <div className="flex font-bold italic">
+                                                            Mariana Cloud &copy;
+                                                        </div>
+                                                    </>
+                                                )}
                                             </Button>
                                         </>
                                     )}
@@ -403,7 +431,12 @@ const ProjectDetail: React.FC = () => {
                         </div>
                         <FaArrowDown />
                     </div>
-                    {expandDetails && (
+                    <div
+                        className={cn(
+                            'transition-all duration-500 ease-in-out overflow-hidden',
+                            expandDetails ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                        )}
+                    >
                         <DetailsComponent
                             selectedVersion={selectedVersion}
                             setSelectedVersion={setSelectedVersion}
@@ -415,7 +448,7 @@ const ProjectDetail: React.FC = () => {
                             setCurrentVersion={setCurrentVersion}
                             versions={versions}
                         />
-                    )}
+                    </div>
                 </div>
             ) : (
                 <p>Select a version to see details.</p>

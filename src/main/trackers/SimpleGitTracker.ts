@@ -28,21 +28,32 @@ export class SimpleGitTracker implements Tracker {
     readonly separator = '//';
     readonly EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
     readonly ignoredFiles = ['diff', 'workingState.json'];
+    readonly attributes: ReadonlyMap<string, string[]>;
 
     constructor() {
         this.git = simpleGit();
+        this.attributes = new Map([['**/*.lod', ['binary', 'merge=ours', '-text']]]);
     }
 
     async init(dir: string, dst?: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.init();
+
         const user: User = userDataManager.getUser()!;
         await this.git.raw(['config', '--local', 'core.autocrlf', 'false']);
         await this.git.raw(['config', '--local', 'user.name', user.username]);
         await this.git.raw(['config', '--local', 'user.email', user.email]);
         await this.git.raw(['config', '--local', 'push.autoSetupRemote', 'true']);
+
         const gitignorePath = path.join(dir, '.gitignore');
         await fs.writeFile(gitignorePath, this.ignoredFiles.join('\n'), 'utf-8');
+
+        const gitAttributesPath = path.join(dir, '.gitattributes');
+        const attributesContent = Array.from(this.attributes)
+            .flatMap(([pattern, attributes]) => attributes.map((attr) => `${pattern} ${attr}`))
+            .join('\n');
+        await fs.writeFile(gitAttributesPath, attributesContent, 'utf-8');
+
         if (dst) {
             await this.git.addRemote('origin', dst);
         }

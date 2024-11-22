@@ -176,20 +176,6 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 handleCompareVersionSelect={handleCompareVersionSelect}
                 compareVersion={compareVersion}
             />
-
-            <div className="flex items-center justify-left mt-4">
-                <FaUserCircle className="text-5xl text-gray-300 mr-2" />
-                <div>
-                    <p className="font-medium">{selectedVersion.author.name}</p>
-                    <p className="text-gray-400 text-sm">{selectedVersion.author.email}</p>
-                </div>
-            </div>
-            <textarea
-                value={selectedVersion.description}
-                readOnly
-                className="w-full h-full  mt-4 bg-gray-800 text-white p-4 rounded-lg"
-                style={{ minHeight: '80px', maxHeight: '150px' }}
-            />
         </>
     );
 };

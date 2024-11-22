@@ -5,6 +5,15 @@ module "network" {
   region       = var.region
 }
 
+module "artifact_registry" {
+  source = "./modules/artifact_registry"
+
+  registry_region = var.region
+  repository_id   = var.repository_id
+  description     = var.description
+  format          = var.format
+}
+
 module "compute" {
   source            = "./modules/compute"
   instance_name     = var.instance_name

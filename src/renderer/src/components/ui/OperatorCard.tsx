@@ -52,7 +52,7 @@ const OperatorCard: React.FC<OperatorCardProps> = ({ node, Icon, iconColor, comp
                 <p className="text-white mt-2 text-center">{node.name}</p>
             </PopoverTrigger>
             <PopoverContent className="bg-gray-600 border-gray-800 py-2 px-3 flex flex-col text-white w-fit max-h-96">
-                <div className="text-h3 mb-1">Propiedades: </div>
+                <div className="text-h3 mb-1">Properties: </div>
                 {node.properties && (
                     <div className="flex flex-col gap-1 overflow-y-auto no-scrollbar">
                         {Array.from(node.properties).map(([key, value]) => (

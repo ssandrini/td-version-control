@@ -22,7 +22,7 @@ const Sidebar: React.FC = () => {
         <div
             className={cn(
                 expanded ? 'w-60' : 'w-16',
-                'transition-all overflow-hidden duration-600 ease-in-out h-full bg-gray-900 text-white flex flex-col border-r border-gray-700 overflow-y-auto sticky items-top'
+                'transition-all overflow-hidden duration-600 ease-in-out h-full bg-gray-800 text-white flex flex-col overflow-y-auto sticky items-top'
             )}
             onMouseEnter={() => setExpanded(true)}
             onMouseLeave={() => setExpanded(false)}

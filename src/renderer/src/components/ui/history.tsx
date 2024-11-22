@@ -3,6 +3,7 @@ import HistoryItem from './HistoryItem';
 import { Version } from '../../../../main/models/Version';
 import { cn } from '../../lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
+import { FaArrowLeft } from 'react-icons/fa';
 
 interface HistoryProps {
     path?: string;
@@ -31,9 +32,10 @@ const History: React.FC<HistoryProps> = ({
             {versions.length === 0 ? (
                 <p>No versions found.</p>
             ) : (
-                versions.map((version) => (
+                versions.map((version, index) => (
                     <Popover key={version.name}>
-                        <PopoverTrigger>
+                        <PopoverTrigger className="flex flex-row items-center justify-center gap-1">
+                            {index != 0 && <FaArrowLeft />}
                             <HistoryItem
                                 version={version}
                                 isCurrent={version.id === currentVersion?.id}
@@ -109,24 +111,6 @@ const History: React.FC<HistoryProps> = ({
                     </Popover>
                 ))
             )}
-            <div className={`flex flex-col flex-grow h-28}`}>
-                <div
-                    className={cn(
-                        'h-14 rounded-lg m-2 transition-colors duration-200',
-                        'text-gray-100 px-2 py-1'
-                    )}
-                ></div>
-                <div className="w-full mt-auto flex flex-row items-center">
-                    <div
-                        className={cn(
-                            'w-6 h-6',
-                            orange ? 'bg-orange-500' : 'bg-blue-500',
-                            'rounded-full'
-                        )}
-                    />
-                    <div className={cn('w-full h-1', orange ? 'bg-orange-500' : 'bg-blue-500')} />
-                </div>
-            </div>
         </div>
     );
 };

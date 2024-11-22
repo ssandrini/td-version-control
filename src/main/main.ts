@@ -17,7 +17,7 @@ import { TDMergeResult } from './models/TDMergeResult';
 import authService from './services/AuthService';
 import remoteRepoService from './services/RemoteRepoService';
 import { Version } from './models/Version';
-import userService from './services/UserService';
+import userService, { RegisterUserRequest } from './services/UserService';
 // @ts-ignore
 import appIcon from '../../resources/icon.ico?asset';
 
@@ -214,8 +214,10 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     ipcMain.handle(API_METHODS.PUSH, (_, dir: string) => projectManager.push(dir));
 
-    ipcMain.handle(API_METHODS.FINISH_MERGE, (_, dir: string, state: T) =>
-        projectManager.finishMerge(dir, state)
+    ipcMain.handle(
+        API_METHODS.FINISH_MERGE,
+        (_, dir: string, state: T, versionName: string, description: string) =>
+            projectManager.finishMerge(dir, state, versionName, description)
     );
     // -----*-----
 
@@ -282,5 +284,13 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     ipcMain.handle(API_METHODS.SEARCH_USER, async (_, username: string) => {
         return userService.searchUser(username);
+    });
+
+    ipcMain.handle(API_METHODS.REGISTER, async (_, req: RegisterUserRequest) => {
+        return userService.registerUser(req);
+    });
+
+    ipcMain.handle(API_METHODS.GET_MERGE_STATUS, async (_, dir: string) => {
+        return projectManager.getMergeStatus(dir);
     });
 };

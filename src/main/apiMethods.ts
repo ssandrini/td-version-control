@@ -27,5 +27,7 @@ export const API_METHODS = {
     ADD_COLLABORATOR: 'add-collaborator',
     REMOVE_COLLABORATOR: 'remove-collaborator',
     OPEN_DIRECTORY: 'open-directory',
-    SEARCH_USER: 'search-user'
+    SEARCH_USER: 'search-user',
+    REGISTER: 'register',
+    GET_MERGE_STATUS: 'get-merge-status'
 };

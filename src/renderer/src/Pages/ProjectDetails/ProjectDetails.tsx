@@ -31,6 +31,8 @@ const ProjectDetail: React.FC = () => {
     const [compareVersion, setCompareVersion] = useState<Version | null>(null);
     const [compareState, setCompareState] = useState<TDState | undefined>(undefined);
     const [expandDetails, setExpandDetails] = useState<boolean>(false);
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
 
     const [mergeConflicts, setMergeConflicts] = useState<
         | {
@@ -93,7 +95,7 @@ const ProjectDetail: React.FC = () => {
                 });
             }
         });
-    }, [mergeConflicts]);
+    }, []);
 
     useEffect(() => {
         if (!compareVersion) return;
@@ -255,12 +257,16 @@ const ProjectDetail: React.FC = () => {
             });
     };
 
-    const handleResolveConflict = (resolvedState: TDState | undefined) => {
+    const handleResolveConflict = (
+        resolvedState: TDState | undefined,
+        name: string,
+        description: string
+    ) => {
         if (!resolvedState) return;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
-            .finishMerge(project?.path, resolvedState)
+            .finishMerge(project?.path, resolvedState, name, description)
             .then((response) => {
                 console.log(response);
             })
@@ -438,25 +444,45 @@ const ProjectDetail: React.FC = () => {
             {mergeConflicts && (
                 <Dialog open>
                     <DialogContent className="min-w-[90%] max-w-[90%] w-[90%] min-h-[90%] max-h-[90%] h-[90%] flex flex-col bg-gray-600">
-                        <div className="w-full flex flex-row justify-between">
-                            <Button
-                                onClick={() => {
-                                    handleResolveConflict(
-                                        mergeConflicts?.currentState ?? undefined
-                                    );
-                                }}
-                            >
-                                Resolver
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    handleResolveConflict(
-                                        mergeConflicts?.incomingState ?? undefined
-                                    );
-                                }}
-                            >
-                                Resolver
-                            </Button>
+                        <div className="w-full flex flex-col gap-4">
+                            <div className="flex flex-col center gap-4">
+                                <input
+                                    type="text"
+                                    placeholder="Name"
+                                    className="p-2 border border-gray-400 rounded-md bg-gray-700 text-white w-1/2"
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Description"
+                                    className="p-2 border border-gray-400 rounded-md bg-gray-700 text-white w-1/2"
+                                    onChange={(e) => setDescription(e.target.value)}
+                                />
+                            </div>
+                            <div className="w-full flex flex-row justify-between">
+                                <Button
+                                    onClick={() => {
+                                        handleResolveConflict(
+                                            mergeConflicts?.currentState ?? undefined,
+                                            name,
+                                            description
+                                        );
+                                    }}
+                                >
+                                    Resolver
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        handleResolveConflict(
+                                            mergeConflicts?.incomingState ?? undefined,
+                                            name,
+                                            description
+                                        );
+                                    }}
+                                >
+                                    Resolver
+                                </Button>
+                            </div>
                         </div>
                         <div className="flex flex-row gap-5 w-full h-full">
                             <NodeGraph

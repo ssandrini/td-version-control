@@ -50,6 +50,23 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         this.excludedFiles = [/\.build$/, /\.lod$/, /\.bin$/, /^local\/.*$/, /\.json$/];
     }
 
+    async getMergeStatus(dir: string): Promise<TDMergeResult> {
+        const hiddenDirPath = this.hiddenDirPath(dir);
+        const result: TrackerMergeResult = await this.tracker.getMergeResult(hiddenDirPath);
+        log.debug('Merge result status:', result.mergeStatus);
+
+        if (result.mergeStatus === MergeStatus.FINISHED) {
+            log.debug('Merge already finished; no further action required.');
+            return Promise.resolve(new TDMergeResult(TDMergeStatus.FINISHED, null, null));
+        }
+
+        log.debug('Merge status is IN_PROGRESS.');
+        const [currentState, incomingState] = await this.createStatesFromConflicts(dir);
+        return Promise.resolve(
+            new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState)
+        );
+    }
+
     async init(dir: string, dst?: string, src?: string): Promise<Version> {
         await validateDirectory(dir);
 
@@ -238,7 +255,12 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         return path.join(dir, this.hiddenDir);
     };
 
-    async finishMerge(dir: string, userInputState: TDState): Promise<void> {
+    async finishMerge(
+        dir: string,
+        userInputState: TDState,
+        versionName: string,
+        description: string
+    ): Promise<void> {
         const hiddenDirPath = this.hiddenDirPath(dir);
         const result: TrackerMergeResult = await this.tracker.getMergeResult(hiddenDirPath);
         log.debug('Merge result status:', result.mergeStatus);
@@ -276,7 +298,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await this.tracker.settleConflicts(hiddenDirPath, resolvedContents);
         await this.processor.postprocess(hiddenDirPath, dir);
         await this.saveVersionState(dir, this.stateFile);
-        await this.tracker.createVersion(hiddenDirPath, 'MergeVersion');
+        await this.tracker.createVersion(hiddenDirPath, versionName, description);
         await this.tracker.push(hiddenDirPath);
         log.debug('Merge resolution complete.');
     }

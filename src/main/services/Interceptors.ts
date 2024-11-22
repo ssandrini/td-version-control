@@ -37,7 +37,11 @@ export const addAuthenticationTokenInterceptor = (config: InternalAxiosRequestCo
     log.debug(`Request body: ${JSON.stringify(config.data)}`);
     log.debug(`Request headers: ${JSON.stringify(config.headers)}`);
 
-    if (config.url && config.url.includes('/tokens') && config.method!.toLowerCase() === 'post') {
+    if (
+        config.url &&
+        (config.url.includes('/tokens') || config.url.includes('/admin')) &&
+        config.method!.toLowerCase() === 'post'
+    ) {
         log.debug('Skipping auth token for authentication request.');
         return config;
     }

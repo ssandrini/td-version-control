@@ -3,6 +3,7 @@ import Project from '../main/models/Project';
 import { API_METHODS } from '../main/apiMethods';
 import { TDState } from '../main/models/TDState';
 import { electronAPI } from '@electron-toolkit/preload';
+import { RegisterUserRequest } from '../main/services/UserService';
 
 const api = {
     listVersions: async (dir: string) => ipcRenderer.invoke(API_METHODS.LIST_VERSIONS, dir),
@@ -26,8 +27,8 @@ const api = {
         ipcRenderer.invoke(API_METHODS.GET_STATE, path, versionId),
     pull: async (dir: string) => ipcRenderer.invoke(API_METHODS.PULL, dir),
     push: async (dir: string) => ipcRenderer.invoke(API_METHODS.PUSH, dir),
-    finishMerge: async (dir: string, state: TDState) =>
-        ipcRenderer.invoke(API_METHODS.FINISH_MERGE, dir, state),
+    finishMerge: async (dir: string, state: TDState, versionName: string, description: string) =>
+        ipcRenderer.invoke(API_METHODS.FINISH_MERGE, dir, state, versionName, description),
     authenticate: async (username: string, password: string) =>
         ipcRenderer.invoke(API_METHODS.AUTHENTICATE_USER, username, password),
     getUser: async () => ipcRenderer.invoke(API_METHODS.GET_USER),
@@ -51,7 +52,10 @@ const api = {
     removeCollaborator: async (owner: string, projectName: string, collaborator: string) =>
         ipcRenderer.invoke(API_METHODS.REMOVE_COLLABORATOR, owner, projectName, collaborator),
     searchUser: async (username: string) => ipcRenderer.invoke(API_METHODS.SEARCH_USER, username),
-    openDirectory: async (dir: string) => ipcRenderer.invoke(API_METHODS.OPEN_DIRECTORY, dir)
+    openDirectory: async (dir: string) => ipcRenderer.invoke(API_METHODS.OPEN_DIRECTORY, dir),
+    register: async (request: RegisterUserRequest) =>
+        ipcRenderer.invoke(API_METHODS.REGISTER, request),
+    getMergeStatus: async (dir: string) => ipcRenderer.invoke(API_METHODS.GET_MERGE_STATUS, dir)
 };
 
 if (process.contextIsolated) {

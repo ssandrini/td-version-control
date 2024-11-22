@@ -81,6 +81,21 @@ const ProjectDetail: React.FC = () => {
     }, [selectedVersion]);
 
     useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.getMergeStatus(project?.path).then((result: TDMergeResult) => {
+            if (result.status === TDMergeStatus.FINISHED) {
+                setMergeConflicts(undefined);
+            } else if (result.status === TDMergeStatus.IN_PROGRESS) {
+                setMergeConflicts({
+                    currentState: result.currentState,
+                    incomingState: result.incomingState
+                });
+            }
+        });
+    }, [mergeConflicts]);
+
+    useEffect(() => {
         if (!compareVersion) return;
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

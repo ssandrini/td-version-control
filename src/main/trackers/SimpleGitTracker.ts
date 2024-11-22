@@ -22,6 +22,8 @@ import {
 import { extractFileName } from '../utils/utils';
 import userDataManager from '../managers/UserDataManager';
 import { User } from '../models/api/User';
+import { Map } from 'lucide-react';
+import { Set } from '../utils/Set';
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
@@ -90,16 +92,20 @@ export class SimpleGitTracker implements Tracker {
     async listVersions(dir: string): Promise<Version[]> {
         await this.git.cwd(dir);
         const log = await this.git.log(['--branches']);
-        return log.all.map((commit) => {
-            const [name, ...description] = commit.message.split(this.separator);
-            return new Version(
-                name,
-                new Author(commit.author_name, commit.author_email),
-                commit.hash,
-                new Date(commit.date),
-                description.join(this.separator)
-            );
-        });
+        return await Promise.all(
+            log.all.map(async (commit) => {
+                const [name, ...description] = commit.message.split(this.separator);
+                const tag = await this.git.tag(['--points-at', commit.hash]);
+                return new Version(
+                    name,
+                    new Author(commit.author_name, commit.author_email),
+                    commit.hash,
+                    new Date(commit.date),
+                    description.join(this.separator),
+                    tag
+                );
+            })
+        );
     }
 
     async createVersion(dir: string, versionName: string, description?: string): Promise<Version> {
@@ -109,6 +115,28 @@ export class SimpleGitTracker implements Tracker {
         const message = `${versionName}${this.separator}${description || ''}`;
         await this.git.commit(message, [], { '--allow-empty': null });
         return this.currentVersion(dir);
+    }
+
+    async addTag(dir: string, versionId: string, tag: string): Promise<void> {
+        log.info(`Creating tag ${tag} for ${versionId}`);
+        await this.git.cwd(dir);
+        try {
+            await this.git.tag([tag, versionId]);
+            log.info(`Tag "${tag}" added to version "${versionId}".`);
+        } catch (error) {
+            this.handleError(error, `Failed to add tag "${tag}" to version "${versionId}".`);
+        }
+    }
+
+    async removeTag(dir: string, tag: string): Promise<void> {
+        log.info(`Deleting tag ${tag}`);
+        await this.git.cwd(dir);
+        try {
+            await this.git.tag(['-d', tag]);
+            log.info(`Tag "${tag}" removed.`);
+        } catch (error) {
+            this.handleError(error, `Failed to remove tag "${tag}".`);
+        }
     }
 
     async goToVersion(dir: string, versionId: string): Promise<Version> {
@@ -261,6 +289,8 @@ export class SimpleGitTracker implements Tracker {
         }
 
         log.info(`Merge encountered ${conflicts.length} conflict(s)`);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const conflictMap = new Map<Filename, Set<[Content, Content]>>();
 
         for (const conflict of conflicts) {
@@ -418,6 +448,8 @@ export class SimpleGitTracker implements Tracker {
             return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
         }
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const conflictMap = new Map<Filename, Set<[Content, Content]>>();
         for (const file of conflictedFiles) {
             const filePath = path.join(dir, file);

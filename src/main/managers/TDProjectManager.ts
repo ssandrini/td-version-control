@@ -141,6 +141,28 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         }
     }
 
+    async addTag(dir: string, versionId: string, tag: string): Promise<void> {
+        await validateDirectory(dir);
+        const hiddenDirPath = this.hiddenDirPath(dir);
+        try {
+            await this.tracker.addTag(hiddenDirPath, versionId, tag);
+        } catch (error) {
+            log.error(`Error creating tag for ${versionId}. Cause:`, error);
+            return Promise.reject(error);
+        }
+    }
+
+    async removeTag(dir: string, versionId: string): Promise<void> {
+        await validateDirectory(dir);
+        const hiddenDirPath = this.hiddenDirPath(dir);
+        try {
+            await this.tracker.removeTag(hiddenDirPath, versionId);
+        } catch (error) {
+            log.error(`Error creating tag for ${versionId}. Cause:`, error);
+            return Promise.reject(error);
+        }
+    }
+
     async goToVersion(dir: string, versionId: string): Promise<Version> {
         await validateDirectory(dir);
         return this.tracker.goToVersion(this.hiddenDirPath(dir), versionId);

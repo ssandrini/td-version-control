@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import electron, { contextBridge, ipcRenderer } from 'electron';
 import Project from '../main/models/Project';
 import { API_METHODS } from '../main/apiMethods';
 import { TDState } from '../main/models/TDState';
@@ -17,6 +17,10 @@ const api = {
         ipcRenderer.invoke(API_METHODS.CREATE_PROJECT, dir, name, remote, src),
     createNewVersion: async (dir: string, name: string, description: string) =>
         ipcRenderer.invoke(API_METHODS.CREATE_VERSION, dir, name, description),
+    addTag: async (dir: string, versionId: string, tag: string) =>
+        electron.ipcRenderer.invoke(API_METHODS.ADD_TAG, dir, versionId, tag),
+    removeTag: async (dir: string, tag: string) =>
+        electron.ipcRenderer.invoke(API_METHODS.REMOVE_TAG, dir, tag),
     getCurrentVersion: async (path: string) =>
         ipcRenderer.invoke(API_METHODS.CURRENT_VERSION, path),
     goToVersion: async (dir: string, versionId: string) =>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FaArrowDown, FaCheck, FaCloud, FaFolderOpen, FaPlay } from 'react-icons/fa';
+import { FaCheck, FaCloud, FaFolderOpen, FaPlay } from 'react-icons/fa';
 import { Version } from '../../../../main/models/Version';
 import log from 'electron-log/renderer.js';
 import { TDNode } from '../../../../main/models/TDNode';
@@ -28,11 +28,10 @@ const ProjectDetail: React.FC = () => {
     const [currentVersion, setCurrentVersion] = useState<Version | null>(null);
     const [versions, setVersions] = useState<Version[]>([]);
     const [changes] = useState<ChangeSet<TDNode>>(new ChangeSet<TDNode>());
-    const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
+    const [selectedVersion, setSelectedVersion] = useState<Version | undefined>(undefined);
     const [currentState, setCurrentState] = useState<TDState | undefined>(undefined);
     const [compareVersion, setCompareVersion] = useState<Version | null>(null);
     const [compareState, setCompareState] = useState<TDState | undefined>(undefined);
-    const [expandDetails, setExpandDetails] = useState<boolean>(false);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
 
@@ -351,11 +350,7 @@ const ProjectDetail: React.FC = () => {
     return (
         <div className="bg-gray-800 p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar">
             {selectedVersion ? (
-                <div
-                    className="w-full rounded-lg bg-gray-700 cursor-pointer text-white p-4 flex flex-col transition-all duration-600 ease-in-out"
-                    onMouseEnter={() => setExpandDetails(true)}
-                    onMouseLeave={() => setExpandDetails(false)}
-                >
+                <div className="w-full rounded-lg bg-gray-700 text-white p-4 flex flex-col transition-all duration-600 ease-in-out">
                     <div className="flex flex-row w-full justify-between items-center">
                         <div className="flex flex-col w-full mr-10">
                             <div className="flex flex-row justify-between w-full">
@@ -450,25 +445,6 @@ const ProjectDetail: React.FC = () => {
                                 })}
                             </p>
                         </div>
-                        <FaArrowDown />
-                    </div>
-                    <div
-                        className={cn(
-                            'transition-all duration-500 ease-in-out overflow-hidden',
-                            expandDetails ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-                        )}
-                    >
-                        <DetailsComponent
-                            selectedVersion={selectedVersion}
-                            setSelectedVersion={setSelectedVersion}
-                            setVersions={setVersions}
-                            dir={dir}
-                            currentVersion={currentVersion}
-                            compareVersion={compareVersion}
-                            setCompareVersion={setCompareVersion}
-                            setCurrentVersion={setCurrentVersion}
-                            versions={versions}
-                        />
                     </div>
                 </div>
             ) : (
@@ -530,13 +506,32 @@ const ProjectDetail: React.FC = () => {
                     </DialogContent>
                 </Dialog>
             )}
-            <div className="h-[85%]">
-                <Nodes
-                    changes={changes}
-                    current={currentState}
-                    compare={compareState}
-                    project={project}
-                />
+            <div className="flex flex-row h-[81%] w-full">
+                <div
+                    className={cn(
+                        'transition-all duration-500 ease-in-out overflow-auto no-scrollbar'
+                    )}
+                >
+                    <DetailsComponent
+                        selectedVersion={selectedVersion}
+                        setSelectedVersion={setSelectedVersion}
+                        setVersions={setVersions}
+                        dir={dir}
+                        currentVersion={currentVersion}
+                        compareVersion={compareVersion}
+                        setCompareVersion={setCompareVersion}
+                        setCurrentVersion={setCurrentVersion}
+                        versions={versions}
+                    />
+                </div>
+                <div className="h-full w-full">
+                    <Nodes
+                        changes={changes}
+                        current={currentState}
+                        compare={compareState}
+                        project={project}
+                    />
+                </div>
             </div>
         </div>
     );

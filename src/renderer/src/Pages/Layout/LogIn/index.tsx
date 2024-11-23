@@ -93,7 +93,7 @@ const LogIn: React.FC<LogInProps> = () => {
     const isFormValid = isUsernameValid && password.trim().length >= 8;
 
     return (
-        <div className="flex flex-col items-center justify-evenly pt-10 h-screen bg-gray-800 text-white overflow-y-auto">
+        <div className="flex pb-[50px] flex-col items-center justify-evenly pt-10 h-full bg-gray-800 text-white overflow-y-auto">
             <MarianaHelper />
             <div className="flex justify-center items-center md:w-[30rem] w-[25rem] max-w-[90%] md:mt-0 text-gray-700">
                 <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 py-16 my-3 shadow-lg">

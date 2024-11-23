@@ -3,7 +3,7 @@ import HistoryItem from './HistoryItem';
 import { Version } from '../../../../main/models/Version';
 import { cn } from '../../lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowUp } from 'react-icons/fa';
 
 interface HistoryProps {
     path?: string;
@@ -12,7 +12,7 @@ interface HistoryProps {
     handleCompareVersionSelect: (version: Version) => void;
     currentVersion: Version | null;
     compareVersion: Version | null;
-    selectedVersion: Version | null;
+    selectedVersion?: Version;
     versions: Version[];
     orange?: boolean;
 }
@@ -28,14 +28,14 @@ const History: React.FC<HistoryProps> = ({
     compareVersion
 }) => {
     return (
-        <div className="flex w-full flex-row overflow-auto no-scrollbar">
+        <div className="flex flex-col overflow-auto no-scrollbar">
             {versions.length === 0 ? (
                 <p>No versions found.</p>
             ) : (
                 versions.map((version, index) => (
                     <Popover key={version.name}>
-                        <PopoverTrigger className="flex flex-row items-center justify-center gap-1">
-                            {index != 0 && <FaArrowLeft />}
+                        <PopoverTrigger className="flex flex-col items-center justify-center gap-1">
+                            {index != 0 && <FaArrowUp className="text-white" />}
                             <HistoryItem
                                 version={version}
                                 isCurrent={version.id === currentVersion?.id}

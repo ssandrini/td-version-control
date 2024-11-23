@@ -10,10 +10,10 @@ import {
 } from '../../../components/ui/dialog';
 import { Label } from '../../../components/ui/label';
 import { Input } from '../../../components/ui/input';
-import { FaUserCircle } from 'react-icons/fa';
 import { Version } from '../../../../../main/models/Version';
 import log from 'electron-log/renderer.js';
 import History from '../../../components/ui/history';
+import HistoryItem from '@renderer/components/ui/HistoryItem';
 
 interface DetailsComponentProps {
     versions: Version[];
@@ -22,8 +22,8 @@ interface DetailsComponentProps {
     setCurrentVersion: React.Dispatch<React.SetStateAction<Version | null>>;
     compareVersion: Version | null;
     setCompareVersion: React.Dispatch<React.SetStateAction<Version | null>>;
-    selectedVersion: Version;
-    setSelectedVersion: React.Dispatch<React.SetStateAction<Version | null>>;
+    selectedVersion?: Version;
+    setSelectedVersion: React.Dispatch<React.SetStateAction<Version | undefined>>;
     dir: string | undefined;
 }
 
@@ -60,7 +60,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         window.api
             .createNewVersion(dir, name, description)
-            .then((_) => {
+            .then(() => {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error
                 window.api.listVersions(dir).then((versions: Version[]) => {
@@ -127,7 +127,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
         <>
             {versions[0] && versions[0].name === currentVersion?.name && (
                 <div className="flex my-5">
-                    <div className="flex flex-row space-x-4 items-center w-full">
+                    <div className="flex flex-col space-x-4 items-center w-full">
                         <Button
                             variant="outline"
                             className="text-black"
@@ -206,6 +206,9 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 </div>
             )}
             <h2 className="text-white font-semibold mb-2">Version History</h2>
+            <div className="flex flex-col items-center justify-center gap-1">
+                <HistoryItem isCurrent={false} isSelected={false} />
+            </div>
             <History
                 versions={versions}
                 path={dir}

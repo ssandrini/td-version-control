@@ -1,6 +1,8 @@
 #root {
     margin: 0 auto;
     width: 100%;
+    height: 100vh;
+    overflow: hidden;
 }
 
 body {
@@ -17,6 +19,131 @@ body {
 .no-scrollbar {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
+}
+
+:root {
+    --topBar: #1b1d23;
+    --subMenu: #272c36;
+    --background: #2c313c;
+    --border: #343b48;
+    --active: #4f9fee;
+
+    --hover: var(--active);
+
+    /* text--------- */
+    --text2: #949aa7;
+    --text3: #e8e8e8;
+    --text: var(--text3);
+
+    --btnWidth: 15px;
+    --btnHeight: 15px;
+}
+
+/* --------------------------------- */
+
+body {
+    margin: 0px;
+}
+
+.topBar {
+    background-color: var(--topBar);
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 50px;
+
+    /* this stops users from being able to select / highlight text elements  */
+    -webkit-user-select: none;
+    user-select: none;
+    /*  you need to add this second line to avoid an error */
+}
+
+.titleBar {
+    /* this paramater allows us to drage the
+  whole window by this element  */
+    /* if this is included over a button it causes issues */
+    -webkit-app-region: drag;
+}
+
+.topBarMainImg {
+    margin-right: 10px;
+    width: 25px;
+    height: 25px;
+}
+
+.title {
+    font-size: 20px;
+    color: var(--text);
+    align-self: center;
+}
+
+.titleBarButtons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100px;
+}
+
+.topBtn {
+    width: var(--btnWidth);
+    height: var(--btnHeight);
+    border-style: none;
+    background-color: transparent;
+
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.minimizeBtn {
+    background-image: url('../icons/icon_minimize.png');
+}
+
+.maximizeBtn {
+    background-image: url('../icons/icon_maximize.png');
+}
+
+.closeBtn {
+    background-image: url('../icons/icon_close.png');
+}
+.restoreBtn {
+    background-image: url('../icons/icon_restore.png');
+}
+
+/* should be no spaces bewtwen className:hover */
+.minimizeBtn:hover {
+    border-style: dotted;
+    border-color: var(--hover);
+}
+.maximizeBtn:hover {
+    border-style: dotted;
+    border-color: var(--hover);
+}
+.closeBtn:hover {
+    border-style: dotted;
+    border-color: var(--hover);
+}
+.restoreBtn:hover {
+    border-style: dotted;
+    border-color: var(--hover);
+}
+
+.leftMenu {
+    background-color: var(--subMenu);
+    width: 280px;
+}
+
+.content {
+    background-color: var(--background);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.contentText {
+    color: var(--text);
+    max-width: 300px;
 }
 
 @keyframes logo-spin {

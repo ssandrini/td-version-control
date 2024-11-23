@@ -4,7 +4,6 @@ import { API_METHODS } from '../main/apiMethods';
 import { TDState } from '../main/models/TDState';
 import { electronAPI } from '@electron-toolkit/preload';
 import { RegisterUserRequest } from '../main/services/UserService';
-
 const api = {
     listVersions: async (dir: string) => ipcRenderer.invoke(API_METHODS.LIST_VERSIONS, dir),
     filePicker: async () => ipcRenderer.invoke(API_METHODS.FILE_PICKER),
@@ -18,6 +17,7 @@ const api = {
         ipcRenderer.invoke(API_METHODS.CREATE_PROJECT, dir, name, remote, src),
     createNewVersion: async (dir: string, name: string, description: string) =>
         ipcRenderer.invoke(API_METHODS.CREATE_VERSION, dir, name, description),
+    hasChanges: async (dir: string) => ipcRenderer.invoke(API_METHODS.HAS_CHANGES, dir),
     addTag: async (dir: string, versionId: string, tag: string) =>
         electron.ipcRenderer.invoke(API_METHODS.ADD_TAG, dir, versionId, tag),
     removeTag: async (dir: string, tag: string) =>
@@ -27,8 +27,12 @@ const api = {
     goToVersion: async (dir: string, versionId: string) =>
         ipcRenderer.invoke(API_METHODS.GO_TO_VERSION, dir, versionId),
     getTemplates: async () => ipcRenderer.invoke(API_METHODS.GET_TEMPLATES),
-    getState: async (path: string, versionId?: string) =>
-        ipcRenderer.invoke(API_METHODS.GET_STATE, path, versionId),
+    getState: async (path: string, versionId?: string) => {
+        if (versionId === '[wip]') {
+            versionId = undefined;
+        }
+        return await ipcRenderer.invoke(API_METHODS.GET_STATE, path, versionId);
+    },
     pull: async (dir: string) => ipcRenderer.invoke(API_METHODS.PULL, dir),
     push: async (dir: string) => ipcRenderer.invoke(API_METHODS.PUSH, dir),
     finishMerge: async (dir: string, state: TDState, versionName: string, description: string) =>
@@ -63,6 +67,18 @@ const api = {
     minimizeApp: async () => ipcRenderer.send('minimizeApp'),
     maximizeRestoreApp: async () => ipcRenderer.send('maximizeRestoreApp'),
     closeApp: async () => ipcRenderer.send('closeApp'),
+    watchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.WATCH_PROJECT, dir),
+    unwatchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.UNWATCH_PROJECT, dir),
+    getLastVersion: async (dir: string) => ipcRenderer.invoke(API_METHODS.LAST_VERSION, dir),
+
+    // MAIN TO RENDERER METHODS
+    onProjectChanged: (callback: (data: any) => void) => {
+        ipcRenderer.on(API_METHODS.PROJECT_CHANGED, (_event, data) => callback(data));
+    },
+
+    removeProjectChangedListener: () => {
+        ipcRenderer.removeAllListeners(API_METHODS.PROJECT_CHANGED);
+    }
 };
 
 if (process.contextIsolated) {

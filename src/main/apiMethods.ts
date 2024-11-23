@@ -4,6 +4,7 @@ export const API_METHODS = {
     ADD_TAG: 'add-tag',
     REMOVE_TAG: 'remove-tag',
     CURRENT_VERSION: 'current-version',
+    HAS_CHANGES: 'has-changes',
     FILE_PICKER: 'file-picker',
     RECENT_PROJECTS: 'recent-projects',
     SAVE_PROJECT: 'save-project',
@@ -31,5 +32,7 @@ export const API_METHODS = {
     OPEN_DIRECTORY: 'open-directory',
     SEARCH_USER: 'search-user',
     REGISTER: 'register',
-    GET_MERGE_STATUS: 'get-merge-status'
+    GET_MERGE_STATUS: 'get-merge-status',
+    PROJECT_CHANGED: 'project-changed',
+    LAST_VERSION: 'last-version'
 };

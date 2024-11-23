@@ -13,7 +13,6 @@ import { Input } from '../../../components/ui/input';
 import { Version } from '../../../../../main/models/Version';
 import log from 'electron-log/renderer.js';
 import History from '../../../components/ui/history';
-import HistoryItem from '@renderer/components/ui/HistoryItem';
 
 interface DetailsComponentProps {
     versions: Version[];
@@ -25,6 +24,8 @@ interface DetailsComponentProps {
     selectedVersion?: Version;
     setSelectedVersion: React.Dispatch<React.SetStateAction<Version | undefined>>;
     dir: string | undefined;
+    wipVersion: Version | null;
+    setWipVersion: React.Dispatch<React.SetStateAction<Version | null>>;
 }
 
 const DetailsComponent: React.FC<DetailsComponentProps> = ({
@@ -36,7 +37,9 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
     setCompareVersion,
     compareVersion,
     setVersions,
-    dir
+    dir,
+    wipVersion,
+    setWipVersion
 }) => {
     const [showNewVersionModal, setShowNewVersionModal] = useState<boolean>(false);
     const [isLoadingNewVersion, setIsLoadingNewVersion] = useState<boolean>(false);
@@ -46,28 +49,24 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
     const handleGoToVersion = (version: Version) => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.goToVersion(dir, version.id).then((newVersion) => {
+        window.api.goToVersion(dir, version.id).then((newVersion: Version) => {
             setCurrentVersion(newVersion);
             setSelectedVersion(version);
         });
     };
 
     const handleAddVersion = () => {
-        log.info('version a crear:', { title: name, description });
         setIsLoadingNewVersion(true);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         window.api
             .createNewVersion(dir, name, description)
-            .then(() => {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                window.api.listVersions(dir).then((versions: Version[]) => {
-                    setVersions(versions);
-                    setSelectedVersion(versions[0]);
-                    setCurrentVersion(versions[0]);
-                });
+            .then((newVersion: Version) => {
+                setWipVersion(null);
+                setCurrentVersion(newVersion);
+                setVersions([newVersion, ...versions]);
+                setSelectedVersion(versions[0]);
             })
             .finally(() => {
                 setShowNewVersionModal(false);
@@ -125,7 +124,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
 
     return (
         <>
-            {versions[0] && versions[0].name === currentVersion?.name && (
+            {wipVersion && (
                 <div className="flex my-5">
                     <div className="flex flex-col space-x-4 items-center w-full">
                         <Button
@@ -206,10 +205,8 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 </div>
             )}
             <h2 className="text-white font-semibold mb-2">Version History</h2>
-            <div className="flex flex-col items-center justify-center gap-1">
-                <HistoryItem isCurrent={false} isSelected={false} />
-            </div>
             <History
+                wipVersion={wipVersion}
                 versions={versions}
                 path={dir}
                 onVersionSelect={handleVersionSelect}

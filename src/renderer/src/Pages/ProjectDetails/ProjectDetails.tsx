@@ -18,6 +18,8 @@ import { DialogContent } from '../../components/ui/dialog';
 import NodeGraph from './Nodes/NodeGraph/NodeGraph';
 import { cn } from '@renderer/lib/utils';
 import Spinner from '@renderer/components/ui/Spinner';
+import { Author } from '../../../../main/models/Author';
+import { useVariableContext } from '@renderer/hooks/Variables/useVariableContext';
 
 const ProjectDetail: React.FC = () => {
     const { toast } = useToast();
@@ -34,6 +36,10 @@ const ProjectDetail: React.FC = () => {
     const [compareState, setCompareState] = useState<TDState | undefined>(undefined);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [isLoadingPush, setIsLoadingPush] = useState(false);
+    const { user } = useVariableContext();
+    const [wipVersion, setWipVersion] = useState<Version | null>(null);
+    const [fetch, setFetch] = useState(false);
 
     const [mergeConflicts, setMergeConflicts] = useState<
         | {
@@ -46,29 +52,90 @@ const ProjectDetail: React.FC = () => {
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
+        window.api.watchProject(project?.path).then(() => {
+            console.log('watch project: ', project?.path);
+        });
+        return () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api.unwatchProject(project?.path);
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleProjectChanged = (_: { message: string }) => {
+            console.log('CALLBACK');
+            const wipVersion = new Version(
+                'Work in progress',
+                new Author(user?.username!, user?.email!),
+                '[wip]',
+                new Date()
+            );
+            setWipVersion(wipVersion);
+            setSelectedVersion(wipVersion);
+        };
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.onProjectChanged(handleProjectChanged);
+
+        return () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api.removeProjectChangedListener();
+        };
+    }, []);
+
+    useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         window.api.getCurrentVersion(dir).then((version: Version) => {
             setCurrentVersion(version);
+            setFetch(true);
         });
     }, [dir]);
 
     useEffect(() => {
+        if (!currentVersion) return;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
             .listVersions(dir)
             .then((versions: Version[]) => {
-                setVersions(versions);
-                if (currentVersion == undefined && versions.length != 0) {
-                    setSelectedVersion(versions[0]);
-                }
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                window.api
+                    .hasChanges(dir)
+                    .then((result: boolean) => {
+                        log.info(`Project has ${result ? '' : 'no '}changes`);
+                        if (result) {
+                            const wipVersion = new Version(
+                                'Work in progress',
+                                new Author(user?.username!, user?.email!),
+                                '[wip]',
+                                new Date()
+                            );
+                            setWipVersion(wipVersion);
+                            setSelectedVersion(wipVersion);
+                        } else {
+                            if (versions.length != 0) {
+                                setSelectedVersion(currentVersion);
+                            }
+                        }
+                        setVersions(versions);
+                    })
+                    .catch((error: any) => {
+                        log.error('Error retrieving change status due to', error);
+                    });
             })
             .catch(() => {
                 setVersions([]);
             });
-    }, [currentVersion]);
+    }, [fetch]);
 
     useEffect(() => {
         if (selectedVersion) {
+            console.log('selected version id:', selectedVersion.id);
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             window.api
@@ -112,8 +179,6 @@ const ProjectDetail: React.FC = () => {
                 log.error('Error retrieving TDSTATE due to', error);
             });
     }, [compareVersion]);
-
-    const [isLoadingPush, setIsLoadingPush] = useState(false);
 
     const handlePush = () => {
         setIsLoadingPush(true);
@@ -513,6 +578,8 @@ const ProjectDetail: React.FC = () => {
                     )}
                 >
                     <DetailsComponent
+                        wipVersion={wipVersion}
+                        setWipVersion={setWipVersion}
                         selectedVersion={selectedVersion}
                         setSelectedVersion={setSelectedVersion}
                         setVersions={setVersions}

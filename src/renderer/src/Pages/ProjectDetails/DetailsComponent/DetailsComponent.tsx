@@ -82,7 +82,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
     const handleCompareVersionSelect = (version: Version) => {
         setCompareVersion(version);
     };
-
+    /*
     // TODO: implement this
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleAddTag = (version: Version, tag: string) => {
@@ -121,7 +121,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 log.error(`Error removing tag:`, err);
             })
             .finally(() => {});
-    };
+    };*/
 
     return (
         <>

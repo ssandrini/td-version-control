@@ -69,6 +69,8 @@ function createWindow() {
 
     win.maximize();
 
+    win.webContents.loadURL('https://forum.derivative.ca/c/general-discussion/12');
+
     /* --- Custom Title Bar actions --- */
     //minimize app
     ipcMain.on('minimizeApp', () => {

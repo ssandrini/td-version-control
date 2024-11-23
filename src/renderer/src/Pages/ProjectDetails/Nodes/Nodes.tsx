@@ -1,36 +1,33 @@
 import React, { useState } from 'react';
-import { TDNode } from '../../../../../main/models/TDNode';
-import { ChangeSet } from '../../../../../main/models/ChangeSet';
 import { TDState } from '../../../../../main/models/TDState';
 import NodeList from './NodeList/NodeList';
 import { cn } from '../../../lib/utils';
 import { FaCircleNodes } from 'react-icons/fa6';
-import { FaSquare } from 'react-icons/fa';
 import NodeGraph from './NodeGraph/NodeGraph';
 import { GoPeople } from 'react-icons/go';
 import Collaborators from './Collaborators';
 import Project from '../../../../../main/models/Project';
+import { GiSpawnNode } from 'react-icons/gi';
 
 interface NodesProps {
     project?: Project;
-    changes: ChangeSet<TDNode>;
     current: TDState | undefined;
     compare: TDState | undefined;
 }
 
 const Viz: {
     GRAPH: string;
-    SETTINGS: string;
+    NODELIST: string;
     COLLABORATORS: string;
     CONFLICTS: string;
 } = {
     GRAPH: 'GRAPH',
-    SETTINGS: 'SETTINGS',
+    NODELIST: 'NODELIST',
     COLLABORATORS: 'COLLABORATORS',
     CONFLICTS: 'CONFLICTS'
 };
 
-const Nodes: React.FC<NodesProps> = ({ changes, current, compare, project }) => {
+const Nodes: React.FC<NodesProps> = ({ current, compare, project }) => {
     const [graphViz, setGraphViz] = useState<string>(Viz.GRAPH);
 
     return (
@@ -66,20 +63,20 @@ const Nodes: React.FC<NodesProps> = ({ changes, current, compare, project }) => 
                 )}
                 <div
                     className={cn(
-                        graphViz == Viz.SETTINGS ? 'bg-blue-800 text-white' : 'text-gray-500',
+                        graphViz == Viz.NODELIST ? 'bg-blue-800 text-white' : 'text-gray-500',
                         'flex gap-2 flex-row items-center p-2 rounded-lg cursor-pointer'
                     )}
                     onClick={() => {
-                        setGraphViz(Viz.SETTINGS);
+                        setGraphViz(Viz.NODELIST);
                     }}
                 >
-                    <FaSquare />
-                    Settings
+                    <GiSpawnNode />
+                    Nodes
                 </div>
             </div>
             {/* Hidden instead of not rendered to avoid re-rendering the ReactFlow diagram each time */}
             <NodeGraph hidden={graphViz != Viz.GRAPH} current={current} compare={compare} />
-            {graphViz != Viz.SETTINGS ? <></> : <NodeList changes={changes} current={current} />}
+            {graphViz != Viz.NODELIST ? <></> : <NodeList current={current} />}
             {graphViz != Viz.COLLABORATORS ? <></> : <Collaborators project={project} />}
         </div>
     );

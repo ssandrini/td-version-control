@@ -25,12 +25,15 @@ import Spinner from '../../components/ui/Spinner';
 import { useToast } from '../../hooks/use-toast';
 import { CiWarning } from 'react-icons/ci';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
+import { MdOutlineCloud, MdOutlineCloudOff } from 'react-icons/md';
 
 interface ProjectsProps {
     hideHeader?: boolean;
+    ignoreRemote?: boolean;
+    setHasProjects?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Projects: React.FC<ProjectsProps> = ({ hideHeader }) => {
+const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasProjects }) => {
     const { toast } = useToast();
     const { user } = useVariableContext();
 
@@ -55,22 +58,28 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader }) => {
         window.api.getRecentProjects().then((recentProjects: Project[]) => {
             if (recentProjects && Array.isArray(recentProjects)) {
                 setProjects(recentProjects);
+                if (setHasProjects) setHasProjects(recentProjects.length > 0);
             }
         });
-        setIsLoadingRemote(true);
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api
-            .getRemoteProjects()
-            .then((externalRemoteProjects: ApiResponse<Project[]>) => {
-                if (externalRemoteProjects.errorCode) return;
-                if (externalRemoteProjects.result && Array.isArray(externalRemoteProjects.result)) {
-                    setRemoteProjects(externalRemoteProjects.result);
-                }
-            })
-            .finally(() => {
-                setIsLoadingRemote(false);
-            });
+        if (!ignoreRemote) {
+            setIsLoadingRemote(true);
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            window.api
+                .getRemoteProjects()
+                .then((externalRemoteProjects: ApiResponse<Project[]>) => {
+                    if (externalRemoteProjects.errorCode) return;
+                    if (
+                        externalRemoteProjects.result &&
+                        Array.isArray(externalRemoteProjects.result)
+                    ) {
+                        setRemoteProjects(externalRemoteProjects.result);
+                    }
+                })
+                .finally(() => {
+                    setIsLoadingRemote(false);
+                });
+        }
     }, [reload]);
 
     const handleFilePick = () => {
@@ -87,6 +96,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader }) => {
             const projectExists = projects.some((proj) => proj.path === selectedPath);
             if (!projectExists) {
                 setProjects([...projects, newProject]);
+                if (setHasProjects) setHasProjects([...projects, newProject].length > 0);
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error
                 window.api.saveProject(newProject);
@@ -119,6 +129,8 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader }) => {
             // @ts-expect-error
             window.api.deleteProject(projectToDelete.path).then(() => {
                 setProjects(projects.filter((p) => p !== projectToDelete));
+                if (setHasProjects)
+                    setHasProjects(projects.filter((p) => p !== projectToDelete).length > 0);
                 setDeleteDialogOpen(false);
                 setProjectToDelete(null);
             });
@@ -226,7 +238,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader }) => {
     }
 
     return (
-        <div className="flex flex-col w-full overflow-auto h-full">
+        <div className="flex flex-col w-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 h-full">
             {/* Main Content */}
             <div className="flex-1 p-8 text-white">
                 {/* Header */}
@@ -249,153 +261,168 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader }) => {
                         </div>
                     </div>
                 )}
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold">Local Projects</h3>
-                </div>
+                {hideHeader && (
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Projects</h3>
+                    </div>
+                )}
 
-                <div className="overflow-auto">
+                <div className="flex flex-row w-full flex-wrap overflow-auto">
                     {projects.length > 0 ? (
                         <>
                             {projects.map((project, index) => (
                                 <div
-                                    className="flex flex-col text-black bg-white bg-gray-800 shadow-lg rounded-lg cursor-pointer w-[20rem] text-ellipsis overflow-hidden hover:bg-gray-700"
+                                    className="flex flex-col text-black bg-white p-2 shadow-lg rounded-lg cursor-pointer min-w-[20rem] w-fit text-ellipsis overflow-hidden"
                                     key={index}
                                     onClick={(event) => handleCellClick(event, project)}
                                 >
-                                    <div className="flex flex-col gap-5 px-6 py-4">
-                                        <div className="whitespace-nowrap text-ellipsis">
-                                            {project.name.split('/').pop()}
-                                        </div>
-                                        <div className="w-full text-left flex flex-row gap-0.5 items-center">
-                                            <FaUserCircle className="text-sm text-gray-300 mr-2" />
-                                            <div className="whitespace-nowrap">
-                                                {project.owner ?? user?.username ?? 'N/A'}
+                                    <div className="flex flex-col px-6 pb-2">
+                                        <div className="whitespace-nowrap flex flex-row items-center justify-between gap-2 text-ellipsis font-bold text-md">
+                                            <div>{project.name.split('/').pop()}</div>
+                                            <div className="flex flex-row items-center">
+                                                <Button
+                                                    className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handlePlayProject(project);
+                                                    }}
+                                                >
+                                                    <FaPlay />
+                                                </Button>
+                                                <Button
+                                                    className="mr-2 p-2 bg-transparent text-red-600 hover:text-red-500"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        confirmDeleteProject(project);
+                                                    }}
+                                                >
+                                                    <FaTrashAlt />
+                                                </Button>
+                                                <Button
+                                                    className="mr-2 p-2 bg-transparent hover:cursor-default"
+                                                    disabled={true}
+                                                >
+                                                    {project.remote ? (
+                                                        <MdOutlineCloud className="text-green-500" />
+                                                    ) : (
+                                                        <MdOutlineCloudOff className="text-red-600" />
+                                                    )}
+                                                </Button>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="w-full text-right px-6 py-4 whitespace-nowrap text-center">
-                                        <Button
-                                            className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handlePlayProject(project);
-                                            }}
-                                        >
-                                            <FaPlay />
-                                        </Button>
-                                        <Button
-                                            className="p-2 bg-transparent text-red-600 hover:text-red-500"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                confirmDeleteProject(project);
-                                            }}
-                                        >
-                                            <FaTrashAlt />
-                                        </Button>
+                                        <div className="flex w-full mt-3 flex-row justify-between">
+                                            <div className="flex flex-row gap-0.5 items-center text-sm">
+                                                <FaUserCircle className="text-sm text-gray-300 mr-2" />
+                                                <div className="whitespace-nowrap">
+                                                    {project.owner ?? user?.username ?? 'N/A'}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </>
                     ) : (
-                        <div className="flex flex-col items-center justify-center">
+                        <div className="flex flex-col items-center w-full justify-center">
                             <FaFolderOpen className="text-6xl text-gray-300 mb-4" />
-                            <h1 className="text-2xl text-gray-200 mb-2">No projects, yet</h1>
-                            <p className="text-lg text-gray-300">
-                                To get started, create or open a project.
-                            </p>
+                            <h1 className="text-2xl text-gray-200 mb-2">No projects, yet...</h1>
                         </div>
                     )}
                 </div>
             </div>
+            {!ignoreRemote && (
+                <div className="flex-1 p-8 text-white">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Remote Projects</h3>
+                    </div>
 
-            <div className="flex-1 p-8 text-white">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold">Remote Projects</h3>
-                </div>
-
-                <div className="overflow-auto">
-                    {/* Projects Table or No Projects Message */}
-                    {remoteProjects.length > 0 ? (
-                        <div className="bg-gray-800 rounded-lg">
-                            <table className="min-w-full divide-y divide-gray-700">
-                                <thead>
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                            Name
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                            Author
-                                        </th>
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-700">
-                                    {remoteProjects.map((project, index) => (
-                                        <tr key={index}>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {project.name}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {project.owner}
-                                            </td>
-                                            <td className="py-4 whitespace-nowrap text-center">
-                                                <Button
-                                                    className="mr-2 bg-green-500 bg-opacity-40 border border-green-500 w-20 p-2 bg-transparent text-green-500 hover:text-green-400"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setProjectToClone(project);
-                                                    }}
-                                                >
-                                                    <FaDownload />
-                                                </Button>
-                                            </td>
+                    <div className="overflow-auto">
+                        {/* Projects Table or No Projects Message */}
+                        {remoteProjects.length > 0 ? (
+                            <div className="bg-gray-800 rounded-lg">
+                                <table className="min-w-full divide-y divide-gray-700">
+                                    <thead>
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                                Name
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                                Author
+                                            </th>
+                                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider"></th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <>
-                            {isLoadingRemote ? (
-                                <Spinner />
-                            ) : (
-                                <div className="flex flex-col items-center justify-center">
-                                    <FaFolderOpen className="text-6xl text-gray-300 mb-4" />
-                                    <h1 className="text-2xl text-gray-200 mb-2">
-                                        No remote projects, yet
-                                    </h1>
-                                </div>
-                            )}
-                        </>
-                    )}
-                    {projectToClone && (
-                        <Dialog open>
-                            <DialogContent className="sm:max-w-[425px]">
-                                <DialogHeader>
-                                    <DialogTitle>Select location for download</DialogTitle>
-                                    <DialogDescription>
-                                        Please select a location to store the project. It must be an
-                                        empty folder.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter>
-                                    <Button type="button" onClick={handleCloneProject}>
-                                        Select location
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    )}
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-700">
+                                        {remoteProjects.map((project, index) => (
+                                            <tr key={index}>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {project.name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {project.owner}
+                                                </td>
+                                                <td className="py-4 whitespace-nowrap text-center">
+                                                    <Button
+                                                        className="mr-2 bg-green-500 bg-opacity-40 border border-green-500 w-20 p-2 bg-transparent text-green-500 hover:text-green-400"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setProjectToClone(project);
+                                                        }}
+                                                    >
+                                                        <FaDownload />
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <>
+                                {isLoadingRemote ? (
+                                    <Spinner />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center">
+                                        <FaFolderOpen className="text-6xl text-gray-300 mb-4" />
+                                        <h1 className="text-2xl text-gray-200 mb-2">
+                                            No remote projects, yet
+                                        </h1>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                        {projectToClone && (
+                            <Dialog open>
+                                <DialogContent className="sm:max-w-[425px]">
+                                    <DialogHeader>
+                                        <DialogTitle>Select location for download</DialogTitle>
+                                        <DialogDescription>
+                                            Please select a location to store the project. It must
+                                            be an empty folder.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <DialogFooter>
+                                        <Button type="button" onClick={handleCloneProject}>
+                                            Select location
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Delete Project</DialogTitle>
-                        <p>Are you sure you want to delete this project?</p>
+                        <p>
+                            Are you sure you want to delete this project? This will only delete the
+                            project from Mariana. It will not delete it from your files.
+                        </p>
                     </DialogHeader>
                     <DialogFooter>
                         <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>

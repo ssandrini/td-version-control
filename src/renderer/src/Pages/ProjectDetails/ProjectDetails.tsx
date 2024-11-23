@@ -3,8 +3,6 @@ import { useLocation } from 'react-router-dom';
 import { FaCheck, FaCloud, FaFolderOpen, FaPlay } from 'react-icons/fa';
 import { Version } from '../../../../main/models/Version';
 import log from 'electron-log/renderer.js';
-import { TDNode } from '../../../../main/models/TDNode';
-import { ChangeSet } from '../../../../main/models/ChangeSet';
 import Nodes from './Nodes/Nodes';
 import { TDState } from '../../../../main/models/TDState';
 import DetailsComponent from './DetailsComponent/DetailsComponent';
@@ -27,7 +25,6 @@ const ProjectDetail: React.FC = () => {
     const dir = project?.path;
     const [currentVersion, setCurrentVersion] = useState<Version | null>(null);
     const [versions, setVersions] = useState<Version[]>([]);
-    const [changes] = useState<ChangeSet<TDNode>>(new ChangeSet<TDNode>());
     const [selectedVersion, setSelectedVersion] = useState<Version | undefined>(undefined);
     const [currentState, setCurrentState] = useState<TDState | undefined>(undefined);
     const [compareVersion, setCompareVersion] = useState<Version | null>(null);
@@ -525,12 +522,7 @@ const ProjectDetail: React.FC = () => {
                     />
                 </div>
                 <div className="h-full w-full">
-                    <Nodes
-                        changes={changes}
-                        current={currentState}
-                        compare={compareState}
-                        project={project}
-                    />
+                    <Nodes current={currentState} compare={compareState} project={project} />
                 </div>
             </div>
         </div>

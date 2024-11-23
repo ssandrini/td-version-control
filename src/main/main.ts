@@ -49,6 +49,7 @@ function createWindow() {
 
     win = new BrowserWindow({
         icon: iconPath,
+        frame: false,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -64,7 +65,46 @@ function createWindow() {
         minHeight: finalHeight
     });
 
+    win.setBackgroundColor('#1b1d23');
+
     win.maximize();
+
+    /* --- Custom Title Bar actions --- */
+    //minimize app
+    ipcMain.on('minimizeApp', () => {
+        console.log('clicked on minimize btn');
+        win?.minimize();
+    });
+
+    //maximize app
+    ipcMain.on('maximizeRestoreApp', () => {
+        console.log('clicked on maximize restore btn');
+        //check status of the window
+        if (win?.isMaximized()) {
+            console.log('--setting restore');
+            win?.restore();
+        } else {
+            console.log('--setting maximize');
+            win?.maximize();
+        }
+    });
+
+    //close app
+    ipcMain.on('closeApp', () => {
+        console.log('clicked on close btn');
+        win?.close();
+    });
+
+    //win.on is used to check events triggers
+    win.on('maximize', () => {
+        win?.webContents.send('isMaximized'); //send an event to the ui
+    });
+
+    win.on('restore', () => {
+        win?.webContents.send('isRestored');
+    });
+    /* --------------------------------- */
+
     const tracker = new SimpleGitTracker();
     const processor = new TDProcessor();
     const projectManager = new TDProjectManager(processor, tracker, '.mar');

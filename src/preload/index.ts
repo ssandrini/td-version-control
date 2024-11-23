@@ -55,7 +55,10 @@ const api = {
     openDirectory: async (dir: string) => ipcRenderer.invoke(API_METHODS.OPEN_DIRECTORY, dir),
     register: async (request: RegisterUserRequest) =>
         ipcRenderer.invoke(API_METHODS.REGISTER, request),
-    getMergeStatus: async (dir: string) => ipcRenderer.invoke(API_METHODS.GET_MERGE_STATUS, dir)
+    getMergeStatus: async (dir: string) => ipcRenderer.invoke(API_METHODS.GET_MERGE_STATUS, dir),
+    minimizeApp: async () => ipcRenderer.send('minimizeApp'),
+    maximizeRestoreApp: async () => ipcRenderer.send('maximizeRestoreApp'),
+    closeApp: async () => ipcRenderer.send('closeApp'),
 };
 
 if (process.contextIsolated) {

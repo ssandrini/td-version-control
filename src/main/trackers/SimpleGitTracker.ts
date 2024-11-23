@@ -22,8 +22,6 @@ import {
 import { extractFileName } from '../utils/utils';
 import userDataManager from '../managers/UserDataManager';
 import { User } from '../models/api/User';
-import { Map } from 'lucide-react';
-import { Set } from '../utils/Set';
 
 export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
@@ -289,8 +287,6 @@ export class SimpleGitTracker implements Tracker {
         }
 
         log.info(`Merge encountered ${conflicts.length} conflict(s)`);
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         const conflictMap = new Map<Filename, Set<[Content, Content]>>();
 
         for (const conflict of conflicts) {
@@ -448,8 +444,6 @@ export class SimpleGitTracker implements Tracker {
             return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
         }
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         const conflictMap = new Map<Filename, Set<[Content, Content]>>();
         for (const file of conflictedFiles) {
             const filePath = path.join(dir, file);

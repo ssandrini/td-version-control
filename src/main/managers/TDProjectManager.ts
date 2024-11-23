@@ -14,7 +14,8 @@ import {
     findFileByExt,
     getNodeInfoFromNFile,
     splitSet,
-    validateDirectory
+    validateDirectory,
+    validateTag
 } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 import { TDState } from '../models/TDState';
@@ -26,6 +27,7 @@ import { TDEdge } from '../models/TDEdge';
 import { MergeStatus, TrackerMergeResult } from '../merge/TrackerMergeResult';
 import { TDMergeResult, TDMergeStatus } from '../models/TDMergeResult';
 import { resolveWithCurrentBranch, resolveWithIncomingBranch } from '../merge/MergeParser';
+import { TagError } from '../errors/TagError';
 
 export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> {
     readonly processor: Processor;
@@ -143,11 +145,15 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     async addTag(dir: string, versionId: string, tag: string): Promise<void> {
         await validateDirectory(dir);
+        validateTag(tag);
         const hiddenDirPath = this.hiddenDirPath(dir);
         try {
             await this.tracker.addTag(hiddenDirPath, versionId, tag);
-        } catch (error) {
+        } catch (error: any) {
             log.error(`Error creating tag for ${versionId}. Cause:`, error);
+            if (error.message.includes('already exists')) {
+                return Promise.reject(new TagError(`Tag ${tag} already exists`));
+            }
             return Promise.reject(error);
         }
     }

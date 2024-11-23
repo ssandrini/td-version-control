@@ -5,6 +5,7 @@ import Template from '../models/Template';
 import path from 'node:path';
 import { TDState } from '../models/TDState';
 import { app } from 'electron';
+import { TagError } from '../errors/TagError';
 
 /**
  * Searches for the first file in the current directory with the specified extension.
@@ -227,7 +228,7 @@ export const splitSet = (set: Set<[string, string]>): [string[], string[]] => {
 };
 
 export const extractFileName = (filePath: string): string | null => {
-    const match = filePath.match(/[^\/\\]+$/);
+    const match = filePath.match(/[^/\\]+$/);
     return match ? match[0] : null;
 };
 
@@ -253,5 +254,59 @@ export const openDirectory = async (directoryPath: string): Promise<void> => {
     } catch (error) {
         log.error('Unexpected error while opening directory:', error);
         return Promise.reject(new Error('Unexpected error while opening directory.'));
+    }
+};
+
+export const validateTag = (tag: string): void => {
+    const fail = (reason: string) => {
+        throw new TagError(`Invalid tag "${tag}": ${reason}`);
+    };
+
+    const components = tag.split('/');
+    if (components.length < 2) {
+        fail('must contain at least one slash (/) to separate components.');
+    }
+    if (components.some((part) => part.startsWith('.') || part.endsWith('.lock'))) {
+        fail(
+            'no slash-separated component can begin with a dot (.) or end with the sequence ".lock".'
+        );
+    }
+
+    if (tag.includes('..')) {
+        fail('cannot contain two consecutive dots (..).');
+    }
+
+    // eslint-disable-next-line no-control-regex
+    const invalidCharacters = new RegExp('[\\x00-\\x1F\\x7F ~^:?*\\[]');
+    if (invalidCharacters.test(tag)) {
+        fail(
+            'cannot contain ASCII control characters, space, tilde (~), caret (^), colon (:), question mark (?), asterisk (*), or open bracket ([).'
+        );
+    }
+
+    if (tag.startsWith('/')) {
+        fail('cannot begin with a slash (/).');
+    }
+    if (tag.endsWith('/')) {
+        fail('cannot end with a slash (/).');
+    }
+    if (tag.includes('//')) {
+        fail('cannot contain multiple consecutive slashes (//).');
+    }
+
+    if (tag.endsWith('.')) {
+        fail('cannot end with a dot (.).');
+    }
+
+    if (tag.includes('@{')) {
+        fail('cannot contain the sequence "@{".');
+    }
+
+    if (tag === '@') {
+        fail('cannot be the single character "@".');
+    }
+
+    if (tag.includes('.')) {
+        fail('cannot contain a bare dot (.).');
     }
 };

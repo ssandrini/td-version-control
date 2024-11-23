@@ -57,7 +57,12 @@ const NewProject: React.FC = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
-            .createProject(formData.location, formData.title, true, selectedTemplate?.dir)
+            .createProject(
+                formData.location,
+                formData.title,
+                formData.pushOnLoad,
+                selectedTemplate?.dir
+            )
             .then((project: Project) => {
                 setLoading(false);
                 setSuccess(true);

@@ -24,9 +24,11 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, 
             <div
                 className={cn(
                     isSelected || isCurrent ? 'bg-gray-600' : '',
-                    'h-fit rounded-lg m-2 cursor-pointer border border-white hover:bg-gray-600 transform transition-all duration-600 ease-in-out sticky',
-                    'text-gray-100 px-2 py-1',
-                    'flex flex-col items-center gap-1 justify-center'
+                    'h-fit rounded-lg m-2 cursor-pointer transform transition-all duration-600 ease-in-out sticky',
+                    'text-gray-100 px-2 py-1 flex flex-col items-center gap-1 justify-center',
+                    version?.id === '[wip]'
+                        ? 'border-dashed border-2 border-gray-400'
+                        : 'border-solid border-2 border-white'
                 )}
             >
                 <div className="w-full text-left flex flex-row gap-0.5 items-center">

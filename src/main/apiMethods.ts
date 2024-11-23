@@ -32,5 +32,7 @@ export const API_METHODS = {
     OPEN_DIRECTORY: 'open-directory',
     SEARCH_USER: 'search-user',
     REGISTER: 'register',
-    GET_MERGE_STATUS: 'get-merge-status'
+    GET_MERGE_STATUS: 'get-merge-status',
+    PROJECT_CHANGED: 'project-changed',
+    LAST_VERSION: 'last-version'
 };

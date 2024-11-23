@@ -333,7 +333,7 @@ export class SimpleGitTracker implements Tracker {
         await this.git.cwd(dir);
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            const result = await this.git.push(remoteUrl);
+            const result = await this.git.push(remoteUrl, '--tags');
             log.info(`Push successful: ${result.pushed.length} references updated.`);
         } catch (error) {
             const errorMessage = `Failed to push changes from ${dir}`;

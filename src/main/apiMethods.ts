@@ -4,6 +4,7 @@ export const API_METHODS = {
     ADD_TAG: 'add-tag',
     REMOVE_TAG: 'remove-tag',
     CURRENT_VERSION: 'current-version',
+    HAS_CHANGES: 'has-changes',
     FILE_PICKER: 'file-picker',
     RECENT_PROJECTS: 'recent-projects',
     SAVE_PROJECT: 'save-project',

@@ -12,6 +12,7 @@ import {
     extractNodeNameFromToc,
     findContainers,
     findFileByExt,
+    getLastModifiedDate,
     getNodeInfoFromNFile,
     splitSet,
     validateDirectory,
@@ -158,6 +159,17 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             log.error('Commit failed. Cause:', error);
             return Promise.reject(error);
         }
+    }
+
+    async hasChanges(dir: string): Promise<boolean> {
+        await validateDirectory(dir);
+        const lastVersion = await this.currentVersion(dir);
+        const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+        const lastModified = await getLastModifiedDate(toeFile);
+
+        log.debug(`${toeFile} was last modified at ${lastModified}`);
+
+        return lastVersion.date.getTime() < lastModified.getTime();
     }
 
     async addTag(dir: string, versionId: string, tag: string): Promise<void> {
@@ -444,8 +456,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         return [node, nodeInputs];
     }
 
-    private async findFileWithCheck(hiddenDirPath: string, extension: string): Promise<string> {
-        const file = findFileByExt(extension, hiddenDirPath);
+    private async findFileWithCheck(dir: string, extension: string): Promise<string> {
+        const file = findFileByExt(extension, dir);
         if (!file) {
             return Promise.reject(new MissingFileError(`Could not find ${extension} file`));
         }

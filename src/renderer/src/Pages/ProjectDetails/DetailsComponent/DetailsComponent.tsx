@@ -13,7 +13,6 @@ import { Input } from '../../../components/ui/input';
 import { Version } from '../../../../../main/models/Version';
 import log from 'electron-log/renderer.js';
 import History from '../../../components/ui/history';
-import HistoryItem from '@renderer/components/ui/HistoryItem';
 
 interface DetailsComponentProps {
     versions: Version[];
@@ -206,9 +205,6 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 </div>
             )}
             <h2 className="text-white font-semibold mb-2">Version History</h2>
-            <div className="flex flex-col items-center justify-center gap-1">
-                <HistoryItem isCurrent={false} isSelected={false} />
-            </div>
             <History
                 versions={versions}
                 path={dir}

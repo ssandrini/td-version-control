@@ -1,6 +1,7 @@
 import { dialog, shell } from 'electron';
 import log from 'electron-log/main.js';
 import fs from 'fs-extra';
+import { stat } from 'fs/promises';
 import Template from '../models/Template';
 import path from 'node:path';
 import { TDState } from '../models/TDState';
@@ -308,5 +309,16 @@ export const validateTag = (tag: string): void => {
 
     if (tag.includes('.')) {
         fail('cannot contain a bare dot (.).');
+    }
+};
+
+export const getLastModifiedDate = async (filePath: string): Promise<Date> => {
+    try {
+        const stats = await stat(filePath);
+        return stats.mtime; // Modification time
+    } catch (error: any) {
+        throw new Error(
+            `Unable to retrieve the last modified date for file "${filePath}": ${error.message}`
+        );
     }
 };

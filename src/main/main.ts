@@ -185,6 +185,8 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
         projectManager.currentVersion(dir)
     );
 
+    ipcMain.handle(API_METHODS.HAS_CHANGES, (_, dir: string) => projectManager.hasChanges(dir));
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ipcMain.handle(API_METHODS.FILE_PICKER, (_) => filePicker());
 

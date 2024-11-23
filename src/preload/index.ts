@@ -18,6 +18,7 @@ const api = {
         ipcRenderer.invoke(API_METHODS.CREATE_PROJECT, dir, name, remote, src),
     createNewVersion: async (dir: string, name: string, description: string) =>
         ipcRenderer.invoke(API_METHODS.CREATE_VERSION, dir, name, description),
+    hasChanges: async (dir: string) => ipcRenderer.invoke(API_METHODS.HAS_CHANGES, dir),
     addTag: async (dir: string, versionId: string, tag: string) =>
         electron.ipcRenderer.invoke(API_METHODS.ADD_TAG, dir, versionId, tag),
     removeTag: async (dir: string, tag: string) =>
@@ -62,7 +63,7 @@ const api = {
     getMergeStatus: async (dir: string) => ipcRenderer.invoke(API_METHODS.GET_MERGE_STATUS, dir),
     minimizeApp: async () => ipcRenderer.send('minimizeApp'),
     maximizeRestoreApp: async () => ipcRenderer.send('maximizeRestoreApp'),
-    closeApp: async () => ipcRenderer.send('closeApp'),
+    closeApp: async () => ipcRenderer.send('closeApp')
 };
 
 if (process.contextIsolated) {

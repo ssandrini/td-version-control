@@ -18,6 +18,7 @@ import { DialogContent } from '../../components/ui/dialog';
 import NodeGraph from './Nodes/NodeGraph/NodeGraph';
 import { cn } from '@renderer/lib/utils';
 import Spinner from '@renderer/components/ui/Spinner';
+import { Author } from '../../../../main/models/Author';
 
 const ProjectDetail: React.FC = () => {
     const { toast } = useToast();
@@ -34,6 +35,7 @@ const ProjectDetail: React.FC = () => {
     const [compareState, setCompareState] = useState<TDState | undefined>(undefined);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [isLoadingPush, setIsLoadingPush] = useState(false);
 
     const [mergeConflicts, setMergeConflicts] = useState<
         | {
@@ -61,6 +63,26 @@ const ProjectDetail: React.FC = () => {
                 if (currentVersion == undefined && versions.length != 0) {
                     setSelectedVersion(versions[0]);
                 }
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                window.api
+                    .hasChanges(dir)
+                    .then((result: boolean) => {
+                        log.info(`Project has ${result ? '' : 'no '}changes`);
+                        if (result) {
+                            const wipVersion = new Version(
+                                'Work in progress',
+                                new Author('', ''),
+                                '[wip]',
+                                new Date()
+                            );
+                            const updated = [wipVersion, ...versions];
+                            setVersions(updated);
+                        }
+                    })
+                    .catch((error: any) => {
+                        log.error('Error retrieving change status due to', error);
+                    });
             })
             .catch(() => {
                 setVersions([]);
@@ -112,8 +134,6 @@ const ProjectDetail: React.FC = () => {
                 log.error('Error retrieving TDSTATE due to', error);
             });
     }, [compareVersion]);
-
-    const [isLoadingPush, setIsLoadingPush] = useState(false);
 
     const handlePush = () => {
         setIsLoadingPush(true);

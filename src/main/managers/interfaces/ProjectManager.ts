@@ -7,6 +7,8 @@ export interface ProjectManager<S, R> {
     init(dir: string, dst?: string, src?: string): Promise<Version>;
     currentVersion(dir: string): Promise<Version>;
     listVersions(dir: string): Promise<Version[]>;
+    addTag(dir: string, versionId: string, tag: string): Promise<void>;
+    removeTag(dir: string, tag: string): Promise<void>;
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;
     goToVersion(dir: string, versionId: string): Promise<Version>;
     getVersionState(dir: string, versionId?: string): Promise<S>;

@@ -173,6 +173,14 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             projectManager.createVersion(dir, name, description)
     );
 
+    ipcMain.handle(API_METHODS.ADD_TAG, (_, dir: string, versionId: string, tag: string) =>
+        projectManager.addTag(dir, versionId, tag)
+    );
+
+    ipcMain.handle(API_METHODS.REMOVE_TAG, (_, dir: string, tag: string) =>
+        projectManager.removeTag(dir, tag)
+    );
+
     ipcMain.handle(API_METHODS.CURRENT_VERSION, (_, dir: string) =>
         projectManager.currentVersion(dir)
     );

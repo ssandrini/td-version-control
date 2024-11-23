@@ -7,6 +7,8 @@ export interface Tracker {
     initialVersion(dir: string): Promise<Version>;
     listVersions(dir: string): Promise<Version[]>;
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;
+    addTag(dir: string, versionId: string, tag: string): Promise<void>;
+    removeTag(dir: string, tag: string): Promise<void>;
     goToVersion(dir: string, versionId: string): Promise<Version>;
     compare(dir: string, versionId?: string, file?: string, modified?: boolean): Promise<string>;
     readFile(dir: string, filePath: string, versionId?: string): Promise<string>;

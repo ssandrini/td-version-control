@@ -1,6 +1,8 @@
 export const API_METHODS = {
     LIST_VERSIONS: 'list-versions',
     CREATE_VERSION: 'create-version',
+    ADD_TAG: 'add-tag',
+    REMOVE_TAG: 'remove-tag',
     CURRENT_VERSION: 'current-version',
     FILE_PICKER: 'file-picker',
     RECENT_PROJECTS: 'recent-projects',

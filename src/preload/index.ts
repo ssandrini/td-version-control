@@ -69,6 +69,7 @@ const api = {
     closeApp: async () => ipcRenderer.send('closeApp'),
     watchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.WATCH_PROJECT, dir),
     unwatchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.UNWATCH_PROJECT, dir),
+    getLastVersion: async (dir: string) => ipcRenderer.invoke(API_METHODS.LAST_VERSION, dir),
 
     // MAIN TO RENDERER METHODS
     onProjectChanged: (callback: (data: any) => void) => {

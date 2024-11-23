@@ -274,9 +274,15 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
     ipcMain.handle(API_METHODS.WATCH_PROJECT, (_, dir: string) => {
         const toePath = path.join(dir, findFileByExt('toe', dir)!);
         log.debug(`Adding ${toePath} to watcher`);
-        watcherMgr.registerWatcher(toePath!, () => {
-            log.debug('Project ' + toePath + ' changed.');
-            win?.webContents.send(API_METHODS.PROJECT_CHANGED, { message: 'Project changed' });
+        watcherMgr.registerWatcher(toePath!, async () => {
+            const currentVersion: Version = await projectManager.currentVersion(dir);
+            const lastVersion: Version = await projectManager.lastVersion(dir);
+            log.debug('currentVersionId: ', currentVersion.id);
+            log.debug('lastVersionId: ', lastVersion.id);
+
+            if (currentVersion.id === lastVersion.id) {
+                win?.webContents.send(API_METHODS.PROJECT_CHANGED, { message: 'Project changed' });
+            }
         });
     });
 
@@ -346,5 +352,9 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     ipcMain.handle(API_METHODS.GET_MERGE_STATUS, async (_, dir: string) => {
         return projectManager.getMergeStatus(dir);
+    });
+
+    ipcMain.handle(API_METHODS.LAST_VERSION, async (_, dir: string) => {
+        return projectManager.lastVersion(dir);
     });
 };

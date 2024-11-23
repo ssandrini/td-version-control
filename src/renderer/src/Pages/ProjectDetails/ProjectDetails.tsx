@@ -38,6 +38,8 @@ const ProjectDetail: React.FC = () => {
     const [description, setDescription] = useState('');
     const [isLoadingPush, setIsLoadingPush] = useState(false);
     const { user } = useVariableContext();
+    const [wipVersion, setWipVersion] = useState<Version | null>(null);
+    const [fetch, setFetch] = useState(false);
 
     const [mergeConflicts, setMergeConflicts] = useState<
         | {
@@ -62,13 +64,14 @@ const ProjectDetail: React.FC = () => {
 
     useEffect(() => {
         const handleProjectChanged = (_: { message: string }) => {
+            console.log('CALLBACK');
             const wipVersion = new Version(
                 'Work in progress',
                 new Author(user?.username!, user?.email!),
                 '[wip]',
                 new Date()
             );
-            console.log('versions: ', versions);
+            setWipVersion(wipVersion);
             setSelectedVersion(wipVersion);
         };
 
@@ -88,6 +91,7 @@ const ProjectDetail: React.FC = () => {
         // @ts-expect-error
         window.api.getCurrentVersion(dir).then((version: Version) => {
             setCurrentVersion(version);
+            setFetch(true);
         });
     }, [dir]);
 
@@ -111,15 +115,14 @@ const ProjectDetail: React.FC = () => {
                                 '[wip]',
                                 new Date()
                             );
-                            const updated = [wipVersion, ...versions];
-                            setVersions(updated);
+                            setWipVersion(wipVersion);
                             setSelectedVersion(wipVersion);
                         } else {
-                            setVersions(versions);
                             if (versions.length != 0) {
-                                setSelectedVersion(versions[0]);
+                                setSelectedVersion(currentVersion);
                             }
                         }
+                        setVersions(versions);
                     })
                     .catch((error: any) => {
                         log.error('Error retrieving change status due to', error);
@@ -128,7 +131,7 @@ const ProjectDetail: React.FC = () => {
             .catch(() => {
                 setVersions([]);
             });
-    }, [currentVersion]);
+    }, [fetch]);
 
     useEffect(() => {
         if (selectedVersion) {
@@ -575,6 +578,8 @@ const ProjectDetail: React.FC = () => {
                     )}
                 >
                     <DetailsComponent
+                        wipVersion={wipVersion}
+                        setWipVersion={setWipVersion}
                         selectedVersion={selectedVersion}
                         setSelectedVersion={setSelectedVersion}
                         setVersions={setVersions}

@@ -15,6 +15,7 @@ interface HistoryProps {
     selectedVersion?: Version;
     versions: Version[];
     orange?: boolean;
+    wipVersion: Version | null;
 }
 
 const History: React.FC<HistoryProps> = ({
@@ -25,10 +26,19 @@ const History: React.FC<HistoryProps> = ({
     orange,
     handleGoToVersion,
     handleCompareVersionSelect,
-    compareVersion
+    compareVersion,
+    wipVersion
 }) => {
     return (
         <div className="flex flex-col overflow-auto no-scrollbar">
+            {wipVersion && (
+                <HistoryItem
+                    version={wipVersion}
+                    isCurrent={wipVersion.id === currentVersion?.id}
+                    isSelected={wipVersion.id === selectedVersion?.id}
+                    orange={orange}
+                />
+            )}
             {versions.length === 0 ? (
                 <p>No versions found.</p>
             ) : (

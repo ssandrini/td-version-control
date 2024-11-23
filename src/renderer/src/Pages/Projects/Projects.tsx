@@ -1,7 +1,14 @@
 import React, { MouseEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
-import { FaCheck, FaDownload, FaFolderOpen, FaPlay, FaTrashAlt } from 'react-icons/fa';
+import {
+    FaCheck,
+    FaDownload,
+    FaFolderOpen,
+    FaPlay,
+    FaTrashAlt,
+    FaUserCircle
+} from 'react-icons/fa';
 import {
     Dialog,
     DialogContent,
@@ -247,59 +254,48 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader }) => {
                 </div>
 
                 <div className="overflow-auto">
-                    {/* Projects Table or No Projects Message */}
                     {projects.length > 0 ? (
-                        <div className="bg-gray-800 rounded-lg">
-                            <table className="min-w-full divide-y divide-gray-700">
-                                <thead>
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                            Name
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                            Author
-                                        </th>
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-700">
-                                    {projects.map((project, index) => (
-                                        <tr
-                                            key={index}
-                                            onClick={(event) => handleCellClick(event, project)}
-                                            className="cursor-pointer hover:bg-gray-700"
-                                        >
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {project.name}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                        <>
+                            {projects.map((project, index) => (
+                                <div
+                                    className="flex flex-col text-black bg-white bg-gray-800 shadow-lg rounded-lg cursor-pointer w-[20rem] text-ellipsis overflow-hidden hover:bg-gray-700"
+                                    key={index}
+                                    onClick={(event) => handleCellClick(event, project)}
+                                >
+                                    <div className="flex flex-col gap-5 px-6 py-4">
+                                        <div className="whitespace-nowrap text-ellipsis">
+                                            {project.name.split('/').pop()}
+                                        </div>
+                                        <div className="w-full text-left flex flex-row gap-0.5 items-center">
+                                            <FaUserCircle className="text-sm text-gray-300 mr-2" />
+                                            <div className="whitespace-nowrap">
                                                 {project.owner ?? user?.username ?? 'N/A'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <Button
-                                                    className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handlePlayProject(project);
-                                                    }}
-                                                >
-                                                    <FaPlay />
-                                                </Button>
-                                                <Button
-                                                    className="p-2 bg-transparent text-red-600 hover:text-red-500"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        confirmDeleteProject(project);
-                                                    }}
-                                                >
-                                                    <FaTrashAlt />
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-full text-right px-6 py-4 whitespace-nowrap text-center">
+                                        <Button
+                                            className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handlePlayProject(project);
+                                            }}
+                                        >
+                                            <FaPlay />
+                                        </Button>
+                                        <Button
+                                            className="p-2 bg-transparent text-red-600 hover:text-red-500"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                confirmDeleteProject(project);
+                                            }}
+                                        >
+                                            <FaTrashAlt />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </>
                     ) : (
                         <div className="flex flex-col items-center justify-center">
                             <FaFolderOpen className="text-6xl text-gray-300 mb-4" />

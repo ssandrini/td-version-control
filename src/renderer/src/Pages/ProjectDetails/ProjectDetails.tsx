@@ -348,7 +348,7 @@ const ProjectDetail: React.FC = () => {
         });
     };
     return (
-        <div className="bg-gray-800 p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar">
+        <div className="bg-[#1b1d23] p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar">
             {selectedVersion ? (
                 <div className="w-full rounded-lg bg-gray-700 text-white p-4 flex flex-col transition-all duration-600 ease-in-out">
                     <div className="flex flex-row w-full justify-between items-center">

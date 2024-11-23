@@ -154,7 +154,7 @@ const Layout: React.FC = () => {
                     ) : (
                         <div className="h-full pb-[50px] flex flex-row flex-1 overflow-auto">
                             <Sidebar expanded={expanded} />
-                            <div className="w-full overflow-auto no-scrollbar bg-gray-900">
+                            <div className="w-full overflow-auto no-scrollbar bg-[#1b1d23]">
                                 <Outlet />
                             </div>
                         </div>

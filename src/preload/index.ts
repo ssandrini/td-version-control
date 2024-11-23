@@ -4,7 +4,6 @@ import { API_METHODS } from '../main/apiMethods';
 import { TDState } from '../main/models/TDState';
 import { electronAPI } from '@electron-toolkit/preload';
 import { RegisterUserRequest } from '../main/services/UserService';
-
 const api = {
     listVersions: async (dir: string) => ipcRenderer.invoke(API_METHODS.LIST_VERSIONS, dir),
     filePicker: async () => ipcRenderer.invoke(API_METHODS.FILE_PICKER),
@@ -28,8 +27,12 @@ const api = {
     goToVersion: async (dir: string, versionId: string) =>
         ipcRenderer.invoke(API_METHODS.GO_TO_VERSION, dir, versionId),
     getTemplates: async () => ipcRenderer.invoke(API_METHODS.GET_TEMPLATES),
-    getState: async (path: string, versionId?: string) =>
-        ipcRenderer.invoke(API_METHODS.GET_STATE, path, versionId),
+    getState: async (path: string, versionId?: string) => {
+        if (versionId === '[wip]') {
+            versionId = undefined;
+        }
+        return await ipcRenderer.invoke(API_METHODS.GET_STATE, path, versionId);
+    },
     pull: async (dir: string) => ipcRenderer.invoke(API_METHODS.PULL, dir),
     push: async (dir: string) => ipcRenderer.invoke(API_METHODS.PUSH, dir),
     finishMerge: async (dir: string, state: TDState, versionName: string, description: string) =>
@@ -63,7 +66,18 @@ const api = {
     getMergeStatus: async (dir: string) => ipcRenderer.invoke(API_METHODS.GET_MERGE_STATUS, dir),
     minimizeApp: async () => ipcRenderer.send('minimizeApp'),
     maximizeRestoreApp: async () => ipcRenderer.send('maximizeRestoreApp'),
-    closeApp: async () => ipcRenderer.send('closeApp')
+    closeApp: async () => ipcRenderer.send('closeApp'),
+    watchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.WATCH_PROJECT, dir),
+    unwatchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.UNWATCH_PROJECT, dir),
+
+    // MAIN TO RENDERER METHODS
+    onProjectChanged: (callback: (data: any) => void) => {
+        ipcRenderer.on(API_METHODS.PROJECT_CHANGED, (_event, data) => callback(data));
+    },
+
+    removeProjectChangedListener: () => {
+        ipcRenderer.removeAllListeners(API_METHODS.PROJECT_CHANGED);
+    }
 };
 
 if (process.contextIsolated) {

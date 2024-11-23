@@ -11,7 +11,7 @@ import { TDProjectManager } from './managers/TDProjectManager';
 import { SimpleGitTracker } from './trackers/SimpleGitTracker';
 import { TDProcessor } from './processors/TDProcessor';
 import { API_METHODS } from './apiMethods';
-import { filePicker, openToeFile, getTemplates, openDirectory } from './utils/utils';
+import { filePicker, openToeFile, getTemplates, openDirectory, findFileByExt } from './utils/utils';
 import { TDState } from './models/TDState';
 import { TDMergeResult } from './models/TDMergeResult';
 import authService from './services/AuthService';
@@ -273,16 +273,20 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
     );
     // -----*-----
 
-    ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
-        watcherMgr.registerWatcher(path, () => {
-            // Registrar los callbacks que necesitemos acá
-            // yo creo que los callbacks van a ser mensajes hacia el Render process que va a usar para
-            // mostrar en pantalla algo cuando se detectó un cambio, por ejemplo "queres crear una nueva version?"
-            log.debug('Project ' + path + ' changed.');
-        })
-    );
+    ipcMain.handle(API_METHODS.WATCH_PROJECT, (_, dir: string) => {
+        const toePath = path.join(dir, findFileByExt('toe', dir)!);
+        log.debug(`Adding ${toePath} to watcher`);
+        watcherMgr.registerWatcher(toePath!, () => {
+            log.debug('Project ' + toePath + ' changed.');
+            win?.webContents.send(API_METHODS.PROJECT_CHANGED, { message: 'Project changed' });
+        });
+    });
 
-    ipcMain.on(API_METHODS.UNWATCH_PROJECT, (_, path: string) => watcherMgr.removeWatcher(path));
+    ipcMain.handle(API_METHODS.UNWATCH_PROJECT, (_, dir: string) => {
+        const toePath = path.join(dir, findFileByExt('toe', dir)!);
+        log.debug(`Adding ${toePath} to watcher`);
+        watcherMgr.removeWatcher(toePath);
+    });
 
     ipcMain.handle(API_METHODS.GET_STATE, async (_, path: string, versionId?: string) => {
         log.debug('get state main handler');

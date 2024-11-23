@@ -48,7 +48,7 @@ export class RemoteRepoService {
                 remote: repo.clone_url
             }));
 
-            log.debug('Projects fetched successfully:', remote_projects);
+            log.debug('Projects fetched successfully');
             return ApiResponse.fromResult(remote_projects);
         } else {
             log.error('Error fetching projects due to', response.errorCode);

@@ -56,10 +56,10 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     async getMergeStatus(dir: string): Promise<TDMergeResult> {
         const hiddenDirPath = this.hiddenDirPath(dir);
         const result: TrackerMergeResult = await this.tracker.getMergeResult(hiddenDirPath);
-        log.debug('Merge result status:', result.mergeStatus);
+        log.debug('Getting merge status:', result.mergeStatus);
 
         if (result.mergeStatus === MergeStatus.FINISHED) {
-            log.debug('Merge already finished; no further action required.');
+            log.debug('No merge in progress');
             return Promise.resolve(new TDMergeResult(TDMergeStatus.FINISHED, null, null));
         }
 

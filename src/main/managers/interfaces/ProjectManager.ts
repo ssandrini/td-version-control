@@ -13,6 +13,7 @@ export interface ProjectManager<S, R> {
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;
     goToVersion(dir: string, versionId: string): Promise<Version>;
     getVersionState(dir: string, versionId?: string): Promise<S>;
+    lastVersion(dir: string): Promise<Version>;
 
     // Remote handling
     pull(dir: string): Promise<R>;

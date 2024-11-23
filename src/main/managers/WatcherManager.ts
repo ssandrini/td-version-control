@@ -2,11 +2,10 @@ import chokidar from 'chokidar';
 import * as path from 'path';
 import log from 'electron-log/main.js';
 
-export type WatcherCallback = (filename: string) => void;
-
+export type AsyncWatcherCallback = (filename: string) => Promise<void>;
 interface Watcher {
     path: string;
-    callbacks: WatcherCallback[];
+    callbacks: AsyncWatcherCallback[];
 }
 
 class WatcherManager {
@@ -37,9 +36,9 @@ class WatcherManager {
     /**
      * Registers a watcher for a file and accepts multiple callbacks.
      * @param {string} filePath - The path of the file to watch.
-     * @param {WatcherCallback[]} callbacks - Functions to execute when the file changes.
+     * @param {AsyncWatcherCallback[]} callbacks - Functions to execute when the file changes.
      */
-    public registerWatcher(filePath: string, ...callbacks: WatcherCallback[]): void {
+    public registerWatcher(filePath: string, ...callbacks: AsyncWatcherCallback[]): void {
         const absolutePath = path.resolve(filePath);
         log.info(`Registering watcher for: ${absolutePath}`);
 

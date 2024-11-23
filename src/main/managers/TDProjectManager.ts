@@ -163,7 +163,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     async hasChanges(dir: string): Promise<boolean> {
         await validateDirectory(dir);
-        const lastVersion = await this.currentVersion(dir);
+        const lastVersion = (await this.tracker.listVersions(this.hiddenDirPath(dir)))[0];
         const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
         const lastModified = await getLastModifiedDate(toeFile);
 
@@ -204,6 +204,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     }
 
     async getVersionState(dir: string, versionId?: string): Promise<TDState> {
+        log.debug('GetVersionState: ', versionId);
         const hiddenDir = this.hiddenDirPath(dir);
         if (versionId) {
             const content = await this.tracker.readFile(
@@ -341,6 +342,11 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await this.tracker.createVersion(hiddenDirPath, versionName, description);
         await this.tracker.push(hiddenDirPath);
         log.debug('Merge resolution complete.');
+    }
+
+    async lastVersion(dir: string): Promise<Version> {
+        await validateDirectory(dir);
+        return (await this.tracker.listVersions(this.hiddenDirPath(dir)))[0];
     }
 
     private async saveVersionState(dir: string, file: string): Promise<TDState> {

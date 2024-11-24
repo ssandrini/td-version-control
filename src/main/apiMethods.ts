@@ -14,6 +14,7 @@ export const API_METHODS = {
     OPEN_TD: 'open-toe',
     CREATE_PROJECT: 'create-project',
     GO_TO_VERSION: 'go-to-version',
+    DISCARD_CHANGES: 'discard-changes',
     WATCH_PROJECT: 'watch-project',
     UNWATCH_PROJECT: 'unwatch-project',
     GET_TEMPLATES: 'get-templates',

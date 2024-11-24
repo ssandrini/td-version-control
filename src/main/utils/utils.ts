@@ -1,7 +1,7 @@
 import { dialog, shell } from 'electron';
 import log from 'electron-log/main.js';
 import fs from 'fs-extra';
-import { stat } from 'fs/promises';
+import { stat, writeFile, readFile } from 'fs/promises';
 import Template from '../models/Template';
 import path from 'node:path';
 import { TDState } from '../models/TDState';
@@ -321,4 +321,39 @@ export const getLastModifiedDate = async (filePath: string): Promise<Date> => {
             `Unable to retrieve the last modified date for file "${filePath}": ${error.message}`
         );
     }
+};
+
+export const dumpTimestampToFile = async (date: Date, path: string): Promise<void> => {
+    try {
+        const dateString = date.toISOString();
+        await writeFile(path, dateString, 'utf-8');
+        log.debug(`Date ${dateString} written to file ${dateString} successfully.`);
+    } catch (error: any) {
+        log.error(`Failed to write date to file: ${error.message}`);
+        throw new Error(`Error writing date to file at path "${path}": ${error.message}`);
+    }
+};
+
+export const readDateFromFile = async (path: string): Promise<Date | undefined> => {
+    let content: string;
+
+    try {
+        // Attempt to read the file content
+        content = await readFile(path, 'utf-8');
+    } catch (error: any) {
+        if (error.code === 'ENOENT') {
+            log.warn(`File not found at path ${path}.`);
+            return undefined;
+        }
+        log.error(`Unable to read content from ${path} due to:`, error.message);
+        throw error;
+    }
+
+    const parsedDate = new Date(Date.parse(content.trim()));
+    if (isNaN(parsedDate.getTime())) {
+        log.error(`Invalid date format in file ${path}: ${content.trim()}`);
+        throw new Error(`Invalid date format in file ${path}: ${content.trim()}`);
+    }
+
+    return parsedDate;
 };

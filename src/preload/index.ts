@@ -26,6 +26,7 @@ const api = {
         ipcRenderer.invoke(API_METHODS.CURRENT_VERSION, path),
     goToVersion: async (dir: string, versionId: string) =>
         ipcRenderer.invoke(API_METHODS.GO_TO_VERSION, dir, versionId),
+    discardChanges: async (dir: string) => ipcRenderer.invoke(API_METHODS.DISCARD_CHANGES, dir),
     getTemplates: async () => ipcRenderer.invoke(API_METHODS.GET_TEMPLATES),
     getState: async (path: string, versionId?: string) => {
         if (versionId === '[wip]') {

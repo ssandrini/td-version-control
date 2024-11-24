@@ -253,6 +253,10 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
         projectManager.goToVersion(dir, versionId)
     );
 
+    ipcMain.handle(API_METHODS.DISCARD_CHANGES, (_, dir: string) =>
+        projectManager.discardChanges(dir)
+    );
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
@@ -279,8 +283,9 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             const lastVersion: Version = await projectManager.lastVersion(dir);
             log.debug('currentVersionId: ', currentVersion.id);
             log.debug('lastVersionId: ', lastVersion.id);
+            const hasChanges: boolean = await projectManager.hasChanges(dir);
 
-            if (currentVersion.id === lastVersion.id) {
+            if (currentVersion.id === lastVersion.id && hasChanges) {
                 win?.webContents.send(API_METHODS.PROJECT_CHANGED, { message: 'Project changed' });
             }
         });

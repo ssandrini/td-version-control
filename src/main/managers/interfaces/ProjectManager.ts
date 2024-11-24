@@ -12,6 +12,7 @@ export interface ProjectManager<S, R> {
     removeTag(dir: string, tag: string): Promise<void>;
     createVersion(dir: string, versionName: string, description?: string): Promise<Version>;
     goToVersion(dir: string, versionId: string): Promise<Version>;
+    discardChanges(dir: string): Promise<void>;
     getVersionState(dir: string, versionId?: string): Promise<S>;
     lastVersion(dir: string): Promise<Version>;
 

@@ -9,11 +9,13 @@ import { TDNode } from '../models/TDNode';
 import {
     dumpDiffToFile,
     dumpTDStateToFile,
+    dumpTimestampToFile,
     extractNodeNameFromToc,
     findContainers,
     findFileByExt,
     getLastModifiedDate,
     getNodeInfoFromNFile,
+    readDateFromFile,
     splitSet,
     validateDirectory,
     validateTag
@@ -42,6 +44,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     private stateFile = 'state.json';
     private workingStateFile = 'workingState.json';
     private diffFile = 'diff';
+    private checkoutTimestampFile = 'checkout.timestamp';
 
     constructor(processor: Processor, tracker: Tracker, hiddenDir: string) {
         this.processor = processor;
@@ -163,13 +166,18 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     async hasChanges(dir: string): Promise<boolean> {
         await validateDirectory(dir);
-        const lastVersion = (await this.tracker.listVersions(this.hiddenDirPath(dir)))[0];
+
+        if (!(await this.isLastVersion(dir))) {
+            return false;
+        }
+
+        const lastReferenceDate = await this.getLastReferenceDate(dir);
         const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
         const lastModified = await getLastModifiedDate(toeFile);
 
         log.debug(`${toeFile} was last modified at ${lastModified}`);
 
-        return lastVersion.date.getTime() < lastModified.getTime();
+        return lastReferenceDate < lastModified;
     }
 
     async addTag(dir: string, versionId: string, tag: string): Promise<void> {
@@ -200,7 +208,46 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     async goToVersion(dir: string, versionId: string): Promise<Version> {
         await validateDirectory(dir);
-        return this.tracker.goToVersion(this.hiddenDirPath(dir), versionId);
+
+        if (await this.hasChanges(dir)) {
+            log.error(`Unable to checkout to ${versionId}: working directory dirty.`);
+            return Promise.reject(`Cannot move to version because of current changes.`);
+        }
+
+        const hiddenDir = this.hiddenDirPath(dir);
+        await this.tracker.discardChanges(hiddenDir);
+        await this.tracker.goToVersion(hiddenDir, versionId);
+        await this.processor.postprocess(hiddenDir, dir);
+
+        const currentVersion = await this.currentVersion(dir);
+        const lastVersion = await this.lastVersion(dir);
+
+        if (currentVersion.id === lastVersion.id) {
+            const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+            const lastModified = await getLastModifiedDate(toeFile);
+            await dumpTimestampToFile(
+                lastModified,
+                path.join(hiddenDir, this.checkoutTimestampFile)
+            );
+        }
+
+        return currentVersion;
+    }
+
+    async discardChanges(dir: string): Promise<void> {
+        await validateDirectory(dir);
+        const hiddenDirPath = this.hiddenDirPath(dir);
+        log.debug(`Discarded changes from ${dir}`);
+        await this.tracker.discardChanges(this.hiddenDirPath(dir));
+        if (await this.isLastVersion(dir)) {
+            await this.processor.postprocess(hiddenDirPath, dir);
+            const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+            const lastModified = await getLastModifiedDate(toeFile);
+            await dumpTimestampToFile(
+                lastModified,
+                path.join(hiddenDirPath, this.checkoutTimestampFile)
+            );
+        }
     }
 
     async getVersionState(dir: string, versionId?: string): Promise<TDState> {
@@ -511,5 +558,27 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             resolveWithIncomingBranch
         );
         return [currentState, incomingState];
+    }
+
+    private async isLastVersion(dir: string): Promise<boolean> {
+        const currentVersion = await this.currentVersion(dir);
+        const lastVersion = await this.lastVersion(dir);
+        return currentVersion.id === lastVersion.id;
+    }
+
+    private async getLastReferenceDate(dir: string): Promise<Date> {
+        const hiddenDir = this.hiddenDirPath(dir);
+
+        const checkoutTimestamp = await readDateFromFile(
+            path.join(hiddenDir, this.checkoutTimestampFile)
+        );
+        const lastCommitDate = (await this.tracker.listVersions(hiddenDir))[0].date;
+
+        // Return the most recent date or fallback to lastCommitDate if checkoutTimestamp is undefined
+        if (!checkoutTimestamp) {
+            return lastCommitDate;
+        }
+
+        return checkoutTimestamp > lastCommitDate ? checkoutTimestamp : lastCommitDate;
     }
 }

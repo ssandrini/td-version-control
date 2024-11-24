@@ -267,7 +267,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                     </div>
                 )}
 
-                <div className="flex flex-row w-full flex-wrap overflow-auto">
+                <div className="flex flex-row w-full gap-3 flex-wrap overflow-auto">
                     {projects.length > 0 ? (
                         <>
                             {projects.map((project, index) => (

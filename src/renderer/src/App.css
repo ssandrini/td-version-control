@@ -70,6 +70,30 @@ body {
     height: 25px;
 }
 
+.spin2 {
+    animation: spin 10s linear infinite;
+}
+
+@keyframes grow-shrink {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    99% {
+        transform: scale(50);
+        opacity: 0;
+    }
+    100% {
+        display: none;
+    }
+}
+
+.animate-grow-shrink {
+    animation: grow-shrink 1s ease-in-out forwards;
+}
+
 .title {
     font-size: 20px;
     color: var(--text);

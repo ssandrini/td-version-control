@@ -3,8 +3,6 @@ import { useLocation } from 'react-router-dom';
 import { FaCheck, FaCloud, FaFolderOpen, FaPlay } from 'react-icons/fa';
 import { Version } from '../../../../main/models/Version';
 import log from 'electron-log/renderer.js';
-import { TDNode } from '../../../../main/models/TDNode';
-import { ChangeSet } from '../../../../main/models/ChangeSet';
 import Nodes from './Nodes/Nodes';
 import { TDState } from '../../../../main/models/TDState';
 import DetailsComponent from './DetailsComponent/DetailsComponent';
@@ -20,6 +18,7 @@ import { cn } from '@renderer/lib/utils';
 import Spinner from '@renderer/components/ui/Spinner';
 import { Author } from '../../../../main/models/Author';
 import { useVariableContext } from '@renderer/hooks/Variables/useVariableContext';
+import { IoHelp } from 'react-icons/io5';
 
 const ProjectDetail: React.FC = () => {
     const { toast } = useToast();
@@ -29,7 +28,6 @@ const ProjectDetail: React.FC = () => {
     const dir = project?.path;
     const [currentVersion, setCurrentVersion] = useState<Version | null>(null);
     const [versions, setVersions] = useState<Version[]>([]);
-    const [changes] = useState<ChangeSet<TDNode>>(new ChangeSet<TDNode>());
     const [selectedVersion, setSelectedVersion] = useState<Version | undefined>(undefined);
     const [currentState, setCurrentState] = useState<TDState | undefined>(undefined);
     const [compareVersion, setCompareVersion] = useState<Version | null>(null);
@@ -63,11 +61,11 @@ const ProjectDetail: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const handleProjectChanged = (_: { message: string }) => {
+        const handleProjectChanged = () => {
             console.log('CALLBACK');
             const wipVersion = new Version(
                 'Work in progress',
-                new Author(user?.username!, user?.email!),
+                new Author(user?.username ?? '', user?.email ?? ''),
                 '[wip]',
                 new Date()
             );
@@ -111,7 +109,7 @@ const ProjectDetail: React.FC = () => {
                         if (result) {
                             const wipVersion = new Version(
                                 'Work in progress',
-                                new Author(user?.username!, user?.email!),
+                                new Author(user?.username ?? '', user?.email ?? ''),
                                 '[wip]',
                                 new Date()
                             );
@@ -413,7 +411,7 @@ const ProjectDetail: React.FC = () => {
         });
     };
     return (
-        <div className="bg-gray-800 p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar">
+        <div className="bg-[#1b1d23] p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar">
             {selectedVersion ? (
                 <div className="w-full rounded-lg bg-gray-700 text-white p-4 flex flex-col transition-all duration-600 ease-in-out">
                     <div className="flex flex-row w-full justify-between items-center">
@@ -517,24 +515,43 @@ const ProjectDetail: React.FC = () => {
             )}
             {mergeConflicts && (
                 <Dialog open>
-                    <DialogContent className="min-w-[90%] max-w-[90%] w-[90%] min-h-[90%] max-h-[90%] h-[90%] flex flex-col bg-gray-600">
-                        <div className="w-full flex flex-col gap-4">
-                            <div className="flex flex-col center gap-4">
-                                <input
-                                    type="text"
-                                    placeholder="Name"
-                                    className="p-2 border border-gray-400 rounded-md bg-gray-700 text-white w-1/2"
-                                    onChange={(e) => setName(e.target.value)}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Description"
-                                    className="p-2 border border-gray-400 rounded-md bg-gray-700 text-white w-1/2"
-                                    onChange={(e) => setDescription(e.target.value)}
-                                />
+                    <DialogContent className="min-w-[90%] max-w-[90%] w-[90%] min-h-[90%] max-h-[90%] h-[90%] flex flex-col bg-gray-600 items-center">
+                        <div className="w-fit flex flex-col items-center">
+                            <div className="w-fit text-[3rem] font-bold bg-gradient-to-r from-purple-400 via-pink-500 to-yellow-500 text-transparent bg-clip-text">
+                                Oh no!
                             </div>
-                            <div className="w-full flex flex-row justify-between">
+                            <div className="text-white">
+                                It looks like the changes stored in Mariana Cloud differs from the
+                                changes in your computer, please choose what state to preserve.
+                            </div>
+                            <div className="text-white font-semibold">
+                                You have to leave a name and a description to identify the conflict
+                                in the future and give some context to your contributors.
+                            </div>
+                        </div>
+                        <div className="flex flex-row items-center gap-4">
+                            <input
+                                type="text"
+                                placeholder="Final State Name"
+                                className="p-2 border border-gray-400 rounded-md bg-gray-700 text-white min-w-[30rem]"
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Final Description"
+                                className="p-2 border border-gray-400 rounded-md bg-gray-700 text-white min-w-[30rem]"
+                                onChange={(e) => setDescription(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex flex-row items-center justify-center w-full h-full">
+                            <div className="w-1/2 h-full mr-2 items-center flex flex-col">
+                                <NodeGraph
+                                    current={mergeConflicts?.currentState ?? undefined}
+                                    compare={mergeConflicts?.incomingState ?? undefined}
+                                />
                                 <Button
+                                    className="w-1/2"
+                                    disabled={name.length == 0 || description.length == 0}
                                     onClick={() => {
                                         handleResolveConflict(
                                             mergeConflicts?.currentState ?? undefined,
@@ -543,9 +560,17 @@ const ProjectDetail: React.FC = () => {
                                         );
                                     }}
                                 >
-                                    Resolver
+                                    Local State
                                 </Button>
+                            </div>
+                            <div className="w-1/2 h-full items-center ml-2 flex flex-col">
+                                <NodeGraph
+                                    current={mergeConflicts?.incomingState ?? undefined}
+                                    compare={mergeConflicts?.currentState ?? undefined}
+                                />
                                 <Button
+                                    className="w-1/2"
+                                    disabled={name.length == 0 || description.length == 0}
                                     onClick={() => {
                                         handleResolveConflict(
                                             mergeConflicts?.incomingState ?? undefined,
@@ -554,19 +579,16 @@ const ProjectDetail: React.FC = () => {
                                         );
                                     }}
                                 >
-                                    Resolver
+                                    Cloud State
                                 </Button>
                             </div>
                         </div>
-                        <div className="flex flex-row gap-5 w-full h-full">
-                            <NodeGraph
-                                current={mergeConflicts?.currentState ?? undefined}
-                                compare={mergeConflicts?.incomingState ?? undefined}
-                            />
-                            <NodeGraph
-                                current={mergeConflicts?.incomingState ?? undefined}
-                                compare={mergeConflicts?.currentState ?? undefined}
-                            />
+                        <div className="text-white flex flex-row items-center gap-2 text-center">
+                            <IoHelp />
+                            <div className="italic">
+                                To avoid these issues in the future, make sure to refresh your local
+                                project with Mariana Cloud often!
+                            </div>
                         </div>
                     </DialogContent>
                 </Dialog>
@@ -592,12 +614,7 @@ const ProjectDetail: React.FC = () => {
                     />
                 </div>
                 <div className="h-full w-full">
-                    <Nodes
-                        changes={changes}
-                        current={currentState}
-                        compare={compareState}
-                        project={project}
-                    />
+                    <Nodes current={currentState} compare={compareState} project={project} />
                 </div>
             </div>
         </div>

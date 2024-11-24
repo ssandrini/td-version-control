@@ -18,11 +18,17 @@ import { ApiResponse } from '../../../../main/errors/ApiResponse';
 import { User } from '../../../../main/models/api/User';
 import Sidebar from '@renderer/components/ui/Sidebar';
 import { HiMenuAlt1 } from 'react-icons/hi';
+import RegisterPage from '@renderer/Pages/RegisterPage';
 
 const Layout: React.FC = () => {
     const { hasTDL, setTouchDesignerLocation, user, setUser } = useVariableContext();
     const [userStateReady, setUserStateReady] = useState<boolean>(false);
     const [expanded, setExpanded] = useState<boolean>(false);
+    const [showAnimation, setShowAnimation] = useState<boolean>(false); // New state for animation
+
+    const [showHome, setShowHome] = useState<boolean>(false);
+
+    const [showRegister, setShowRegister] = useState(false);
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -40,6 +46,19 @@ const Layout: React.FC = () => {
                 setUserStateReady(true);
             });
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            // Trigger animation end after 1.5 seconds when the user is defined
+            const timer = setTimeout(() => setShowAnimation(true), 0);
+            setShowHome(true);
+            return () => clearTimeout(timer); // Cleanup timeout on component unmount or user change
+        } else {
+            setShowHome(false);
+            setShowAnimation(false);
+        }
+        return;
+    }, [user]);
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -72,7 +91,18 @@ const Layout: React.FC = () => {
     };
 
     return (
-        <div className="h-screen">
+        <div className="h-screen bg-[#1b1d23]">
+            {showAnimation && (
+                <div className="no-scrollbar overflow-hidden">
+                    <div className="animate-grow-shrink no-scrollbar overflow-hidden absolute inset-0 flex items-center justify-center z-50">
+                        <img
+                            src="icon.png"
+                            alt="Mariana Logo"
+                            className="rounded-full no-scrollbar overflow-hidden"
+                        />
+                    </div>
+                </div>
+            )}
             <div className="topBar w-full justify-between items-center flex flex-row">
                 {user != undefined ? (
                     <HiMenuAlt1
@@ -83,7 +113,7 @@ const Layout: React.FC = () => {
                 ) : (
                     <div />
                 )}
-                <div className="flex flex-row titleBar w-full justify-center">
+                <div className="flex flex-row titleBar items-center w-full justify-center">
                     <img className="topBarMainImg rounded-full" src="icon.png" alt="" />
                     <div className="title font-bold">Mariana</div>
                 </div>
@@ -149,12 +179,18 @@ const Layout: React.FC = () => {
                 </div>
             ) : (
                 <>
-                    {user == undefined ? (
-                        <LogIn />
+                    {!showHome ? (
+                        <>
+                            {showRegister ? (
+                                <RegisterPage goToLogin={() => setShowRegister(false)} />
+                            ) : (
+                                <LogIn goToRegister={() => setShowRegister(true)} />
+                            )}
+                        </>
                     ) : (
                         <div className="h-full pb-[50px] flex flex-row flex-1 overflow-auto">
                             <Sidebar expanded={expanded} />
-                            <div className="w-full overflow-auto no-scrollbar bg-gray-900">
+                            <div className="w-full overflow-auto no-scrollbar bg-[#1b1d23]">
                                 <Outlet />
                             </div>
                         </div>

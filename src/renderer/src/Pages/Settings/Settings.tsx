@@ -26,13 +26,9 @@ const Settings: React.FC = () => {
         }
     };
 
-    console.log('EL USER');
-    console.log(user);
-    console.log(user?.avatar_url);
-
     return (
-        <div className="flex h-full bg-gray-50">
-            <div className="max-w-4xl mx-auto my-8 p-6 w-full bg-white rounded-lg shadow-md">
+        <div className="flex h-full bg-gray-50 overflow-auto">
+            <div className="max-w-4xl mx-auto my-8 p-6 w-full bg-white overflow-auto no-scrollbar rounded-lg shadow-md">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                     <div className="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center text-xl font-bold">
@@ -93,6 +89,17 @@ const Settings: React.FC = () => {
                         >
                             Update Location
                         </Button>
+                    </div>
+                </div>
+
+                <div className="w-full flex flex-col items-center justify-center px-20 py-5">
+                    <div className="p-6 bg-gray-800 rounded-lg shadow-md text-center">
+                        <h3 className="text-xl font-semibold mb-4 text-white">Did You Know?</h3>
+                        <p className="text-white">
+                            This VCS is designed specifically for TouchDesigner files, allowing you
+                            to easily version control and collaborate on your visual projects, a
+                            little assistant that reminds you of everything you have done!
+                        </p>
                     </div>
                 </div>
 

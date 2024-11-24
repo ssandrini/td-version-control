@@ -5,14 +5,15 @@ import { localPaths } from '../../../const';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
-import MarianaHelper from '../../../components/ui/MarianaHelper';
 import Spinner from '../../../components/ui/Spinner';
 import { ApiResponse } from '../../../../../main/errors/ApiResponse';
 import { User } from 'src/main/models/api/User';
 
-interface LogInProps {}
+interface LogInProps {
+    goToRegister: () => void;
+}
 
-const LogIn: React.FC<LogInProps> = () => {
+const LogIn: React.FC<LogInProps> = ({ goToRegister }) => {
     const { isLoggedIn, setUser } = useVariableContext();
     const navigate = useNavigate();
 
@@ -93,11 +94,13 @@ const LogIn: React.FC<LogInProps> = () => {
     const isFormValid = isUsernameValid && password.trim().length >= 8;
 
     return (
-        <div className="flex pb-[50px] flex-col items-center justify-evenly pt-10 h-full bg-gray-800 text-white overflow-y-auto">
-            <MarianaHelper />
+        <div className="flex pb-[50px] flex-col items-center justify-evenly pt-10 h-full text-white overflow-y-auto">
             <div className="flex justify-center items-center md:w-[30rem] w-[25rem] max-w-[90%] md:mt-0 text-gray-700">
                 <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 py-16 my-3 shadow-lg">
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="flex items-center justify-center">
+                            <img src="icon.png" alt="Logo" className="h-36 mb-5 object-contain" />
+                        </div>
                         <div className="w-full space-y-1 h-20">
                             <label htmlFor="username" className="text-left">
                                 Username*
@@ -134,7 +137,7 @@ const LogIn: React.FC<LogInProps> = () => {
                                 </div>
                             </div>
                             {submitted && userError && (
-                                <p className="text-red-500 text-sm">Credenciales inválidas.</p>
+                                <p className="text-red-500 text-sm">Invalid credentials.</p>
                             )}
                         </div>
 
@@ -144,8 +147,16 @@ const LogIn: React.FC<LogInProps> = () => {
                                 className="w-full"
                                 disabled={!isFormValid || isLoadingLogin}
                             >
-                                {!isLoadingLogin ? 'Iniciar Sesión' : <Spinner />}
+                                {!isLoadingLogin ? 'Log in' : <Spinner />}
                             </Button>
+                            <div className="mr-auto ml-auto w-fit mt-4 flex flex-row">
+                                <a
+                                    className="text-gray-500 underline cursor-pointer text-p1_regular"
+                                    onClick={() => goToRegister()}
+                                >
+                                    Create a new account!
+                                </a>
+                            </div>
                         </div>
                     </form>
                 </div>

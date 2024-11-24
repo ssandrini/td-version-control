@@ -27,7 +27,7 @@ export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
     readonly separator = '//';
     readonly EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
-    readonly ignoredFiles = ['diff', 'workingState.json'];
+    readonly ignoredFiles = ['diff', 'workingState.json', 'checkout.timestamp'];
     readonly attributes: ReadonlyMap<string, string[]>;
 
     constructor() {
@@ -164,6 +164,11 @@ export class SimpleGitTracker implements Tracker {
             new Date(commit.date),
             description.join('\n')
         );
+    }
+
+    async discardChanges(dir: string): Promise<void> {
+        await this.git.cwd(dir);
+        await this.git.raw(['restore', '.']);
     }
 
     async compare(

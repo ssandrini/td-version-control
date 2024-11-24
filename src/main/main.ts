@@ -253,6 +253,10 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
         projectManager.goToVersion(dir, versionId)
     );
 
+    ipcMain.handle(API_METHODS.DISCARD_CHANGES, (_, dir: string) =>
+        projectManager.discardChanges(dir)
+    );
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 

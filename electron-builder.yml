@@ -13,7 +13,7 @@ extraResources:
     - resources/templates
 win:
     executableName: Mariana
-    icon: resources/icon.png
+    icon: resources/img.png
 nsis:
     artifactName: ${name}-${version}-setup.${ext}
     shortcutName: ${productName}

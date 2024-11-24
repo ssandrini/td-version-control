@@ -53,7 +53,14 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         this.propertyRuleEngine = new PropertyRuleEngine();
         this.inputRuleEngine = new InputRuleEngine();
 
-        this.excludedFiles = [/\.build$/, /\.lod$/, /\.bin$/, /^local\/.*$/, /\.json$/];
+        this.excludedFiles = [
+            /\.build$/,
+            /\.lod$/,
+            /\.bin$/,
+            /^local\/.*$/,
+            /\.json$/,
+            /.*\.dir\/[^\/]+\.(n|parm|panel)$/
+        ];
     }
 
     async getMergeStatus(dir: string): Promise<TDMergeResult> {
@@ -297,6 +304,9 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     }
 
     async pull(dir: string): Promise<TDMergeResult> {
+        if (await this.hasChanges(dir)) {
+            return Promise.reject(`Cannot pull because of current changes.`);
+        }
         const hiddenDirPath = this.hiddenDirPath(dir);
         const result: TrackerMergeResult = await this.tracker.pull(
             hiddenDirPath,
@@ -335,6 +345,9 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     }
 
     async push(dir: string): Promise<void> {
+        if (await this.hasChanges(dir)) {
+            return Promise.reject(`Cannot push because of current changes.`);
+        }
         const hiddenDirPath = this.hiddenDirPath(dir);
         await this.tracker.push(hiddenDirPath);
     }
@@ -387,6 +400,12 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await this.processor.postprocess(hiddenDirPath, dir);
         await this.saveVersionState(dir, this.stateFile);
         await this.tracker.createVersion(hiddenDirPath, versionName, description);
+        const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+        const lastModified = await getLastModifiedDate(toeFile);
+        await dumpTimestampToFile(
+            lastModified,
+            path.join(hiddenDirPath, this.checkoutTimestampFile)
+        );
         await this.tracker.push(hiddenDirPath);
         log.debug('Merge resolution complete.');
     }
@@ -439,6 +458,15 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
                 return Promise.reject(new TDError(`Error getting state from ${dir}`));
             }
         }
+
+        await this.processMissingEdgesForRenderNodes(
+            state,
+            hiddenDirPath,
+            versionId,
+            transformContent,
+            toeDir,
+            container
+        );
 
         return state;
     }
@@ -543,6 +571,12 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await this.tracker.clone(hiddenDirPath, url);
         hidefile.hideSync(hiddenDirPath);
         await this.processor.postprocess(hiddenDirPath, dir);
+        const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+        const lastModified = await getLastModifiedDate(toeFile);
+        await dumpTimestampToFile(
+            lastModified,
+            path.join(hiddenDirPath, this.checkoutTimestampFile)
+        );
         return await this.tracker.initialVersion(hiddenDirPath);
     }
 
@@ -580,5 +614,60 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         }
 
         return checkoutTimestamp > lastCommitDate ? checkoutTimestamp : lastCommitDate;
+    }
+
+    private async processMissingEdgesForRenderNodes(
+        state: TDState,
+        hiddenDirPath: string,
+        versionId: string | undefined,
+        transformContent: (content: string) => string,
+        toeDir: string,
+        container: string
+    ): Promise<void> {
+        const topRenderNodes = state.nodes.filter(
+            (node) => node.type === 'TOP' && node.subtype === 'render'
+        );
+        const compGeoNodes = state.nodes
+            .filter((node) => node.type === 'COMP' && node.subtype === 'geo')
+            .map((node) => node.name);
+        const compLightNodes = state.nodes
+            .filter(
+                (node) =>
+                    node.type === 'COMP' &&
+                    (node.subtype === 'light' || node.subtype === 'environment')
+            )
+            .map((node) => node.name);
+
+        for (const node of topRenderNodes) {
+            const parmFilePath = path.posix.join(toeDir, container, `${node.name}.parm`);
+            let parmFileContent = '';
+
+            try {
+                parmFileContent = await this.tracker.readFile(
+                    hiddenDirPath,
+                    parmFilePath,
+                    versionId
+                );
+                parmFileContent = transformContent(parmFileContent);
+            } catch {
+                log.warn(`Missing or inaccessible .parm file for node ${node.name}`);
+            }
+
+            if (!parmFileContent.split('\n').some((line) => line.startsWith('camera'))) {
+                state.inputs.get(node.name)?.push(new TDEdge('cam1', true));
+            }
+
+            if (!parmFileContent.split('\n').some((line) => line.startsWith('geometry'))) {
+                for (const geoNode of compGeoNodes) {
+                    state.inputs.get(node.name)?.push(new TDEdge(geoNode, true));
+                }
+            }
+
+            if (!parmFileContent.split('\n').some((line) => line.startsWith('lights'))) {
+                for (const lightNode of compLightNodes) {
+                    state.inputs.get(node.name)?.push(new TDEdge(lightNode, true));
+                }
+            }
+        }
     }
 }

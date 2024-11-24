@@ -189,6 +189,7 @@ export class SimpleGitTracker implements Tracker {
     async discardChanges(dir: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.raw(['restore', '.']);
+        await this.git.raw(['clean', '-fd']);
     }
 
     async compare(
@@ -330,8 +331,8 @@ export class SimpleGitTracker implements Tracker {
             let currentContent = this.readFileContent(filePath);
 
             log.info(`Conflict detected in file "${conflict.file}" due to: ${conflict.reason}`);
-
-            if (excludedFiles.some((regex) => regex.test(filePath))) {
+            const normalizedFilePath = filePath.replace(/\\/g, '/');
+            if (excludedFiles.some((regex) => regex.test(normalizedFilePath))) {
                 log.info(`Auto-resolving conflict for excluded file: ${filePath}`);
                 currentContent = resolveWithCurrentBranch(currentContent);
                 fs.writeFileSync(filePath, currentContent);

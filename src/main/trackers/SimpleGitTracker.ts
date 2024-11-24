@@ -38,6 +38,7 @@ export class SimpleGitTracker implements Tracker {
     async init(dir: string, dst?: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.init();
+        await this.git.raw(['branch', '-m', 'main']);
 
         const user: User = userDataManager.getUser()!;
         await this.git.raw(['config', '--local', 'core.autocrlf', 'false']);
@@ -150,11 +151,30 @@ export class SimpleGitTracker implements Tracker {
 
     async goToVersion(dir: string, versionId: string): Promise<Version> {
         await this.git.cwd(dir);
+
         const log = await this.git.log(['--all']);
         const commit = log.all.find((c) => c.hash === versionId);
         if (!commit) {
             throw new TrackerError(`Version with id "${versionId}" not found.`);
         }
+
+        try {
+            const mainLog = await this.git.log(['main']);
+            if (mainLog.latest?.hash === versionId) {
+                await this.git.checkout('main');
+                const [name, ...description] = mainLog.latest.message.split(this.separator);
+                return new Version(
+                    name,
+                    new Author(mainLog.latest.author_name, mainLog.latest.author_email),
+                    mainLog.latest.hash,
+                    new Date(mainLog.latest.date),
+                    description.join('\n')
+                );
+            }
+        } catch {
+            throw new TrackerError(`Branch 'main' does not exist.`);
+        }
+
         await this.git.checkout(commit.hash);
         const [name, ...description] = commit.message.split(this.separator);
         return new Version(
@@ -338,8 +358,20 @@ export class SimpleGitTracker implements Tracker {
         await this.git.cwd(dir);
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            const result = await this.git.push(remoteUrl, '--tags');
-            log.info(`Push successful: ${result.pushed.length} references updated.`);
+            const branches = await this.git.branch(['--list']);
+            const currentBranch = branches.current;
+
+            const hasUpstream = branches.all.some((branch) =>
+                branch.includes(`remotes/origin/${currentBranch}`)
+            );
+
+            if (!hasUpstream) {
+                log.info(`Setting upstream branch for the first push.`);
+                await this.git.push(['-u', remoteUrl, 'HEAD']);
+            } else {
+                const result = await this.git.push(remoteUrl, '--tags');
+                log.info(`Push successful: ${result.pushed.length} references updated.`);
+            }
         } catch (error) {
             const errorMessage = `Failed to push changes from ${dir}`;
             this.handleError(error, errorMessage);

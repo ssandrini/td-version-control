@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FaCheck, FaCloud, FaFolderOpen, FaPlay } from 'react-icons/fa';
+import { FaCheck, FaCloud, FaFolderOpen, FaPlay, FaTrash } from 'react-icons/fa';
 import { Version } from '../../../../main/models/Version';
 import log from 'electron-log/renderer.js';
 import { TDNode } from '../../../../main/models/TDNode';
@@ -240,6 +240,20 @@ const ProjectDetail: React.FC = () => {
             });
     };
 
+    const handleDiscardChanges = () => {
+        if (!wipVersion) return;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api
+            .discardChanges(project?.path)
+            .then(() => {
+                setWipVersion(null);
+                setSelectedVersion(versions[0]);
+            })
+            .catch(() => {})
+            .finally(() => {});
+    };
+
     const handlePull = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
@@ -432,6 +446,12 @@ const ProjectDetail: React.FC = () => {
                                         }}
                                     >
                                         <FaPlay />
+                                    </Button>
+                                    <Button
+                                        onClick={() => handleDiscardChanges()}
+                                        className="mr-2 p-2 bg-transparent"
+                                    >
+                                        <FaTrash />
                                     </Button>
                                     <Button
                                         onClick={() => handleOpenDirectory(project)}

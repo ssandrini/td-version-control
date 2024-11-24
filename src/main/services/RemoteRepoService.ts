@@ -11,7 +11,7 @@ export class RemoteRepoService {
 
         const requestData = {
             auto_init: false,
-            default_branch: 'master',
+            default_branch: 'main',
             name,
             object_format_name: 'sha1',
             private: false,

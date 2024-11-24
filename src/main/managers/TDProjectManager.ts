@@ -236,8 +236,18 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     async discardChanges(dir: string): Promise<void> {
         await validateDirectory(dir);
+        const hiddenDirPath = this.hiddenDirPath(dir);
         log.debug(`Discarded changes from ${dir}`);
         await this.tracker.discardChanges(this.hiddenDirPath(dir));
+        if (await this.isLastVersion(dir)) {
+            await this.processor.postprocess(hiddenDirPath, dir);
+            const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+            const lastModified = await getLastModifiedDate(toeFile);
+            await dumpTimestampToFile(
+                lastModified,
+                path.join(hiddenDirPath, this.checkoutTimestampFile)
+            );
+        }
     }
 
     async getVersionState(dir: string, versionId?: string): Promise<TDState> {

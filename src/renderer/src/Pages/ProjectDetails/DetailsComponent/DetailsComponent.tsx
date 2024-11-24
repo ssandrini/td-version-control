@@ -66,7 +66,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 setWipVersion(null);
                 setCurrentVersion(newVersion);
                 setVersions([newVersion, ...versions]);
-                setSelectedVersion(versions[0]);
+                setSelectedVersion(newVersion);
             })
             .finally(() => {
                 setShowNewVersionModal(false);

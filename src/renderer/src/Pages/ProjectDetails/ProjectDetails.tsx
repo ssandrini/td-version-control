@@ -18,8 +18,6 @@ import { cn } from '@renderer/lib/utils';
 import Spinner from '@renderer/components/ui/Spinner';
 import { Author } from '../../../../main/models/Author';
 import { useVariableContext } from '@renderer/hooks/Variables/useVariableContext';
-import { GiHelp, GiThink } from 'react-icons/gi';
-import { SiThinkpad } from 'react-icons/si';
 import { IoHelp } from 'react-icons/io5';
 
 const ProjectDetail: React.FC = () => {
@@ -63,11 +61,11 @@ const ProjectDetail: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const handleProjectChanged = (_: { message: string }) => {
+        const handleProjectChanged = () => {
             console.log('CALLBACK');
             const wipVersion = new Version(
                 'Work in progress',
-                new Author(user?.username ?? "", user?.email ?? ""),
+                new Author(user?.username ?? '', user?.email ?? ''),
                 '[wip]',
                 new Date()
             );
@@ -102,10 +100,6 @@ const ProjectDetail: React.FC = () => {
         window.api
             .listVersions(dir)
             .then((versions: Version[]) => {
-                setVersions(versions);
-                if (currentVersion == undefined && versions.length != 0) {
-                    setSelectedVersion(versions[0]);
-                }
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error
                 window.api
@@ -115,7 +109,7 @@ const ProjectDetail: React.FC = () => {
                         if (result) {
                             const wipVersion = new Version(
                                 'Work in progress',
-                                new Author(user?.username ?? "", user?.email ?? ""),
+                                new Author(user?.username ?? '', user?.email ?? ''),
                                 '[wip]',
                                 new Date()
                             );

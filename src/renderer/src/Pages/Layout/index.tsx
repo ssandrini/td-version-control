@@ -19,6 +19,12 @@ import { User } from '../../../../main/models/api/User';
 import Sidebar from '@renderer/components/ui/Sidebar';
 import { HiMenuAlt1 } from 'react-icons/hi';
 import RegisterPage from '@renderer/Pages/RegisterPage';
+import {
+    FaRegWindowClose,
+    FaRegWindowMaximize,
+    FaRegWindowMinimize,
+    FaWindowClose
+} from 'react-icons/fa';
 
 const Layout: React.FC = () => {
     const { hasTDL, setTouchDesignerLocation, user, setUser } = useVariableContext();
@@ -120,34 +126,40 @@ const Layout: React.FC = () => {
                 <div className="titleBarButtons">
                     <button
                         id="minimizeBtn"
-                        className="topBtn minimizeBtn"
+                        className="topBtn minimizeBtn text-white"
                         onClick={() => {
                             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             // @ts-expect-error
                             window.api.minimizeApp();
                         }}
                         title="Minimize"
-                    ></button>
+                    >
+                        <FaRegWindowMinimize />
+                    </button>
                     <button
                         id="maxResBtn"
-                        className="topBtn maximizeBtn"
+                        className="topBtn maximizeBtn text-white"
                         onClick={() => {
                             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             // @ts-expect-error
                             window.api.maximizeRestoreApp();
                         }}
                         title="Maximize"
-                    ></button>
+                    >
+                        <FaRegWindowMaximize />
+                    </button>
                     <button
                         id="closeBtn"
-                        className="topBtn closeBtn"
+                        className="topBtn closeBtn text-red-600"
                         onClick={() => {
                             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                             // @ts-expect-error
                             window.api.closeApp();
                         }}
                         title="Restore"
-                    ></button>
+                    >
+                        <FaWindowClose />
+                    </button>
                 </div>
             </div>
 

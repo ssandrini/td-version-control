@@ -203,7 +203,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                     )}
                 </div>
             )}
-            <h2 className="text-white font-semibold mb-2">Version History</h2>
+            <h2 className="text-white font-semibold my-2">Version History</h2>
             <History
                 wipVersion={wipVersion}
                 versions={versions}

@@ -30,7 +30,7 @@ const History: React.FC<HistoryProps> = ({
     wipVersion
 }) => {
     return (
-        <div className="flex flex-col overflow-auto no-scrollbar">
+        <div className="flex flex-col overflow-auto no-scrollbar w-[20rem]">
             {wipVersion && (
                 <HistoryItem
                     version={wipVersion}

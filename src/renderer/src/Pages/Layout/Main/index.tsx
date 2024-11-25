@@ -27,7 +27,7 @@ const Main: React.FC = () => {
                     </p>
                     <Button
                         onClick={handleCreateNewProject}
-                        className="bg-gradient-to-r from-purple-400 via-pink-500 to-yellow-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-all hover:scale-105"
+                        className="bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-all hover:scale-105"
                     >
                         Start a new project
                     </Button>

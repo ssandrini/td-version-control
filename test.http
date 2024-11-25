@@ -1,11 +1,11 @@
 ### try post user
-POST localhost:80/api/v1/admin/users
+POST http://34.44.41.60:80/api/v1/admin/users
 Content-Type: application/json
 
 {
-  "username": "Prueba5",
-  "email": "prueba5@test.test",
-  "password": "Hola1234",
+  "username": "BraveJero",
+  "email": "brave@jero.test",
+  "password": "testtest",
   "must_change_password": false
 }
 

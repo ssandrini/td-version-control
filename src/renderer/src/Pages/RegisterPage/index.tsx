@@ -147,7 +147,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
     };
 
     return (
-        <div className="flex pb-[50px] flex-col items-center justify-evenly pt-10 h-full text-white overflow-y-auto">
+        <div className="flex pb-[50px] flex-col items-center justify-evenly no-scrollbar h-full text-white overflow-y-auto">
             <div className="flex justify-center items-center md:w-[40rem] w-[35rem] max-w-[90%] md:mt-0 text-gray-700">
                 <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 py-16 my-3 shadow-lg">
                     <form onSubmit={handleSubmit} className="space-y-4">

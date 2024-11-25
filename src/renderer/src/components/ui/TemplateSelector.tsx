@@ -28,7 +28,7 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onTemplateSelect })
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto bg-gray-900 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-500 scrollbar-track-gray-700">
+        <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-500 scrollbar-track-gray-700">
             {loading ? (
                 <div className="flex justify-center items-center h-full">
                     <ImSpinner2 className="animate-spin text-white text-4xl" />
@@ -47,7 +47,7 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onTemplateSelect })
                                 <div
                                     key={template.id}
                                     onClick={() => handleTemplateClick(template)}
-                                    className={`bg-gray-700 text-white p-4 rounded-lg cursor-pointer text-center border-2 ${
+                                    className={`bg-gray-700 aspect-video max-h-[30rem] text-white p-4 rounded-lg cursor-pointer text-center border-2 ${
                                         selectedTemplateId === template.id
                                             ? 'border-blue-500'
                                             : 'border-transparent'
@@ -57,7 +57,7 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onTemplateSelect })
                                     <img
                                         src={template.imagePath}
                                         alt={template.name}
-                                        className="w-full h-auto"
+                                        className="w-full h-auto aspect-video"
                                     />
                                 </div>
                             ))}

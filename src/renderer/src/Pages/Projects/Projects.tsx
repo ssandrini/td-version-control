@@ -272,11 +272,11 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                         <>
                             {projects.map((project, index) => (
                                 <div
-                                    className="flex flex-col text-black bg-white p-2 shadow-lg rounded-lg cursor-pointer min-w-[20rem] w-fit text-ellipsis overflow-hidden"
+                                    className="flex flex-col text-black bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] p-1 shadow-lg rounded-lg cursor-pointer min-w-[20rem] w-fit text-ellipsis overflow-hidden"
                                     key={index}
                                     onClick={(event) => handleCellClick(event, project)}
                                 >
-                                    <div className="flex flex-col px-6 pb-2">
+                                    <div className="flex bg-white rounded-lg flex-col px-8 pb-4">
                                         <div className="whitespace-nowrap flex flex-row items-center justify-between gap-2 text-ellipsis font-bold text-md">
                                             <div>{project.name.split('/').pop()}</div>
                                             <div className="flex flex-row items-center">

@@ -16,7 +16,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, 
 
     return (
         <div
-            className="flex flex-col h-fit items-center"
+            className="flex flex-col h-fit items-center text-nowrap text-ellipsis overflow-hidden w-[20rem]"
             onClick={onClick}
             onMouseEnter={() => setShowDescription(true)}
             onMouseLeave={() => setShowDescription(false)}
@@ -26,6 +26,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, 
                     isSelected || isCurrent ? 'bg-gray-600' : '',
                     'h-fit rounded-lg m-2 cursor-pointer transform transition-all duration-600 ease-in-out sticky',
                     'text-gray-100 px-2 py-1 flex flex-col items-center gap-1 justify-center',
+                    'w-[20rem]',
                     version?.id === '[wip]'
                         ? 'border-dashed border-2 border-gray-400'
                         : 'border-solid border-2 border-white'
@@ -55,7 +56,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, 
                 <div
                     className={cn(
                         'w-full text-left flex flex-row gap-0.5 items-center overflow-hidden transition-all duration-500 ease-in-out',
-                        showDescription ? 'max-h-16 opacity-100' : 'max-h-0 opacity-0'
+                        'max-h-16 opacity-100 text-ellipsis w-[20rem]'
                     )}
                 >
                     <FaInfo className="text-sm text-gray-300 mr-2" />

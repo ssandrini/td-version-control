@@ -19,6 +19,8 @@ resource "google_compute_instance" "gitea_instance" {
     #!/bin/bash
     sudo apt-get update
     sudo apt-get install -y docker.io
+    gcloud auth configure-docker
+    gcloud auth print-access-token | sudo docker login -u oauth2accesstoken --password-stdin https://${var.region}-docker.pkg.dev
 
     # Start a PostgreSQL container
     sudo docker run -d \
@@ -39,6 +41,6 @@ resource "google_compute_instance" "gitea_instance" {
       -p 80:${var.gitea_port} \
       -v /mnt/disks/gitea-data:/data \
       --link gitea-db:db \
-      gitea/gitea:latest
+      ${var.region}-docker.pkg.dev/${var.project_id}/${var.ar_repository_name}/mariana-gitea:latest
   EOT
 }

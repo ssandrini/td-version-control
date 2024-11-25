@@ -95,7 +95,7 @@ const NewProject: React.FC = () => {
     };
 
     return (
-        <div className="h-full bg-gray-900 text-white p-8 flex flex-col">
+        <div className="h-full text-white p-8 flex flex-col">
             <h1 className="text-2xl font-semibold mb-6">
                 {step === 'select' ? 'Select a template' : 'Project Details'}
             </h1>

@@ -36,7 +36,7 @@ const ProjectDetailsForm: React.FC<ProjectDetailsFormProps> = ({ onFormChange })
     };
 
     return (
-        <div className="bg-gray-900 p-8 rounded-lg">
+        <div className="p-8 rounded-lg">
             <div className="mb-4">
                 <label className="block text-gray-300 mb-2">Project Title</label>
                 <input

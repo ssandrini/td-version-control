@@ -119,21 +119,6 @@ body {
     background-size: contain;
 }
 
-.minimizeBtn {
-    background-image: url('../icons/icon_minimize.png');
-}
-
-.maximizeBtn {
-    background-image: url('../icons/icon_maximize.png');
-}
-
-.closeBtn {
-    background-image: url('../icons/icon_close.png');
-}
-.restoreBtn {
-    background-image: url('../icons/icon_restore.png');
-}
-
 /* should be no spaces bewtwen className:hover */
 .minimizeBtn:hover {
     border-style: dotted;

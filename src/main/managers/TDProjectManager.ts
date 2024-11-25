@@ -39,6 +39,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     readonly propertyRuleEngine: PropertyRuleEngine;
     readonly inputRuleEngine: InputRuleEngine;
     readonly excludedFiles: RegExp[];
+    readonly excludedProperties: RegExp[] = [/^pageindex\b/, /^view\b/, /^flags\b/, /^v\b/];
     private versionNameMax = 256;
     private descriptionMax = 1024;
     private stateFile = 'state.json';
@@ -311,7 +312,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         const result: TrackerMergeResult = await this.tracker.pull(
             hiddenDirPath,
             this.excludedFiles,
-            []
+            this.excludedProperties
         );
 
         if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
@@ -322,12 +323,24 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         ) {
             await this.processor.postprocess(hiddenDirPath, dir);
             await this.saveVersionState(dir, this.stateFile);
+            const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+            const lastModified = await getLastModifiedDate(toeFile);
+            await dumpTimestampToFile(
+                lastModified,
+                path.join(hiddenDirPath, this.checkoutTimestampFile)
+            );
             return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
         } else if (result.mergeStatus === MergeStatus.FINISHED) {
             await this.processor.postprocess(hiddenDirPath, dir);
             await this.saveVersionState(dir, this.stateFile);
             await this.tracker.createVersion(hiddenDirPath, 'MergeVersion');
             await this.tracker.push(hiddenDirPath);
+            const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+            const lastModified = await getLastModifiedDate(toeFile);
+            await dumpTimestampToFile(
+                lastModified,
+                path.join(hiddenDirPath, this.checkoutTimestampFile)
+            );
             return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
         } else if (
             result.mergeStatus === MergeStatus.IN_PROGRESS &&

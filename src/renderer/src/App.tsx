@@ -9,7 +9,6 @@ import Layout from './Pages/Layout';
 import { VariableProvider } from './hooks/Variables/useVariableContext';
 import { localPaths } from './const';
 import NewProject from './Pages/NewProject/NewProjects';
-import RegisterPage from '@renderer/Pages/RegisterPage';
 
 const App: React.FC = () => {
     return (

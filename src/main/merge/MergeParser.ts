@@ -39,7 +39,6 @@ export const preprocessMergeConflicts = (
                 return ignoredLinesMap.get(key) || line;
             });
 
-            // Verificar si todas las líneas son ignoradas
             const isOnlyIgnored =
                 currentLines.every((line: string) =>
                     ignoreProperties.some((regex) => regex.test(line))

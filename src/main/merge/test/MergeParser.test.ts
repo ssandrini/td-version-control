@@ -198,17 +198,19 @@ describe('Conflict Resolution Functions with Multiple Conflicts', () => {
 });
 
 describe('preprocessMergeConflicts', () => {
-    const ignoreProperties = [/^pageindex\b/];
+    const ignoreProperties = [/^pageindex\b/, /^v\b/];
 
     test('conflicto con propiedades ignoradas sincronizadas', () => {
         const input = `
 <<<<<<< HEAD
 horzsource 67108864 none
 pageindex 67108864 1
+v 118.371 433.381 0.62898
 vertsource 67108864 red
 =======
 horzsource 67108864 asd
 pageindex 67108864 2
+v 119.371 432.381 0.70000
 vertsource 67108864 blue
 >>>>>>> 21dasd123123
         `;
@@ -216,10 +218,12 @@ vertsource 67108864 blue
 <<<<<<< HEAD
 horzsource 67108864 none
 pageindex 67108864 1
+v 118.371 433.381 0.62898
 vertsource 67108864 red
 =======
 horzsource 67108864 asd
 pageindex 67108864 1
+v 118.371 433.381 0.62898
 vertsource 67108864 blue
 >>>>>>> 21dasd123123
         `;

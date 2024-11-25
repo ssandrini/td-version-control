@@ -31,7 +31,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
     const [isEmailValid, setIsEmailValid] = useState<boolean>(false);
 
     const [isLoadingRegister, setIsLoadingRegister] = useState<boolean>(false);
-    const [userError, setUserError] = useState<boolean>(false);
+    const [_, setUserError] = useState<boolean>(false);
     const [submitted, setSubmitted] = useState<boolean>(false);
 
     const validateEmail = (email: string) => {

@@ -11,7 +11,6 @@ import {
 import { Label } from '../../../components/ui/label';
 import { Input } from '../../../components/ui/input';
 import { Version } from '../../../../../main/models/Version';
-import log from 'electron-log/renderer.js';
 import History from '../../../components/ui/history';
 
 interface DetailsComponentProps {

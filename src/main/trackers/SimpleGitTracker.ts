@@ -16,6 +16,7 @@ import path from 'node:path';
 import { Content, Filename, MergeStatus, TrackerMergeResult } from '../merge/TrackerMergeResult';
 import {
     parseMergeConflicts,
+    preprocessMergeConflicts,
     resolveFileConflicts,
     resolveWithCurrentBranch
 } from '../merge/MergeParser';
@@ -269,7 +270,11 @@ export class SimpleGitTracker implements Tracker {
         }
     }
 
-    async pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult> {
+    async pull(
+        dir: string,
+        excludedFiles: RegExp[],
+        linesMatching: RegExp[]
+    ): Promise<TrackerMergeResult> {
         this.git.cwd(dir);
         log.info('Starting pull operation');
 
@@ -343,7 +348,19 @@ export class SimpleGitTracker implements Tracker {
             log.info(
                 `Unable to auto-resolve conflict in file "${conflict.file}". Marking as unresolved.`
             );
-            conflictMap.set(extractFileName(conflict.file!)!, parseMergeConflicts(currentContent));
+
+            log.debug(`Preprocessing file ${conflict.file}`);
+            const newContent = preprocessMergeConflicts(currentContent, linesMatching);
+            if (newContent !== currentContent) {
+                fs.writeFileSync(filePath, newContent);
+            }
+
+            const conflictSet: Set<[Content, Content]> = parseMergeConflicts(newContent);
+            if (conflictSet.size > 0) {
+                conflictMap.set(extractFileName(conflict.file!)!, conflictSet);
+            } else {
+                await this.git.add(conflict.file!);
+            }
         }
 
         if (conflictMap.size > 0) {

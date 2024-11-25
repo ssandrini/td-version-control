@@ -59,7 +59,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             /\.bin$/,
             /^local\/.*$/,
             /\.json$/,
-            /.*\.dir\/[^\/]+\.(n|parm|panel)$/
+            /.*\.dir\/[^/]+\.(n|parm|panel)$/
         ];
     }
 
@@ -310,7 +310,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         const hiddenDirPath = this.hiddenDirPath(dir);
         const result: TrackerMergeResult = await this.tracker.pull(
             hiddenDirPath,
-            this.excludedFiles
+            this.excludedFiles,
+            []
         );
 
         if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
@@ -507,7 +508,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             })
         );
 
-        return Promise.resolve(this.extractNodeAndInputs(nodeName, fileContents, true));
+        return Promise.resolve(this.extractNodeAndInputs(nodeName, fileContents));
     }
 
     private processProperties(content: string, properties: Map<string, string>) {
@@ -516,17 +517,11 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         });
     }
 
-    private extractNodeAndInputs(
-        nodeName: string,
-        fileContents: string[],
-        nFile: boolean
-    ): [TDNode, TDEdge[]] {
+    private extractNodeAndInputs(nodeName: string, fileContents: string[]): [TDNode, TDEdge[]] {
         const properties = new Map<string, string>();
         fileContents.forEach((content) => this.processProperties(content, properties));
 
-        const [type, subtype] = nFile
-            ? getNodeInfoFromNFile(fileContents[0])!
-            : [undefined, undefined];
+        const [type, subtype] = getNodeInfoFromNFile(fileContents[0])!;
         const node = new TDNode(nodeName, type, subtype, properties);
 
         const nodeInputs: TDEdge[] = [];

@@ -269,7 +269,11 @@ export class SimpleGitTracker implements Tracker {
         }
     }
 
-    async pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult> {
+    async pull(
+        dir: string,
+        excludedFiles: RegExp[],
+        linesMatching: RegExp[]
+    ): Promise<TrackerMergeResult> {
         this.git.cwd(dir);
         log.info('Starting pull operation');
 

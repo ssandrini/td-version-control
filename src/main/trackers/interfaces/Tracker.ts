@@ -16,7 +16,11 @@ export interface Tracker {
 
     // Remote handling
     clone(dir: string, url: string): Promise<void>;
-    pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult>;
+    pull(
+        dir: string,
+        excludedFiles: RegExp[],
+        linesMatching: RegExp[]
+    ): Promise<TrackerMergeResult>;
     push(dir: string): Promise<void>;
     settleConflicts(dir: string, userInput: Map<Filename, Content[]>): Promise<void>;
     abortMerge(dir: string): Promise<void>;

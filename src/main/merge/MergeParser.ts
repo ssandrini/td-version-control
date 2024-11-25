@@ -1,6 +1,6 @@
 import { Content } from './TrackerMergeResult';
 
-const conflictRegex = /<<<<<<< HEAD\s*([\s\S]*?)\s*=======\s*([\s\S]*?)\s*>>>>>>> \w+/g;
+const conflictRegex = /<<<<<<< HEAD\s*([\s\S]*?)\s*=======\s*([\s\S]*?)\s*>>>>>>> (\w+)/g;
 
 export const parseMergeConflicts = (fileContent: Content): Set<[Content, Content]> => {
     const conflicts = new Set<[Content, Content]>();
@@ -13,6 +13,49 @@ export const parseMergeConflicts = (fileContent: Content): Set<[Content, Content
     }
 
     return conflicts;
+};
+
+export const preprocessMergeConflicts = (
+    fileContent: Content,
+    ignoreProperties: RegExp[]
+): Content => {
+    return fileContent.replace(
+        conflictRegex,
+        (_fullMatch, currentContent, incomingContent, commitHash) => {
+            const currentLines = currentContent.trim().split('\n');
+            const incomingLines = incomingContent.trim().split('\n');
+
+            const ignoredLinesMap = new Map<string, string>();
+
+            currentLines.forEach((line: string) => {
+                if (ignoreProperties.some((regex) => regex.test(line))) {
+                    const key = line.split(/\s+/)[0];
+                    ignoredLinesMap.set(key, line);
+                }
+            });
+
+            const synchronizedIncomingLines = incomingLines.map((line: string) => {
+                const key = line.split(/\s+/)[0];
+                return ignoredLinesMap.get(key) || line;
+            });
+
+            // Verificar si todas las líneas son ignoradas
+            const isOnlyIgnored =
+                currentLines.every((line: string) =>
+                    ignoreProperties.some((regex) => regex.test(line))
+                ) &&
+                incomingLines.every((line: string) =>
+                    ignoreProperties.some((regex) => regex.test(line))
+                );
+
+            if (isOnlyIgnored) {
+                return currentContent.trim();
+            }
+
+            const updatedIncomingContent = synchronizedIncomingLines.join('\n');
+            return `<<<<<<< HEAD\n${currentContent.trim()}\n=======\n${updatedIncomingContent}\n>>>>>>> ${commitHash}`;
+        }
+    );
 };
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

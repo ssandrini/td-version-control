@@ -267,11 +267,6 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                         </div>
                     </div>
                 )}
-                {hideHeader && (
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-semibold">Projects</h3>
-                    </div>
-                )}
 
                 <div className="flex flex-row items-center justify-center w-full gap-3 flex-wrap overflow-auto">
                     {projects.length > 0 ? (

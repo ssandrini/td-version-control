@@ -201,12 +201,7 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
         userDataMgr.removeRecentProject(path)
     );
 
-    ipcMain.handle(API_METHODS.SAVE_TD_PATH, (_, path: string) =>
-        userDataMgr.setTouchDesignerBinPath(path)
-    );
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ipcMain.handle(API_METHODS.GET_TD_PATH, (_) => userDataMgr.getTouchDesignerBinPath());
+    ipcMain.handle(API_METHODS.CHECK_DEPENDENCIES, (_) => projectManager.checkDependencies());
 
     ipcMain.handle(API_METHODS.OPEN_TD, (_, path: string) => openToeFile(path));
 

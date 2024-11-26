@@ -1,16 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { Outlet } from 'react-router-dom';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle
-} from '../../components/ui/dialog';
-import { Button } from '../../components/ui/button';
-import log from 'electron-log/renderer.js';
 import LogIn from './LogIn';
 import MarianaHelper from '../../components/ui/MarianaHelper';
 import Spinner from '../../components/ui/Spinner';
@@ -20,9 +10,12 @@ import Sidebar from '@renderer/components/ui/Sidebar';
 import { HiMenuAlt1 } from 'react-icons/hi';
 import RegisterPage from '@renderer/Pages/RegisterPage';
 import { FaRegWindowMaximize, FaRegWindowMinimize, FaWindowClose } from 'react-icons/fa';
+import { ProjectDependencies } from '@renderer/models/ProjectDependencies';
+import MissingDependenciesDialog from '@renderer/components/ui/MissingDependenciesDialog';
 
 const Layout: React.FC = () => {
-    const { hasTDL, setTouchDesignerLocation, user, setUser } = useVariableContext();
+    const { hasMissingDependencies, missingDependencies, setMissingDependencies, user, setUser } =
+        useVariableContext();
     const [userStateReady, setUserStateReady] = useState<boolean>(false);
     const [expanded, setExpanded] = useState<boolean>(false);
     const [showAnimation, setShowAnimation] = useState<boolean>(false); // New state for animation
@@ -64,31 +57,16 @@ const Layout: React.FC = () => {
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.getTDBinPath().then((path: string) => {
-            if (path) {
-                setTouchDesignerLocation(path);
-            }
+        window.api.checkDependencies().then((missingDeps: ProjectDependencies[]) => {
+            setMissingDependencies(missingDeps);
         });
-    }, [setTouchDesignerLocation]);
+    }, []);
 
-    const handleSetLocation = async () => {
-        try {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            const files = await window.api.filePicker();
-
-            if (files.filePaths.length > 0) {
-                const selectedPath = files.filePaths[0];
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                await window.api.saveTDBinPath(selectedPath);
-                setTouchDesignerLocation(selectedPath);
-            } else {
-                log.info('No file was selected.');
-            }
-        } catch (error) {
-            log.error('Error selecting file:', error);
-        }
+    const recheckDependencies = async () => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const missingDeps = await window.api.checkDependencies();
+        setMissingDependencies(missingDeps);
     };
 
     return (
@@ -158,25 +136,11 @@ const Layout: React.FC = () => {
                 </div>
             </div>
 
-            {!hasTDL() && user != undefined && (
-                <div>
-                    <Dialog open>
-                        <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                                <DialogTitle>Select location of TouchDesigner</DialogTitle>
-                                <DialogDescription>
-                                    In order to use the tool correctly, please select TouchDesigner
-                                    location.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                                <Button type="button" onClick={handleSetLocation}>
-                                    Select location
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
+            {hasMissingDependencies() && user != undefined && (
+                <MissingDependenciesDialog
+                    missingDependencies={missingDependencies}
+                    onRecheck={recheckDependencies}
+                />
             )}
             <div id="mySideBar" className="leftMenu"></div>
             {!userStateReady ? (

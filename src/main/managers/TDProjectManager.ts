@@ -7,6 +7,7 @@ import path from 'node:path';
 import { Tracker } from '../trackers/interfaces/Tracker';
 import { TDNode } from '../models/TDNode';
 import {
+    checkDependencies,
     dumpDiffToFile,
     dumpTDStateToFile,
     dumpTimestampToFile,
@@ -31,6 +32,7 @@ import { MergeStatus, TrackerMergeResult } from '../merge/TrackerMergeResult';
 import { TDMergeResult, TDMergeStatus } from '../models/TDMergeResult';
 import { resolveWithCurrentBranch, resolveWithIncomingBranch } from '../merge/MergeParser';
 import { TagError } from '../errors/TagError';
+import { ProjectDependencies } from '../../renderer/src/models/ProjectDependencies';
 
 export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> {
     readonly processor: Processor;
@@ -677,5 +679,9 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
                 }
             }
         }
+    }
+
+    checkDependencies(): Promise<ProjectDependencies[]> {
+        return checkDependencies();
     }
 }

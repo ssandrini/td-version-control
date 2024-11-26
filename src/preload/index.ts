@@ -10,8 +10,7 @@ const api = {
     getRecentProjects: async () => ipcRenderer.invoke(API_METHODS.RECENT_PROJECTS),
     saveProject: async (project: Project) => ipcRenderer.invoke(API_METHODS.SAVE_PROJECT, project),
     deleteProject: async (path: string) => ipcRenderer.invoke(API_METHODS.DELETE_PROJECT, path),
-    saveTDBinPath: async (path: string) => ipcRenderer.invoke(API_METHODS.SAVE_TD_PATH, path),
-    getTDBinPath: async () => ipcRenderer.invoke(API_METHODS.GET_TD_PATH),
+    checkDependencies: async () => ipcRenderer.invoke(API_METHODS.CHECK_DEPENDENCIES),
     openToe: async (path: string) => ipcRenderer.invoke(API_METHODS.OPEN_TD, path),
     createProject: async (dir: string, name: string, remote: boolean, src?: string) =>
         ipcRenderer.invoke(API_METHODS.CREATE_PROJECT, dir, name, remote, src),

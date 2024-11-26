@@ -1,12 +1,14 @@
-import { dialog, shell } from 'electron';
+import { app, dialog, shell } from 'electron';
 import log from 'electron-log/main.js';
 import fs from 'fs-extra';
-import { stat, writeFile, readFile } from 'fs/promises';
+import { readFile, stat, writeFile } from 'fs/promises';
 import Template from '../models/Template';
 import path from 'node:path';
 import { TDState } from '../models/TDState';
-import { app } from 'electron';
 import { TagError } from '../errors/TagError';
+import { ProjectDependencies } from '../../renderer/src/models/ProjectDependencies';
+import simpleGit from 'simple-git';
+import { execSync } from 'node:child_process';
 
 /**
  * Searches for the first file in the current directory with the specified extension.
@@ -356,4 +358,62 @@ export const readDateFromFile = async (path: string): Promise<Date | undefined> 
     }
 
     return parsedDate;
+};
+
+export const checkDependencies = async (): Promise<ProjectDependencies[]> => {
+    if (process.platform === 'win32') {
+        return checkDependenciesWin();
+    } else if (process.platform === 'darwin') {
+        return checkDependenciesMac();
+    }
+    throw new Error('Linux is not supported');
+};
+
+const checkDependenciesWin = async (): Promise<ProjectDependencies[]> => {
+    // check git
+    const missingDeps: ProjectDependencies[] = [];
+    try {
+        if (!(await simpleGit().version()).installed) {
+            log.error('Git is not installed');
+            missingDeps.push(ProjectDependencies.GIT);
+        }
+    } catch (err: any) {
+        log.error('Error trying git version:', err.message);
+        missingDeps.push(ProjectDependencies.GIT);
+    }
+
+    // find touchdesigner on path
+    try {
+        const pathVariable = process.env.PATH || '';
+        if (!pathVariable.includes('TouchDesigner')) {
+            log.error('TouchDesigner not found on PATH');
+            missingDeps.push(ProjectDependencies.TOUCH_DESIGNER_PATH);
+        }
+    } catch (err: any) {
+        log.error('Unable to get PATH:', err.message);
+        missingDeps.push(ProjectDependencies.TOUCH_DESIGNER_PATH);
+    }
+
+    const checkCommandExists = (command: string): boolean => {
+        try {
+            execSync(command, {
+                stdio: ['ignore', 'ignore', 'ignore'],
+                windowsHide: true
+            });
+            return true;
+        } catch (err: any) {
+            // Check for CommandNotFoundException by FullyQualifiedErrorId
+            return !(err instanceof Error && err.message.includes('CommandNotFoundException'));
+        }
+    };
+
+    if (!checkCommandExists('toeexpand') || !checkCommandExists('toecollapse')) {
+        missingDeps.push(ProjectDependencies.TOE_COMMANDS);
+    }
+
+    return missingDeps;
+};
+
+const checkDependenciesMac = async (): Promise<ProjectDependencies[]> => {
+    return Promise.resolve([]);
 };

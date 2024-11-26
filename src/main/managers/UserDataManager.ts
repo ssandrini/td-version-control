@@ -14,13 +14,15 @@ class UserDataManager {
 
     addRecentProject(project: Project): void {
         log.info(`Attempting to add project: ${project.name} with path: ${project.path}`);
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const recentProjects: Project[] = this.store.get('recentProjects', []) as Project[];
         const projectExists = recentProjects.some((proj) => proj.path === project.path);
 
         if (!projectExists) {
             recentProjects.push(project);
-            // @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             this.store.set('recentProjects', recentProjects);
             log.info(`Project ${project.name} added to recent projects.`);
         } else {
@@ -30,12 +32,14 @@ class UserDataManager {
 
     removeRecentProject(projectPath: string): void {
         log.info(`Attempting to remove project with path: ${projectPath}`);
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         let recentProjects: Project[] = this.store.get('recentProjects', []) as Project[];
         const initialLength = recentProjects.length;
 
         recentProjects = recentProjects.filter((proj) => proj.path !== projectPath);
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         this.store.set('recentProjects', recentProjects);
 
         if (recentProjects.length < initialLength) {
@@ -47,40 +51,25 @@ class UserDataManager {
 
     getRecentProjects(): Project[] {
         log.info('Retrieving recent projects.');
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const recentProjects = this.store.get('recentProjects', []) as Project[];
         log.info(`Found ${recentProjects.length} recent project(s).`);
         return recentProjects;
     }
 
-    setTouchDesignerBinPath(path: string): void {
-        log.info(`Setting TouchDesigner binary path to: ${path}`);
-        // @ts-ignore
-        this.store.set('touchDesignerBinPath', path);
-    }
-
-    getTouchDesignerBinPath(): string | undefined {
-        log.info('Retrieving TouchDesigner binary path.');
-        // @ts-ignore
-        const path = this.store.get('touchDesignerBinPath') as string;
-        if (path) {
-            log.info(`TouchDesigner binary path is: ${path}`);
-        } else {
-            log.warn('TouchDesigner binary path is not set.');
-        }
-        return path;
-    }
-
     saveAuthToken(token: AuthToken): void {
         log.info('Saving authentication token.');
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         this.store.set('authToken', token);
         log.info(`Authentication token for ${token.name} saved.`);
     }
 
     getAuthToken(): AuthToken | null {
         log.info('Retrieving authentication token.');
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const token = this.store.get('authToken', null) as AuthToken | null;
         if (token) {
             log.info(`Authentication token retrieved: ${token.name}`);
@@ -92,7 +81,8 @@ class UserDataManager {
 
     clearAuthToken(): void {
         log.info('Clearing authentication token.');
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         this.store.delete('authToken');
         log.info('Authentication token cleared.');
     }
@@ -100,14 +90,16 @@ class UserDataManager {
     saveUserCredentials(username: string, password: string): void {
         log.info('Saving user credentials in Base64.');
         const encodedCredentials = btoa(`${username}:${password}`);
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         this.store.set('userCredentials', encodedCredentials);
         log.info('User credentials saved.');
     }
 
     getUserCredentials(): { username: string; password: string } | null {
         log.info('Retrieving user credentials from store.');
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const encodedCredentials = this.store.get('userCredentials', null) as string | null;
 
         if (encodedCredentials) {
@@ -128,21 +120,24 @@ class UserDataManager {
 
     clearUserCredentials(): void {
         log.info('Clearing user credentials.');
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         this.store.delete('userCredentials');
         log.info('User credentials cleared.');
     }
 
     saveUser(user: User): void {
         log.info(`Saving user with ID: ${user.id} and username: ${user.username}`);
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         this.store.set('user', user);
         log.info('User saved successfully.');
     }
 
     getUser(): User | null {
         log.info('Retrieving user from store.');
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const user = this.store.get('user', null) as User | null;
 
         if (user) {
@@ -156,7 +151,8 @@ class UserDataManager {
 
     clearUser(): void {
         log.info('Clearing user from store.');
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         this.store.delete('user');
         log.info('User cleared successfully.');
     }

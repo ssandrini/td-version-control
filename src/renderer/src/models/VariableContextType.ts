@@ -1,10 +1,11 @@
 import { Dispatch, SetStateAction } from 'react';
 import { User } from '../../../main/models/api/User';
+import { ProjectDependencies } from '@renderer/models/ProjectDependencies';
 
 export default interface VariableContextType {
-    touchDesignerLocation: string;
-    setTouchDesignerLocation: Dispatch<SetStateAction<string>>;
-    hasTDL: () => boolean;
+    missingDependencies: ProjectDependencies[];
+    setMissingDependencies: Dispatch<SetStateAction<ProjectDependencies[]>>;
+    hasMissingDependencies: () => boolean;
     isLoggedIn: () => boolean;
     user: User | undefined;
     setUser: Dispatch<SetStateAction<User | undefined>>;

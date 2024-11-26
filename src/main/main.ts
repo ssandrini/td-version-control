@@ -229,20 +229,11 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
                 initialVersion = await projectManager.init(dir, undefined, src);
             }
 
-            if (src) {
-                try {
-                    new URL(src);
-                    remoteUrl = src;
-                } catch (error) {
-                    // fixme
-                }
-            }
-
             const newProject: Project = {
                 name: name,
                 owner: initialVersion.author.name,
                 path: dir,
-                remote: remoteUrl
+                remote: remote ? remoteUrl : ''
             };
             userDataMgr.addRecentProject(newProject);
             return Promise.resolve(newProject);

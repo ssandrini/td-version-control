@@ -19,12 +19,7 @@ import { User } from '../../../../main/models/api/User';
 import Sidebar from '@renderer/components/ui/Sidebar';
 import { HiMenuAlt1 } from 'react-icons/hi';
 import RegisterPage from '@renderer/Pages/RegisterPage';
-import {
-    FaRegWindowClose,
-    FaRegWindowMaximize,
-    FaRegWindowMinimize,
-    FaWindowClose
-} from 'react-icons/fa';
+import { FaRegWindowMaximize, FaRegWindowMinimize, FaWindowClose } from 'react-icons/fa';
 
 const Layout: React.FC = () => {
     const { hasTDL, setTouchDesignerLocation, user, setUser } = useVariableContext();

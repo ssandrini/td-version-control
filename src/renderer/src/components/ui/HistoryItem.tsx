@@ -12,7 +12,7 @@ interface HistoryItemProps {
 }
 
 const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, isSelected }) => {
-    const [showDescription, setShowDescription] = useState<boolean>(false);
+    const [_showDescription, setShowDescription] = useState<boolean>(false);
 
     return (
         <div

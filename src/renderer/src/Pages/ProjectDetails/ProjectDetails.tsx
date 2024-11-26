@@ -19,6 +19,8 @@ import Spinner from '@renderer/components/ui/Spinner';
 import { Author } from '../../../../main/models/Author';
 import { useVariableContext } from '@renderer/hooks/Variables/useVariableContext';
 import { IoHelp } from 'react-icons/io5';
+import { motion } from 'framer-motion';
+import { Skeleton } from '@renderer/components/ui/skeleton';
 
 const ProjectDetail: React.FC = () => {
     const { toast } = useToast();
@@ -425,9 +427,14 @@ const ProjectDetail: React.FC = () => {
         });
     };
     return (
-        <div className="bg-[#1b1d23] p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar">
-            {selectedVersion ? (
-                <div className="w-full rounded-lg bg-gray-700 text-white p-4 flex flex-col transition-all duration-600 ease-in-out">
+        <motion.div
+            exit={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#1b1d23] p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar"
+        >
+            {selectedVersion && project ? (
+                <div className="w-full h-[9rem] rounded-lg bg-gray-700 text-white p-4 flex flex-col transition-all duration-600 ease-in-out">
                     <div className="flex flex-row w-full justify-between items-center">
                         <div className="flex flex-col w-full mr-10">
                             <div className="flex flex-row justify-between w-full">
@@ -513,12 +520,12 @@ const ProjectDetail: React.FC = () => {
                             </div>
                             <h2 className="text-xl flex flex-row gap-2">
                                 <div className="font-bold">Version:</div>
-                                {selectedVersion.name}
+                                {selectedVersion?.name}
                             </h2>
                             <hr className="border-gray-500 opacity-50 w-full my-1" />
                             <div className="text-xs text-gray-400">{project?.path}</div>
                             <p className="text-gray-400 text-sm mt-1">
-                                {selectedVersion.date.toLocaleString('en-US', {
+                                {selectedVersion?.date.toLocaleString('en-US', {
                                     year: 'numeric',
                                     month: 'long',
                                     day: 'numeric',
@@ -531,7 +538,7 @@ const ProjectDetail: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <p>Select a version to see details.</p>
+                <Skeleton className="w-full h-[9rem] rounded-lg p-4 flex flex-col" />
             )}
             {mergeConflicts && (
                 <Dialog open>
@@ -614,11 +621,7 @@ const ProjectDetail: React.FC = () => {
                 </Dialog>
             )}
             <div className="flex flex-row h-[81%] w-full">
-                <div
-                    className={cn(
-                        'transition-all duration-500 ease-in-out overflow-auto no-scrollbar'
-                    )}
-                >
+                <div className={cn('transition-all duration-500 ease-in-out no-scrollbar')}>
                     <DetailsComponent
                         wipVersion={wipVersion}
                         setWipVersion={setWipVersion}
@@ -637,7 +640,7 @@ const ProjectDetail: React.FC = () => {
                     <Nodes current={currentState} compare={compareState} project={project} />
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

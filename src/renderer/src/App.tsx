@@ -9,20 +9,23 @@ import Layout from './Pages/Layout';
 import { VariableProvider } from './hooks/Variables/useVariableContext';
 import { localPaths } from './const';
 import NewProject from './Pages/NewProject/NewProjects';
+import { AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
     return (
         <VariableProvider>
             <HashRouter>
-                <Routes>
-                    <Route path={localPaths.HOME} element={<Layout />}>
-                        <Route path="" element={<Main />} />
-                        <Route path={localPaths.PROJECTS} element={<Projects />} />
-                        <Route path={localPaths.SETTINGS} element={<Settings />} />
-                        <Route path={localPaths.PROJECT_DETAIL} element={<ProjectDetail />} />
-                        <Route path={localPaths.NEW_PROJECT} element={<NewProject />} />
-                    </Route>
-                </Routes>
+                <AnimatePresence mode="wait">
+                    <Routes>
+                        <Route path={localPaths.HOME} element={<Layout />}>
+                            <Route path="" element={<Main />} />
+                            <Route path={localPaths.PROJECTS} element={<Projects />} />
+                            <Route path={localPaths.SETTINGS} element={<Settings />} />
+                            <Route path={localPaths.PROJECT_DETAIL} element={<ProjectDetail />} />
+                            <Route path={localPaths.NEW_PROJECT} element={<NewProject />} />
+                        </Route>
+                    </Routes>
+                </AnimatePresence>
             </HashRouter>
         </VariableProvider>
     );

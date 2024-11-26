@@ -8,6 +8,7 @@ import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'react-icons/ai';
 import Spinner from '../../components/ui/Spinner';
 import Project from '../../../../main/models/Project';
 import Template from '../../../../main/models/Template';
+import { motion } from 'framer-motion';
 
 const NewProject: React.FC = () => {
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -95,7 +96,12 @@ const NewProject: React.FC = () => {
     };
 
     return (
-        <div className="h-full text-white p-8 flex flex-col">
+        <motion.div
+            exit={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="h-full text-white p-8 flex flex-col"
+        >
             <h1 className="text-2xl font-semibold mb-6">
                 {step === 'select' ? 'Select a template' : 'Project Details'}
             </h1>
@@ -136,7 +142,7 @@ const NewProject: React.FC = () => {
                     </Button>
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 };
 

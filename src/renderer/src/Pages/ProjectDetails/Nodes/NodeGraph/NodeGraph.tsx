@@ -16,6 +16,7 @@ import { TDState } from '../../../../../../main/models/TDState';
 import OperatorNode from './OperatorNode/OperatorNode';
 import { cn } from '../../../../lib/utils';
 import { nodeState } from '../../../../models/OperatorNodeVariant';
+import { Skeleton } from '@renderer/components/ui/skeleton';
 
 interface NodeGraphProps {
     current?: TDState | undefined;
@@ -285,24 +286,28 @@ const NodeGraph: React.FC<NodeGraphProps> = ({ current, hidden, compare }) => {
 
     return (
         <div className={cn(hidden ? 'hidden' : '', 'border-2 w-full h-full rounded-lg my-5')}>
-            <ReactFlow
-                maxZoom={2}
-                minZoom={0.1}
-                className="text-black"
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                nodeTypes={nodeTypes}
-                onInit={(instance) => {
-                    setReactFlowInstance(instance);
-                    instance.fitView();
-                }}
-                onConnect={onConnect}
-            >
-                <Controls className="text-black" />
-                <Background variant={BackgroundVariant.Dots} gap={12} size={0.5} />
-            </ReactFlow>
+            {current == undefined ? (
+                <Skeleton className="h-full w-full" />
+            ) : (
+                <ReactFlow
+                    maxZoom={2}
+                    minZoom={0.1}
+                    className="text-black"
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    nodeTypes={nodeTypes}
+                    onInit={(instance) => {
+                        setReactFlowInstance(instance);
+                        instance.fitView();
+                    }}
+                    onConnect={onConnect}
+                >
+                    <Controls className="text-black" />
+                    <Background variant={BackgroundVariant.Dots} gap={12} size={0.5} />
+                </ReactFlow>
+            )}
         </div>
     );
 };

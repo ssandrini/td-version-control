@@ -9,6 +9,7 @@ import { Input } from '@renderer/components/ui/input';
 import { Button } from '@renderer/components/ui/button';
 import Spinner from '@renderer/components/ui/Spinner';
 import { MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
+import { motion } from 'framer-motion';
 
 interface RegisterPageProps {
     goToLogin: () => void;
@@ -147,9 +148,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
     };
 
     return (
-        <div className="flex pb-[50px] flex-col items-center justify-evenly no-scrollbar h-full text-white overflow-y-auto">
+        <motion.div
+            exit={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex pb-[50px] flex-col items-center justify-evenly no-scrollbar h-full text-white overflow-y-auto"
+        >
             <div className="flex justify-center items-center md:w-[40rem] w-[35rem] max-w-[90%] md:mt-0 text-gray-700">
-                <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 py-16 my-3 shadow-lg">
+                <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 pb-16 pt-8 my-3 shadow-lg">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="flex items-center justify-center">
                             <img
@@ -298,7 +304,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
                     </form>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

@@ -26,6 +26,7 @@ import { useToast } from '../../hooks/use-toast';
 import { CiWarning } from 'react-icons/ci';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { MdOutlineCloud, MdOutlineCloudOff } from 'react-icons/md';
+import { motion } from 'framer-motion';
 
 interface ProjectsProps {
     hideHeader?: boolean;
@@ -238,7 +239,12 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
     }
 
     return (
-        <div className="flex flex-col w-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 h-full">
+        <motion.div
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col w-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 h-full"
+        >
             {/* Main Content */}
             <div className="flex-1 p-8 text-white">
                 {/* Header */}
@@ -279,9 +285,9 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                     <div className="flex bg-white rounded-lg flex-col px-8 pb-4">
                                         <div className="whitespace-nowrap flex flex-row items-center justify-between gap-2 text-ellipsis font-bold text-md">
                                             <div>{project.name.split('/').pop()}</div>
-                                            <div className="flex flex-row items-center">
+                                            <div className="flex flex-row items-center pt-1">
                                                 <Button
-                                                    className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
+                                                    className="mr-2 p-2 bg-transparent hover:bg-green-200 text-green-500 hover:text-green-400"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handlePlayProject(project);
@@ -290,7 +296,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                                     <FaPlay />
                                                 </Button>
                                                 <Button
-                                                    className="mr-2 p-2 bg-transparent text-red-600 hover:text-red-500"
+                                                    className="mr-2 p-2 bg-transparent hover:bg-red-200 text-red-600 hover:text-red-500"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         confirmDeleteProject(project);
@@ -442,7 +448,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                     <div className="text-white text-2xl">Loading...</div>
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 };
 

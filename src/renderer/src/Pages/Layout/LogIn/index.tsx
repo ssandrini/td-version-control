@@ -8,6 +8,7 @@ import { MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
 import Spinner from '../../../components/ui/Spinner';
 import { ApiResponse } from '../../../../../main/errors/ApiResponse';
 import { User } from 'src/main/models/api/User';
+import { motion } from 'framer-motion';
 
 interface LogInProps {
     goToRegister: () => void;
@@ -94,9 +95,14 @@ const LogIn: React.FC<LogInProps> = ({ goToRegister }) => {
     const isFormValid = isUsernameValid && password.trim().length >= 8;
 
     return (
-        <div className="flex pb-[50px] flex-col items-center justify-evenly pt-10 h-full text-white overflow-y-auto">
+        <motion.div
+            exit={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex pb-[50px] flex-col items-center justify-evenly pt-10 h-full text-white overflow-y-auto"
+        >
             <div className="flex justify-center items-center md:w-[30rem] w-[25rem] max-w-[90%] md:mt-0 text-gray-700">
-                <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 py-16 my-3 shadow-lg">
+                <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 pb-16 pt-8 my-3 shadow-lg">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="flex items-center justify-center">
                             <img src="icon.png" alt="Logo" className="h-36 mb-5 object-contain" />
@@ -161,7 +167,7 @@ const LogIn: React.FC<LogInProps> = ({ goToRegister }) => {
                     </form>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

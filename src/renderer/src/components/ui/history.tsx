@@ -4,6 +4,7 @@ import { Version } from '../../../../main/models/Version';
 import { cn } from '../../lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { FaArrowUp } from 'react-icons/fa';
+import { Skeleton } from '@renderer/components/ui/skeleton';
 
 interface HistoryProps {
     path?: string;
@@ -30,7 +31,7 @@ const History: React.FC<HistoryProps> = ({
     wipVersion
 }) => {
     return (
-        <div className="flex flex-col overflow-auto no-scrollbar w-[20rem]">
+        <div className="flex flex-col items-center overflow-y-auto no-scrollbar max-h-[90%] w-[20rem]">
             {wipVersion && (
                 <HistoryItem
                     version={wipVersion}
@@ -40,7 +41,7 @@ const History: React.FC<HistoryProps> = ({
                 />
             )}
             {versions.length === 0 ? (
-                <p>No versions found.</p>
+                <Skeleton />
             ) : (
                 versions.map((version, index) => (
                     <Popover key={version.name}>

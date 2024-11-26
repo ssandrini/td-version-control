@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ expanded }) => {
                     >
                         <div
                             className={cn(
-                                'flex items-center py-2',
+                                'flex items-center py-2 overflow-hidden flex-nowrap text-nowrap',
                                 expanded ? 'px-4' : 'justify-center'
                             )}
                         >

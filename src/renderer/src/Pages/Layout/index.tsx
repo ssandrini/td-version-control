@@ -80,21 +80,21 @@ const Layout: React.FC = () => {
         <div className="h-screen bg-[#1b1d23]">
             <div className="topBar w-full justify-between items-center flex flex-row">
                 {user != undefined ? (
-                    <div className="toggleButton flex flex-col justify-start text-white h-10 w-[5.5rem]">
+                    <div className="toggleButton flex flex-col justify-start text-white h-10 w-[5.7rem]">
                         <HiMenuAlt1
                             id="showHideMenu"
-                            className="cursor-pointer h-10 w-full"
+                            className="cursor-pointer h-10 w-fit"
                             onClick={() => setExpanded(!expanded)}
                         />
                     </div>
                 ) : (
-                    <div className="w-[5.5rem]" />
+                    <div className="w-[5.7rem]" />
                 )}
                 <div className="flex flex-row titleBar items-center w-full justify-center">
                     <img className="topBarMainImg rounded-full" src="icon.png" alt="" />
                     <div className="title font-bold">Mariana</div>
                 </div>
-                <div className="titleBarButtons">
+                <div className="titleBarButtons w-[5.7rem]">
                     <button
                         id="minimizeBtn"
                         className="topBtn minimizeBtn text-white"

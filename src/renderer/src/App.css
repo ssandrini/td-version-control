@@ -105,7 +105,6 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    width: 100px;
 }
 
 .topBtn {
@@ -180,7 +179,7 @@ body {
 
 @keyframes custom-pulse {
     50% {
-        opacity: .2;
+        opacity: 0.2;
     }
 }
 

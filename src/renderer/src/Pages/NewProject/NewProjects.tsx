@@ -9,6 +9,8 @@ import Spinner from '../../components/ui/Spinner';
 import Project from '../../../../main/models/Project';
 import Template from '../../../../main/models/Template';
 import { motion } from 'framer-motion';
+import { ApiResponse } from '../../../../main/errors/ApiResponse';
+import { APIErrorCode } from '../../../../main/errors/APIErrorCode';
 
 const NewProject: React.FC = () => {
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -53,8 +55,6 @@ const NewProject: React.FC = () => {
         setError(null);
         setSuccess(false);
 
-        console.log('PUSH ON LOAD: ', formData.pushOnLoad);
-
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
@@ -64,23 +64,36 @@ const NewProject: React.FC = () => {
                 formData.pushOnLoad,
                 selectedTemplate?.dir
             )
-            .then((project: Project) => {
+            .then((response: ApiResponse<Project>) => {
                 setLoading(false);
-                setSuccess(true);
-                setTimeout(
-                    () =>
-                        navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, {
-                            state: { project: project }
-                        }),
-                    1500
-                );
-            })
-            .catch((err: unknown) => {
-                setLoading(false);
-                if (Object.prototype.hasOwnProperty.call(err, 'message')) {
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-expect-error
-                    setError(`Error: ${err.message}`);
+                if (response.result) {
+                    setSuccess(true);
+                    setTimeout(
+                        () =>
+                            navigate(localPaths.HOME + localPaths.PROJECT_DETAIL, {
+                                state: { project: response.result }
+                            }),
+                        1500
+                    );
+                } else {
+                    switch (response.errorCode!) {
+                        case APIErrorCode.EntityAlreadyExists:
+                            setError('A project with this name already exists.');
+                            break;
+                        case APIErrorCode.UnprocessableEntity:
+                        case APIErrorCode.BadRequest:
+                            setError('The chosen name is invalid. Please select a different name.');
+                            break;
+                        case APIErrorCode.LocalError:
+                            setError(
+                                'Failed to create the project. Please verify your TouchDesigner installation and try again.'
+                            );
+                            break;
+                        default:
+                            setError(
+                                'Unable to create the project on Mariana Cloud. Please try again later.'
+                            );
+                    }
                 }
             });
     };

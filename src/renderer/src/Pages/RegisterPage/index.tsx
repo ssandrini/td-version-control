@@ -10,6 +10,8 @@ import { Button } from '@renderer/components/ui/button';
 import Spinner from '@renderer/components/ui/Spinner';
 import { MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
 import { motion } from 'framer-motion';
+import { RegisterUserRequest } from '../../../../main/services/UserService';
+import { APIErrorCode } from '../../../../main/errors/APIErrorCode';
 
 interface RegisterPageProps {
     goToLogin: () => void;
@@ -33,8 +35,31 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
 
     const [isLoadingRegister, setIsLoadingRegister] = useState<boolean>(false);
     const [_, setUserError] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
     const [submitted, setSubmitted] = useState<boolean>(false);
 
+    const buildErrorMessage = (apiErrorCode: APIErrorCode) => {
+        switch (apiErrorCode) {
+            case APIErrorCode.EntityAlreadyExists:
+            case APIErrorCode.UnprocessableEntity:
+                setErrorMessage('An account with this username or email already exists.');
+                break;
+            case APIErrorCode.BadRequest:
+                setErrorMessage(
+                    'The provided information is invalid. Please check your details and try again.'
+                );
+                break;
+            case APIErrorCode.LocalError:
+                setErrorMessage(
+                    'Failed to complete the registration. Please check your internet connection and try again.'
+                );
+                break;
+            default:
+                setErrorMessage(
+                    'Unable to register your account at this time. Please try again later.'
+                );
+        }
+    };
     const validateEmail = (email: string) => {
         const re =
             /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -69,10 +94,13 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
             setPasswordMatch(value === formData.password2);
             setIsPasswordValid(value.length >= 8);
         }
+        setErrorMessage('');
     };
 
     const allowLetters = (value: string) => {
-        return value.replace(/[^a-zA-Záéíóúñ´ ]/g, '');
+        const hasLetter = /[a-zA-Záéíóúñ´]/.test(value);
+        const allowedPattern = hasLetter ? /[^a-zA-Záéíóúñ´0-9 ]/g : /[^a-zA-Záéíóúñ´ ]/g;
+        return value.replace(allowedPattern, '');
     };
 
     const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +110,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
             ...prevState,
             name: newValue
         }));
+        setErrorMessage('');
     };
 
     const handleEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +123,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
             setSubmitted(false);
         }
         setUserError(false);
-
+        setErrorMessage('');
         setIsEmailValid(validateEmail(value));
     };
 
@@ -107,24 +136,31 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
             return;
         }
 
+        const registerUserRequest: RegisterUserRequest = {
+            email: email,
+            username: name,
+            password: password
+        };
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.authenticate(name, password).then((apiResponse: ApiResponse<void>) => {
+        window.api.register(registerUserRequest).then((registerResponse: ApiResponse<User>) => {
             setSubmitted(true);
-            if (apiResponse.errorCode) {
+            if (registerResponse.errorCode) {
                 setUserError(true);
+                buildErrorMessage(registerResponse.errorCode);
                 setIsLoadingRegister(false);
             } else {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error
                 window.api
-                    .getUser()
-                    .then((apiResponse: ApiResponse<User>) => {
-                        if (apiResponse.result) {
-                            setUser(apiResponse.result);
+                    .authenticate(name, password)
+                    .then((apiResponse: ApiResponse) => {
+                        if (!apiResponse.errorCode) {
+                            setUser(registerResponse.result!);
                         } else {
                             setSubmitted(true);
                             setUserError(true);
+                            setErrorMessage('Auto-login failed, please go to login page.');
                         }
                     })
                     .finally(() => {
@@ -181,6 +217,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
                                     className="w-full border-input rounded-md shadow-sm "
                                     value={name}
                                     onChange={handleNameChange}
+                                    maxLength={30}
                                 />
                             </div>
                             <div className="w-full space-y-1 h-20">
@@ -276,6 +313,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
                             )}{' '}
                             {/* Error message */}
                         </div>
+                        {errorMessage && (
+                            <div className="mb-4 text-center text-red-500 text-sm">
+                                {errorMessage}
+                            </div>
+                        )}
                         <div className="flex flex-col justify-center content-center pt-4">
                             {!isLoadingRegister ? (
                                 <>
@@ -296,7 +338,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
                                     </div>
                                 </>
                             ) : (
-                                <div className="flex items-center h-10 w-10">
+                                <div className="flex justify-center items-center w-full h-10">
                                     <Spinner />
                                 </div>
                             )}

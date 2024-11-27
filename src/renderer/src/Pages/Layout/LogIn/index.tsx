@@ -160,7 +160,7 @@ const LogIn: React.FC<LogInProps> = ({ goToRegister }) => {
                                     className="text-gray-500 underline cursor-pointer text-p1_regular"
                                     onClick={() => goToRegister()}
                                 >
-                                    Create a new account!
+                                    Create a new account
                                 </a>
                             </div>
                         </div>

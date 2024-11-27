@@ -389,7 +389,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                     <div className="flex flex-col items-center justify-center">
                                         <FaFolderOpen className="text-6xl text-gray-300 mb-4" />
                                         <h1 className="text-2xl text-gray-200 mb-2">
-                                            No remote projects, yet...
+                                            No remote projects yet
                                         </h1>
                                     </div>
                                 )}

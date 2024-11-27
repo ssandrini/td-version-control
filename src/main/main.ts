@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, screen, session } from 'electron';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import userDataMgr from './managers/UserDataManager';
@@ -11,7 +11,7 @@ import { TDProjectManager } from './managers/TDProjectManager';
 import { SimpleGitTracker } from './trackers/SimpleGitTracker';
 import { TDProcessor } from './processors/TDProcessor';
 import { API_METHODS } from './apiMethods';
-import { filePicker, openToeFile, getTemplates, openDirectory, findFileByExt } from './utils/utils';
+import { filePicker, findFileByExt, getTemplates, openDirectory, openToeFile } from './utils/utils';
 import { TDState } from './models/TDState';
 import { TDMergeResult } from './models/TDMergeResult';
 import authService from './services/AuthService';
@@ -20,6 +20,8 @@ import { Version } from './models/Version';
 import userService, { RegisterUserRequest } from './services/UserService';
 // @ts-ignore
 import appIcon from '../../resources/icon.ico?asset';
+import { APIErrorCode } from './errors/APIErrorCode';
+import { ApiResponse } from './errors/ApiResponse';
 
 createRequire(import.meta.url);
 
@@ -215,18 +217,26 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
         async (_, dir: string, name: string, remote: boolean, src?: string) => {
             let initialVersion: Version;
             let remoteUrl: string = '';
-            log.debug('params: ', dir, name, remote, src);
             if (remote) {
                 const response = await remoteRepoService.createRepository(name);
                 if (response.result) {
                     remoteUrl = response.result;
-                    initialVersion = await projectManager.init(dir, remoteUrl, src);
+                    try {
+                        initialVersion = await projectManager.init(dir, remoteUrl, src);
+                    } catch (err) {
+                        log.error('Failed to initialize project locally:', err);
+                        return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
+                    }
                 } else {
-                    // TO DO: fixme
-                    return Promise.reject(new Error('Unexpected error'));
+                    return Promise.resolve(ApiResponse.fromErrorCode(response.errorCode!));
                 }
             } else {
-                initialVersion = await projectManager.init(dir, undefined, src);
+                try {
+                    initialVersion = await projectManager.init(dir, undefined, src);
+                } catch (err) {
+                    log.error('Failed to initialize project locally:', err);
+                    return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
+                }
             }
 
             const newProject: Project = {
@@ -236,7 +246,7 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
                 remote: remote ? remoteUrl : ''
             };
             userDataMgr.addRecentProject(newProject);
-            return Promise.resolve(newProject);
+            return Promise.resolve(ApiResponse.fromResult(newProject));
         }
     );
 

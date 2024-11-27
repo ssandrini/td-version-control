@@ -201,7 +201,10 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
         userDataMgr.removeRecentProject(path)
     );
 
-    ipcMain.handle(API_METHODS.CHECK_DEPENDENCIES, (_) => projectManager.checkDependencies());
+    ipcMain.handle(API_METHODS.CHECK_DEPENDENCIES, (_) => {
+        if (process.platform != 'win32' && process.platform != 'darwin') return Promise.resolve([]);
+        return projectManager.checkDependencies();
+    });
 
     ipcMain.handle(API_METHODS.OPEN_TD, (_, path: string) => openToeFile(path));
 

@@ -70,7 +70,7 @@ const Layout: React.FC = () => {
     };
 
     return (
-        <div className="h-screen bg-[#1b1d23]">
+        <div className="h-screen bg-[#1b1d23] relative">
             {showAnimation && (
                 <div className="no-scrollbar overflow-hidden">
                     <div className="animate-grow-shrink no-scrollbar overflow-hidden absolute inset-0 flex items-center justify-center z-50">
@@ -82,7 +82,7 @@ const Layout: React.FC = () => {
                     </div>
                 </div>
             )}
-            <div className="topBar w-full justify-between items-center flex flex-row">
+            <div className="topBar w-full justify-between items-center flex flex-row z-20">
                 {user != undefined ? (
                     <HiMenuAlt1
                         id="showHideMenu"
@@ -137,10 +137,12 @@ const Layout: React.FC = () => {
             </div>
 
             {hasMissingDependencies() && user != undefined && (
-                <MissingDependenciesDialog
-                    missingDependencies={missingDependencies}
-                    onRecheck={recheckDependencies}
-                />
+                <div className="fixed inset-0 z-10 bg-[#1b1d23] bg-opacity-10 backdrop-blur-sm flex items-center justify-center">
+                    <MissingDependenciesDialog
+                        missingDependencies={missingDependencies}
+                        onRecheck={recheckDependencies}
+                    />
+                </div>
             )}
             <div id="mySideBar" className="leftMenu"></div>
             {!userStateReady ? (

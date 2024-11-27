@@ -14,7 +14,6 @@ resource "google_compute_instance" "gitea_instance" {
     access_config {}
   }
 
-  // TODO: Move script to docker compose to better align with: https://docs.gitea.com/installation/install-with-docker
   metadata_startup_script = <<-EOT
     #!/bin/bash
     sudo apt-get update
@@ -36,7 +35,6 @@ resource "google_compute_instance" "gitea_instance" {
     sleep 20
 
     # Start Gitea container and link it to the PostgreSQL database
-    # TODO: Configure the email send (Cloud NAT will be needed): https://docs.gitea.com/installation/install-with-docker#managing-deployments-with-environment-variables
     sudo docker run -d --name gitea \
       -p 80:${var.gitea_port} \
       -v /mnt/disks/gitea-data:/data \

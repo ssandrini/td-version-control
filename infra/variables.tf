@@ -38,3 +38,7 @@ variable "description" {
 variable "format" {
   default = "DOCKER"
 }
+
+variable "artifact_registry_name" {
+    default = "masabra-ar-repository"
+}

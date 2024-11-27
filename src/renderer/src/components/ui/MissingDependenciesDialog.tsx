@@ -45,7 +45,7 @@ const MissingDependenciesDialog: React.FC<MissingDependenciesDialogProps> = ({
                             rel="noopener noreferrer"
                             className="text-blue-500 underline mt-2 block"
                         >
-                            Download Git
+                            Click here to download Git.
                         </a>
                     </li>
                 );

@@ -134,7 +134,7 @@ app.whenReady().then(() => {
     electronApp.setAppUserModelId('com.electron');
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
         const responseHeaders = details.responseHeaders || {};
-        responseHeaders['Content-Security-Policy'] = ["img-src 'self' http://34.44.41.60 data:"];
+        responseHeaders['Content-Security-Policy'] = ["img-src 'self' http://35.206.108.190 data:"];
         callback({ responseHeaders });
     });
 

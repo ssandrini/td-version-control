@@ -5,12 +5,12 @@ import ProjectDetailsForm from '../../components/ui/ProjectDetailsForm';
 import { localPaths } from '../../const';
 import { useNavigate } from 'react-router-dom';
 import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'react-icons/ai';
-import Spinner from '../../components/ui/Spinner';
 import Project from '../../../../main/models/Project';
 import Template from '../../../../main/models/Template';
 import { motion } from 'framer-motion';
 import { ApiResponse } from '../../../../main/errors/ApiResponse';
 import { APIErrorCode } from '../../../../main/errors/APIErrorCode';
+import DerivativeSpinner from '@renderer/components/ui/DerivativeSpinner';
 
 const NewProject: React.FC = () => {
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -105,7 +105,7 @@ const NewProject: React.FC = () => {
         pushOnLoad: boolean;
     }) => {
         setFormData(data);
-        setIsFormValid(data.title.trim() !== '' && data.location.trim() !== '');
+        setIsFormValid(data.title?.trim() !== '' && data.location?.trim() !== '');
     };
 
     return (
@@ -115,46 +115,71 @@ const NewProject: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="h-full text-white p-8 flex flex-col"
         >
-            <h1 className="text-2xl font-semibold mb-6">
-                {step === 'select' ? 'Select a template' : 'Project Details'}
-            </h1>
-            <div className="flex-1 overflow-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-500 scrollbar-track-gray-700">
+            {/* Top-level container to keep Sidebar and Topbar visible */}
+            <div className="flex justify-center items-center h-full relative">
+                {/* Show loading spinner if loading */}
                 {loading ? (
-                    <div className="flex items-center justify-center h-full">
-                        <Spinner />
+                    <div className="absolute inset-0 bg-gray-800 opacity-80 flex justify-center items-center z-20">
+                        <DerivativeSpinner />
                     </div>
-                ) : success ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                        <AiOutlineCheckCircle className="text-green-500 text-4xl" />
-                        <p className="mt-4 text-xl">Project created successfully!</p>
-                    </div>
-                ) : error ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                        <AiOutlineCloseCircle className="text-red-500 text-4xl" />
-                        <p className="mt-4 text-xl">{error}</p>
-                    </div>
-                ) : step === 'select' ? (
-                    <TemplateSelector onTemplateSelect={handleTemplateSelect} />
                 ) : (
-                    <ProjectDetailsForm onFormChange={handleFormUpdate} />
+                    <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-6xl relative">
+                        <div className="sticky top-0 bg-gray-800 z-10 pb-4">
+                            <h1 className="text-2xl font-semibold">
+                                {step === 'select' ? 'Select a template' : 'Project Details'}
+                            </h1>
+                        </div>
+
+                        <div className="relative h-[calc(100%-150px)]">
+                            {success ? (
+                                <div className="flex flex-col items-center justify-center h-full">
+                                    <AiOutlineCheckCircle className="text-green-500 text-4xl" />
+                                    <p className="mt-4 text-xl">Project created successfully!</p>
+                                </div>
+                            ) : error ? (
+                                <div className="flex flex-col items-center justify-center h-full">
+                                    <AiOutlineCloseCircle className="text-red-500 text-4xl" />
+                                    <p className="mt-4 text-xl">{error}</p>
+                                </div>
+                            ) : step === 'select' ? (
+                                <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-500 scrollbar-track-gray-700 max-h-[60vh]">
+                                    <TemplateSelector onTemplateSelect={handleTemplateSelect} />
+                                </div>
+                            ) : (
+                                <ProjectDetailsForm onFormChange={handleFormUpdate} />
+                            )}
+                        </div>
+
+                        {!loading && !success && (
+                            <div className="flex justify-end items-center gap-4 sticky bottom-0 bg-gray-800 pt-4 mr-8">
+                                {step === 'form' && (
+                                    <Button
+                                        onClick={handleBack}
+                                        className="bg-gray-600 hover:bg-gray-500"
+                                    >
+                                        Back
+                                    </Button>
+                                )}
+                                {step === 'select' && (
+                                    <Button
+                                        onClick={() => navigate(-1)}
+                                        className="bg-gray-600 hover:bg-gray-500"
+                                    >
+                                        Cancel
+                                    </Button>
+                                )}
+                                <Button
+                                    disabled={step === 'select' ? !selectedTemplate : !isFormValid}
+                                    onClick={handleNext}
+                                    className="bg-blue-700 hover:bg-blue-600"
+                                >
+                                    {step === 'form' ? 'Finish' : 'Next'}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
-            {!loading && !success && (
-                <div className="mt-6 flex justify-between">
-                    {step === 'form' && (
-                        <Button onClick={handleBack} className="bg-gray-600 hover:bg-gray-500">
-                            Back
-                        </Button>
-                    )}
-                    <Button
-                        disabled={step === 'select' ? !selectedTemplate : !isFormValid}
-                        onClick={handleNext}
-                        className="bg-blue-600 hover:bg-blue-500"
-                    >
-                        {step === 'form' ? 'Finish' : 'Next'}
-                    </Button>
-                </div>
-            )}
         </motion.div>
     );
 };

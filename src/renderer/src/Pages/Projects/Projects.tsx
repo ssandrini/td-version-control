@@ -268,7 +268,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                     </div>
                 )}
 
-                <div className="flex flex-row items-center justify-center w-full gap-3 flex-wrap overflow-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-6xl mx-auto">
                     {projects.length > 0 ? (
                         <>
                             {projects.map((project, index) => (
@@ -277,7 +277,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                     key={index}
                                     onClick={(event) => handleCellClick(event, project)}
                                 >
-                                    <div className="flex bg-white rounded-lg flex-col px-8 pb-4">
+                                    <div className="flex bg-gray-200 rounded-lg flex-col px-8 pb-4 h-full">
                                         <div className="whitespace-nowrap flex flex-row items-center justify-between gap-2 text-ellipsis font-bold text-md">
                                             <div>{project.name.split('/').pop()}</div>
                                             <div className="flex flex-row items-center pt-1">

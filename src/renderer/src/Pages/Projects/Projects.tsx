@@ -243,7 +243,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
             exit={{ opacity: 0 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col w-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 h-full"
+            className="flex flex-col w-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700"
         >
             {/* Main Content */}
             <div className="flex-1 p-8 text-white">
@@ -287,6 +287,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                                         e.stopPropagation();
                                                         handlePlayProject(project);
                                                     }}
+                                                    title={'Run Project'}
                                                 >
                                                     <FaPlay />
                                                 </Button>
@@ -296,6 +297,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                                         e.stopPropagation();
                                                         confirmDeleteProject(project);
                                                     }}
+                                                    title={'Remove Project'}
                                                 >
                                                     <FaTrashAlt />
                                                 </Button>
@@ -387,7 +389,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                     <div className="flex flex-col items-center justify-center">
                                         <FaFolderOpen className="text-6xl text-gray-300 mb-4" />
                                         <h1 className="text-2xl text-gray-200 mb-2">
-                                            No remote projects, yet
+                                            No remote projects, yet...
                                         </h1>
                                     </div>
                                 )}

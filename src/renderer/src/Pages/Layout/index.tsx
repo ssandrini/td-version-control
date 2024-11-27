@@ -80,7 +80,7 @@ const Layout: React.FC = () => {
         <div className="h-screen bg-[#1b1d23]">
             <div className="topBar w-full justify-between items-center flex flex-row">
                 {user != undefined ? (
-                    <div className="toggleButton flex flex-col justify-start text-white h-10 w-[5.7rem]">
+                    <div className="toggleButton flex flex-col justify-start text-white h-10 w-[6rem]">
                         <HiMenuAlt1
                             id="showHideMenu"
                             className="cursor-pointer h-10 w-fit"
@@ -88,13 +88,13 @@ const Layout: React.FC = () => {
                         />
                     </div>
                 ) : (
-                    <div className="w-[5.7rem]" />
+                    <div className="w-[6rem]" />
                 )}
                 <div className="flex flex-row titleBar items-center w-full justify-center">
-                    <img className="topBarMainImg rounded-full" src="icon.png" alt="" />
+                    <img className="topBarMainImg rounded-full mt-1" src="icon.png" alt="" />
                     <div className="title font-bold">Mariana</div>
                 </div>
-                <div className="titleBarButtons w-[5.7rem]">
+                <div className="titleBarButtons w-[6rem]">
                     <button
                         id="minimizeBtn"
                         className="topBtn minimizeBtn text-white"
@@ -127,7 +127,7 @@ const Layout: React.FC = () => {
                             // @ts-expect-error
                             window.api.closeApp();
                         }}
-                        title="Restore"
+                        title="Close"
                     >
                         <FaWindowClose />
                     </button>

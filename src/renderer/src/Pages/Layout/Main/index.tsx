@@ -26,10 +26,10 @@ const Main: React.FC = () => {
             exit={{ opacity: 0 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center w-full h-full pt-10 text-white overflow-y-auto no-scrollbar"
+            className="flex flex-col  w-full h-full pt-10 text-white overflow-y-auto no-scrollbar"
         >
             <motion.div
-                className="w-full px-10 mb-10"
+                className="w-full pt-10 pb-20 my-auto"
                 variants={topDivVariants}
                 initial="initial"
                 animate="animate"

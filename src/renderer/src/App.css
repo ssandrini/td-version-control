@@ -5,6 +5,10 @@
     overflow: hidden;
 }
 
+html {
+    font-size: 80%; /* Reduces sizes by 20% */
+}
+
 body {
     width: 100%;
     height: 100%;

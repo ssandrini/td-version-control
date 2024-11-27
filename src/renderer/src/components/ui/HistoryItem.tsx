@@ -12,14 +12,10 @@ interface HistoryItemProps {
 }
 
 const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, isSelected }) => {
-    const [showDescription, setShowDescription] = useState<boolean>(false);
-
     return (
         <div
             className="flex flex-col h-fit items-center text-nowrap text-ellipsis overflow-hidden w-[20rem]"
             onClick={onClick}
-            onMouseEnter={() => setShowDescription(true)}
-            onMouseLeave={() => setShowDescription(false)}
         >
             <div
                 className={cn(
@@ -37,10 +33,6 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, 
                     <div>{version?.author.name ?? '------'}</div>
                 </div>
                 <div className="w-full text-left flex flex-row gap-0.5 items-center">
-                    <FaMailBulk className="text-sm text-gray-300 mr-2" />
-                    <div className="italic underline">{version?.author.email ?? '----------'}</div>
-                </div>
-                <div className="w-full text-left flex flex-row gap-0.5 items-center">
                     <FaCalendar className="text-sm text-gray-300 mr-2" />
                     <div>
                         {version?.date.toLocaleString('en-US', {
@@ -52,15 +44,6 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, 
                             hour12: false
                         }) ?? '-------'}
                     </div>
-                </div>
-                <div
-                    className={cn(
-                        'w-full text-left flex flex-row gap-0.5 items-center overflow-hidden transition-all duration-500 ease-in-out',
-                        'max-h-16 opacity-100 text-ellipsis w-[20rem]'
-                    )}
-                >
-                    <FaInfo className="text-sm text-gray-300 mr-2" />
-                    <div>{version?.description ?? '------'}</div>
                 </div>
             </div>
         </div>

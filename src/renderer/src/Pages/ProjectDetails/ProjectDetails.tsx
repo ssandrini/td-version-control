@@ -434,8 +434,8 @@ const ProjectDetail: React.FC = () => {
             className="bg-[#1b1d23] p-2 flex-col justify-between w-full h-full overflow-auto no-scrollbar"
         >
             {selectedVersion && project ? (
-                <div className="w-full h-[9rem] rounded-lg bg-gray-700 text-white p-4 flex flex-col transition-all duration-600 ease-in-out">
-                    <div className="flex flex-row w-full justify-between items-center">
+                <div className="w-full h-[12rem] shadow-lg rounded-lg bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] p-2 text-white flex flex-col transition-all duration-600 ease-in-out">
+                    <div className="flex flex-row h-full rounded-lg w-full bg-white justify-between items-center p-3 text-gray-800">
                         <div className="flex flex-col w-full mr-10">
                             <div className="flex flex-row justify-between w-full">
                                 <h2 className="text-2xl flex flex-row gap-2">
@@ -444,23 +444,26 @@ const ProjectDetail: React.FC = () => {
                                 </h2>
                                 <div className="flex flex-row gap-4">
                                     <Button
-                                        className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
+                                        className="mr-2 p-2 bg-transparent text-green-500 hover:bg-green-200"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handlePlayProject(project);
                                         }}
+                                        title={'Run Project'}
                                     >
                                         <FaPlay />
                                     </Button>
                                     <Button
                                         onClick={() => handleDiscardChanges()}
-                                        className="mr-2 p-2 bg-transparent"
+                                        className="mr-2 p-2 bg-transparent text-red-500 hover:bg-red-200"
+                                        title={'Remove Project'}
                                     >
-                                        <FaTrash />
+                                        <FaTrash className="text-red-500" />
                                     </Button>
                                     <Button
                                         onClick={() => handleOpenDirectory(project)}
-                                        className="mr-2 p-2 bg-transparent"
+                                        className="mr-2 p-2 bg-transparent text-gray-800 hover:bg-gray-200"
+                                        title={'Open folder'}
                                     >
                                         <FaFolderOpen />
                                     </Button>
@@ -523,8 +526,8 @@ const ProjectDetail: React.FC = () => {
                                 {selectedVersion?.name}
                             </h2>
                             <hr className="border-gray-500 opacity-50 w-full my-1" />
-                            <div className="text-xs text-gray-400">{project?.path}</div>
-                            <p className="text-gray-400 text-sm mt-1">
+                            <div className="text-xs">{project?.path}</div>
+                            <p className="text-sm mt-1">
                                 {selectedVersion?.date.toLocaleString('en-US', {
                                     year: 'numeric',
                                     month: 'long',
@@ -538,7 +541,7 @@ const ProjectDetail: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <Skeleton className="w-full h-[9rem] rounded-lg p-4 flex flex-col" />
+                <Skeleton className="w-full h-[12rem] rounded-lg p-4 flex flex-col" />
             )}
             {mergeConflicts && (
                 <Dialog open>

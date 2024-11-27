@@ -1,6 +1,7 @@
 import React, { createContext, type ReactNode, useContext, useState } from 'react';
 import VariableContextType from '../../models/VariableContextType';
 import { User } from '../../../../main/models/api/User';
+import { ProjectDependencies } from '@renderer/models/ProjectDependencies';
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 export const VariableContext: React.Context<VariableContextType> =
@@ -8,23 +9,23 @@ export const VariableContext: React.Context<VariableContextType> =
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function VariableProvider({ children }: { children: ReactNode }): JSX.Element {
-    const [touchDesignerLocation, setTouchDesignerLocation] = useState<string>('');
+    const [missingDependencies, setMissingDependencies] = useState<ProjectDependencies[]>([]);
     const [user, setUser] = useState<User | undefined>(undefined);
 
     const isLoggedIn = (): boolean => {
         return user != undefined;
     };
 
-    const hasTDL = (): boolean => {
-        return touchDesignerLocation.length != 0;
+    const hasMissingDependencies = (): boolean => {
+        return missingDependencies.length !== 0;
     };
 
     return (
         <VariableContext.Provider
             value={{
-                touchDesignerLocation,
-                setTouchDesignerLocation,
-                hasTDL,
+                missingDependencies,
+                setMissingDependencies,
+                hasMissingDependencies,
                 isLoggedIn,
                 user,
                 setUser

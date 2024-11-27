@@ -1,4 +1,5 @@
 import { Version } from '../../models/Version';
+import { ProjectDependencies } from '../../../renderer/src/models/ProjectDependencies';
 
 // TODO: S type musy be serializable
 // S: state
@@ -15,6 +16,7 @@ export interface ProjectManager<S, R> {
     discardChanges(dir: string): Promise<void>;
     getVersionState(dir: string, versionId?: string): Promise<S>;
     lastVersion(dir: string): Promise<Version>;
+    checkDependencies(): Promise<ProjectDependencies[]>;
 
     // Remote handling
     pull(dir: string): Promise<R>;

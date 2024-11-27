@@ -12,7 +12,7 @@ import { APIErrorCode } from '../errors/APIErrorCode';
 
 export class GiteaAPIConnector {
     private readonly apiClient: AxiosInstance;
-    private readonly baseURL: string = 'http://34.44.41.60/api/v1/';
+    private readonly baseURL: string = 'http://35.206.108.190/api/v1/';
 
     constructor() {
         this.apiClient = axios.create({

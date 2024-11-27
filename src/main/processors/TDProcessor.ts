@@ -24,7 +24,10 @@ export class TDProcessor implements Processor {
         }
 
         try {
-            execSync(`toeexpand.exe ${toePath}`, { stdio: ['ignore', 'ignore', 'inherit'] });
+            execSync(`toeexpand.exe ${toePath}`, {
+                stdio: ['ignore', 'ignore', 'inherit'],
+                windowsHide: true
+            });
             process.chdir(originalDir);
             return Promise.reject();
         } catch (error) {
@@ -78,7 +81,10 @@ export class TDProcessor implements Processor {
         const toePath = tocPath.replace(/\.toc$/, '');
 
         try {
-            execSync(`toecollapse.exe ${toePath}`, { stdio: ['ignore', 'ignore', 'inherit'] });
+            execSync(`toecollapse.exe ${toePath}`, {
+                stdio: ['ignore', 'ignore', 'inherit'],
+                windowsHide: true
+            });
         } catch (error) {
             log.error(`Error collapsing ${tocPath}.`);
             process.chdir(originalDir);

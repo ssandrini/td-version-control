@@ -264,7 +264,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
             {selectedVersion && project ? (
                 <div className="w-full h-fit shadow-lg rounded-lg bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] p-2 text-white flex flex-col transition-all duration-600 ease-in-out">
                     <div className="flex flex-row h-full rounded-lg w-full bg-white justify-between items-center p-3 text-gray-800">
-                        <div className="flex flex-col w-full mr-10">
+                        <div className="flex flex-col w-full">
                             <div className="flex flex-col-reverse justify-between w-full">
                                 <h2 className="w-full text-2xl whitespace-pre-wrap break-words overflow-wrap break-word gap-2">
                                     {project?.name}

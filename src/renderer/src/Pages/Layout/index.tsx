@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { Outlet } from 'react-router-dom';
 import LogIn from './LogIn';
-import MarianaHelper from '../../components/ui/MarianaHelper';
 import Spinner from '../../components/ui/Spinner';
 import { ApiResponse } from '../../../../main/errors/ApiResponse';
 import { User } from '../../../../main/models/api/User';

@@ -32,7 +32,7 @@ const Nodes: React.FC<NodesProps> = ({ current, compare, project }) => {
 
     return (
         <div className="flex flex-col py-4 rounded-lg h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 mx-2">
-            <div className="ml-auto flex flex-row p-2 bg-gray-600 w-fit rounded-lg gap-2 transition-all duration-600 ease-in-out">
+            <div className="mr-auto flex flex-row p-2 bg-gray-600 w-fit rounded-lg gap-2 transition-all duration-600 ease-in-out">
                 <div
                     className={cn(
                         graphViz == Viz.GRAPH ? 'bg-blue-800 text-white' : 'text-gray-500',

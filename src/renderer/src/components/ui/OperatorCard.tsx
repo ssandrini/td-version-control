@@ -32,7 +32,7 @@ const OperatorCard: React.FC<OperatorCardProps> = ({ node, Icon, iconColor, comp
     };
 
     return (
-        <Popover>
+        <Popover modal>
             <PopoverTrigger className="flex bg-gray-700 rounded-md w-full h-full flex-col items-center">
                 <div className="w-full h-full text-white rounded-md p-2 relative flex justify-center items-center">
                     <img

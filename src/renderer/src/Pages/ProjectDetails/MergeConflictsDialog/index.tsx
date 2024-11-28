@@ -93,7 +93,7 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                                 compare={mergeConflicts?.incomingState ?? undefined}
                             />
                             <Button
-                                className="w-1/2"
+                                className="w-1/2 mt-2"
                                 disabled={name.length == 0 || description.length == 0}
                                 onClick={() => {
                                     handleResolveConflict(
@@ -112,7 +112,7 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                                 compare={mergeConflicts?.currentState ?? undefined}
                             />
                             <Button
-                                className="w-1/2"
+                                className="w-1/2 mt-2"
                                 disabled={name.length == 0 || description.length == 0}
                                 onClick={() => {
                                     handleResolveConflict(

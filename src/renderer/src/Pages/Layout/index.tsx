@@ -136,7 +136,7 @@ const Layout: React.FC = () => {
                                 )}
                             </>
                         ) : (
-                            <div className="h-full pb-[50px] flex flex-row flex-1 overflow-auto">
+                            <div className="h-full pb-[35px] flex flex-row flex-1 overflow-auto">
                                 <Sidebar expanded={expanded} />
                                 <motion.div
                                     exit={{ opacity: 0, scale: 1.1 }}

@@ -285,7 +285,7 @@ const NodeGraph: React.FC<NodeGraphProps> = ({ current, hidden, compare }) => {
     );
 
     return (
-        <div className={cn(hidden ? 'hidden' : '', 'border-2 w-full h-full rounded-lg my-5')}>
+        <div className={cn(hidden ? 'hidden' : '', 'border-2 w-full h-full rounded-lg mt-5')}>
             {current == undefined ? (
                 <Skeleton className="h-full w-full" />
             ) : (

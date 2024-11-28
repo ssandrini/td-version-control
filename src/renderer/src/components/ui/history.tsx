@@ -41,7 +41,13 @@ const History: React.FC<HistoryProps> = ({
                 />
             )}
             {versions.length === 0 ? (
-                <Skeleton />
+                <div className="flex w-full flex-col items-center justify-center gap-4">
+                    <Skeleton className="w-full h-14 py-4" />
+                    <Skeleton className="w-full h-14 py-4" />
+                    <Skeleton className="w-full h-14 py-4" />
+                    <Skeleton className="w-full h-14 py-4" />
+                    <Skeleton className="w-full h-14 py-4" />
+                </div>
             ) : (
                 versions.map((version) => (
                     <div

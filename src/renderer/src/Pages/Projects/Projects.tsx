@@ -27,6 +27,7 @@ import { CiWarning } from 'react-icons/ci';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { MdOutlineCloud, MdOutlineCloudOff } from 'react-icons/md';
 import { motion } from 'framer-motion';
+import { cn } from '@renderer/lib/utils';
 
 interface ProjectsProps {
     hideHeader?: boolean;
@@ -268,7 +269,14 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-6xl mx-auto">
+                <div
+                    className={cn(
+                        projects.length != 0
+                            ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+                            : 'flex flex-row flex-wrap items-center justify-center',
+                        'gap-4 w-full max-w-6xl mx-auto'
+                    )}
+                >
                     {projects.length > 0 ? (
                         <>
                             {projects.map((project, index) => (

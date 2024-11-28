@@ -89,6 +89,9 @@ const NewProject: React.FC = () => {
                                 'Failed to create the project. Please verify your TouchDesigner installation and try again.'
                             );
                             break;
+                        case APIErrorCode.UnknownError:
+                            setError('No internet connection detected for push.');
+                            break;
                         default:
                             setError(
                                 'Unable to create the project on Mariana Cloud. Please try again later.'
@@ -113,24 +116,25 @@ const NewProject: React.FC = () => {
             exit={{ opacity: 0, scale: 1.1 }}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="h-full text-white p-8 flex flex-col"
+            className="h-full text-white p-8 pt-0 flex flex-col"
         >
             {/* Top-level container to keep Sidebar and Topbar visible */}
-            <div className="flex justify-center items-center h-full relative">
+            <div className="flex justify-center items-center h-full p-8">
                 {/* Show loading spinner if loading */}
                 {loading ? (
-                    <div className="absolute inset-0 bg-gray-800 opacity-80 flex justify-center items-center z-20">
+                    <div className="absolute inset-0 opacity-80 flex justify-center items-center z-20">
                         <DerivativeSpinner />
                     </div>
                 ) : (
-                    <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-6xl relative">
+                    <div className="flex flex-col justify-start bg-gray-800 p-8 rounded-lg shadow-lg overflow-auto no-scrollbar w-full max-w-[1000px] h-fit">
                         <div className="sticky top-0 bg-gray-800 z-10 pb-4">
                             <h1 className="text-2xl font-semibold">
-                                {step === 'select' ? 'Select a template' : 'Project Details'}
+                                {!error &&
+                                    (step === 'select' ? 'Select a template' : 'Project Details')}
                             </h1>
                         </div>
 
-                        <div className="relative h-[calc(100%-150px)]">
+                        <div className="flex flex-col items-center justify-center max-h-[90%] w-full">
                             {success ? (
                                 <div className="flex flex-col items-center justify-center h-full">
                                     <AiOutlineCheckCircle className="text-green-500 text-4xl" />
@@ -151,7 +155,7 @@ const NewProject: React.FC = () => {
                         </div>
 
                         {!loading && !success && (
-                            <div className="flex justify-end items-center gap-4 sticky bottom-0 bg-gray-800 pt-4 mr-8">
+                            <div className="flex justify-end items-center gap-4 sticky bottom-0 pt-4 mr-8">
                                 {step === 'form' && (
                                     <Button
                                         onClick={handleBack}
@@ -160,7 +164,7 @@ const NewProject: React.FC = () => {
                                         Back
                                     </Button>
                                 )}
-                                {step === 'select' && (
+                                {step === 'select' && !error && (
                                     <Button
                                         onClick={() => navigate(-1)}
                                         className="bg-gray-600 hover:bg-gray-500"

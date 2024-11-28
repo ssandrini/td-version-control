@@ -76,6 +76,9 @@ const LogIn: React.FC<LogInProps> = ({ goToRegister }) => {
 
     const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
+        if (value.includes(' ') || value.includes('\n') || value.includes('\t')) {
+            return;
+        }
         setUsername(value);
         if (submitted) {
             setSubmitted(false);

@@ -123,7 +123,6 @@ const Layout: React.FC = () => {
             <div id="mySideBar" className="leftMenu"></div>
             {!userStateReady ? (
                 <div className="flex flex-col pb-[50px] h-full items-center justify-evenly pt-10 bg-[#1b1d23] text-white overflow-y-auto">
-                    <MarianaHelper />
                     <Spinner white />
                 </div>
             ) : (

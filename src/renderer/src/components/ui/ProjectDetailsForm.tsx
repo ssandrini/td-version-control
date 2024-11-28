@@ -39,13 +39,22 @@ const ProjectDetailsForm: React.FC<ProjectDetailsFormProps> = ({ onFormChange })
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
             <div>
                 <label className="block text-gray-300 mb-2 text-lg">Project Title</label>
                 <input
                     type="text"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => {
+                        if (
+                            e.target.value.includes(' ') ||
+                            e.target.value.includes('\t') ||
+                            e.target.value.includes('\n')
+                        ) {
+                            return;
+                        }
+                        setTitle(e.target.value);
+                    }}
                     className="w-full p-4 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-lg"
                 />
             </div>

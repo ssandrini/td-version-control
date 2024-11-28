@@ -97,18 +97,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
         setErrorMessage('');
     };
 
-    const allowLetters = (value: string) => {
-        const hasLetter = /[a-zA-Záéíóúñ´]/.test(value);
-        const allowedPattern = hasLetter ? /[^a-zA-Záéíóúñ´0-9 ]/g : /[^a-zA-Záéíóúñ´ ]/g;
-        return value.replace(allowedPattern, '');
-    };
-
     const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
-        const newValue = allowLetters(value);
+        if (value.includes(' ') || value.includes('\n') || value.includes('\t')) {
+            return;
+        }
         setFormData((prevState) => ({
             ...prevState,
-            name: newValue
+            name: value
         }));
         setErrorMessage('');
     };

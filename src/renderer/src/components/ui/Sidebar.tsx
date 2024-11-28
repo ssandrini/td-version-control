@@ -25,8 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ expanded }) => {
         <div
             className={cn(
                 expanded ? 'w-60' : 'w-16',
-                'transition-all overflow-hidden duration-600 ease-in-out h-full bg-[#1b1d23] text-white flex flex-col overflow-y-auto sticky items-top',
-                'shadow-lg' // Agregar sombra
+                'transition-all overflow-hidden duration-600 ease-in-out h-full bg-[#2b2d30] text-white flex flex-col overflow-y-auto sticky items-top'
             )}
         >
             <div

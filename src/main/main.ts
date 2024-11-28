@@ -40,8 +40,8 @@ function createWindow() {
 
     const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
 
-    const minWidth = 1400;
-    const minHeight = 850;
+    const minWidth = 1000;
+    const minHeight = 550;
 
     const finalWidth = Math.min(screenWidth, minWidth);
     const finalHeight = Math.min(screenHeight, minHeight);

@@ -44,3 +44,6 @@ resource "google_compute_instance" "gitea_instance" {
       ${var.region}-docker.pkg.dev/${var.project_id}/${var.ar_repository_name}/mariana-gitea:latest
   EOT
 }
+
+
+    gcloud auth print-access-token | sudo docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev

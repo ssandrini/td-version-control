@@ -12,8 +12,10 @@ import { Label } from '../../../components/ui/label';
 import { Input } from '../../../components/ui/input';
 import { Version } from '../../../../../main/models/Version';
 import History from '../../../components/ui/history';
+import Project from '../../../../../main/models/Project';
 
 interface HistoryContainerProps {
+    project: Project | undefined;
     versions: Version[];
     setVersions: React.Dispatch<React.SetStateAction<Version[]>>;
     currentVersion: Version | null;
@@ -28,6 +30,7 @@ interface HistoryContainerProps {
 }
 
 const HistoryContainer: React.FC<HistoryContainerProps> = ({
+    project,
     versions,
     currentVersion,
     selectedVersion,
@@ -203,8 +206,10 @@ const HistoryContainer: React.FC<HistoryContainerProps> = ({
                     )}
                 </div>
             )}
-            <h2 className="text-white font-semibold my-2">Version History</h2>
             <History
+                project={project}
+                setSelectedVersion={setSelectedVersion}
+                setWipVersion={setWipVersion}
                 wipVersion={wipVersion}
                 versions={versions}
                 path={dir}

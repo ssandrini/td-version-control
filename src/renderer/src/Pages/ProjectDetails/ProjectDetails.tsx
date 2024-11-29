@@ -170,23 +170,6 @@ const ProjectDetail: React.FC = () => {
             });
     }, [compareVersion]);
 
-    /*
-    const handleDiscardChanges = () => {
-        if (!wipVersion) return;
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api
-            .discardChanges(project?.path)
-            .then(() => {
-                setWipVersion(null);
-                setSelectedVersion(versions[0]);
-            })
-            .catch(() => {
-            })
-            .finally(() => {
-            });
-    };*/
-
     return (
         <motion.div
             exit={{ opacity: 0, scale: 1.1 }}
@@ -204,14 +187,6 @@ const ProjectDetail: React.FC = () => {
                     setMergeConflicts={setMergeConflicts}
                 />
 
-                {/*<Button
-            onClick={() => handleDiscardChanges()}
-            className="mr-2 p-2 bg-transparent text-red-500 hover:bg-red-200"
-            title={'Remove Project'}
-        >
-            <FaTrash className="text-red-500"/>
-        </Button>*/}
-
                 {mergeConflicts && (
                     <MergeConflictsDialog
                         project={project}
@@ -226,6 +201,7 @@ const ProjectDetail: React.FC = () => {
                         )}
                     >
                         <HistoryContainer
+                            project={project}
                             wipVersion={wipVersion}
                             setWipVersion={setWipVersion}
                             selectedVersion={selectedVersion}

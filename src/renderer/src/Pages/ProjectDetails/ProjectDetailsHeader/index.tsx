@@ -280,7 +280,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                             </h2>
                             <hr className="border-gray-500 opacity-50 w-full my-1" />
                             <div className="text-xs">{project?.path}</div>
-                            <p className="text-sm mt-1 mb-2">
+                            <p className="text-sm mt-1 mb-1">
                                 {selectedVersion?.date.toLocaleString('en-US', {
                                     year: 'numeric',
                                     month: 'long',
@@ -290,6 +290,25 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                     hour12: false
                                 })}
                             </p>
+                            <div className="flex mb-1 w-full items-center justify-center p-1 flex-row gap-4">
+                                <Button
+                                    className="mr-2 p-2 bg-transparent text-green-500 hover:bg-green-200"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePlayProject(project);
+                                    }}
+                                    title={'Run Project'}
+                                >
+                                    <FaPlay />
+                                </Button>
+                                <Button
+                                    onClick={() => handleOpenDirectory(project)}
+                                    className="mr-2 p-2 bg-transparent text-gray-800 hover:bg-gray-200"
+                                    title={'Open folder'}
+                                >
+                                    <FaFolderOpen />
+                                </Button>
+                            </div>
                             {project?.remote ? (
                                 <div className="flex flex-row w-full gap-4 items-center justify-center">
                                     <Button
@@ -342,25 +361,6 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                     </Button>
                                 </div>
                             )}
-                            <div className="flex w-full items-center justify-center p-1 flex-row gap-4">
-                                <Button
-                                    className="mr-2 p-2 bg-transparent text-green-500 hover:bg-green-200"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handlePlayProject(project);
-                                    }}
-                                    title={'Run Project'}
-                                >
-                                    <FaPlay />
-                                </Button>
-                                <Button
-                                    onClick={() => handleOpenDirectory(project)}
-                                    className="mr-2 p-2 bg-transparent text-gray-800 hover:bg-gray-200"
-                                    title={'Open folder'}
-                                >
-                                    <FaFolderOpen />
-                                </Button>
-                            </div>
                         </div>
                     </div>
                 </div>

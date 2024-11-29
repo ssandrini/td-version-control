@@ -2,9 +2,13 @@ import React from 'react';
 import HistoryItem from './HistoryItem';
 import { Version } from '../../../../main/models/Version';
 import { Skeleton } from '@renderer/components/ui/skeleton';
+import Project from '../../../../main/models/Project';
 
 interface HistoryProps {
     path?: string;
+    project: Project | undefined;
+    setSelectedVersion: React.Dispatch<React.SetStateAction<Version | undefined>>;
+    setWipVersion: React.Dispatch<React.SetStateAction<Version | null>>;
     onVersionSelect: (version: Version) => void;
     handleGoToVersion: (version: Version) => void;
     handleCompareVersionSelect: (version: Version) => void;
@@ -16,6 +20,7 @@ interface HistoryProps {
 }
 
 const History: React.FC<HistoryProps> = ({
+    project,
     versions,
     onVersionSelect,
     currentVersion,
@@ -23,13 +28,19 @@ const History: React.FC<HistoryProps> = ({
     handleGoToVersion,
     handleCompareVersionSelect,
     compareVersion,
-    wipVersion
+    wipVersion,
+    setSelectedVersion,
+    setWipVersion
 }) => {
     return (
-        <div className="flex flex-col w-full items-center overflow-y-auto no-scrollbar max-h-[90%]">
+        <div className="flex flex-col w-full items-center no-scrollbar max-h-[90%]">
             {wipVersion && (
                 <HistoryItem
+                    project={project}
+                    setSelectedVersion={setSelectedVersion}
+                    setWipVersion={setWipVersion}
                     version={wipVersion}
+                    versions={versions}
                     isCurrent={wipVersion.id === currentVersion?.id}
                     isSelected={wipVersion.id === selectedVersion?.id}
                     onVersionSelect={onVersionSelect}
@@ -55,6 +66,10 @@ const History: React.FC<HistoryProps> = ({
                         className="flex w-full flex-col items-center justify-center gap-1"
                     >
                         <HistoryItem
+                            versions={versions}
+                            project={project}
+                            setSelectedVersion={setSelectedVersion}
+                            setWipVersion={setWipVersion}
                             version={version}
                             isCurrent={version.id === currentVersion?.id}
                             isSelected={version.id === selectedVersion?.id}

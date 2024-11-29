@@ -6,7 +6,7 @@ import Project from '../models/Project';
 import { User } from '../models/api/User';
 
 export class RemoteRepoService {
-    async createRepository(name: string): Promise<ApiResponse<string>> {
+    async createRepository(name: string, description: string): Promise<ApiResponse<string>> {
         log.debug('Creating repository with name:', name);
 
         const requestData = {
@@ -16,7 +16,8 @@ export class RemoteRepoService {
             object_format_name: 'sha1',
             private: false,
             template: false,
-            trust_model: 'default'
+            trust_model: 'default',
+            description: description
         };
 
         const response = await giteaAPIConnector.apiRequest<{ clone_url: string }>(
@@ -38,14 +39,15 @@ export class RemoteRepoService {
         log.debug('Fetching projects...');
 
         const response = await giteaAPIConnector.apiRequest<
-            { name: string; owner: { username: string }; clone_url: string }[]
+            { name: string; owner: { username: string }; clone_url: string; description: string }[]
         >('/user/repos', HttpMethod.GET);
 
         if (response.result) {
             const remote_projects: Project[] = response.result.map((repo) => ({
                 name: repo.name,
                 owner: repo.owner.username,
-                remote: repo.clone_url
+                remote: repo.clone_url,
+                description: repo.description
             }));
 
             log.debug('Projects fetched successfully');

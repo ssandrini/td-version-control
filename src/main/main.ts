@@ -210,12 +210,19 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     ipcMain.handle(
         API_METHODS.CREATE_PROJECT,
-        async (_, dir: string, name: string, remote: boolean, src?: string) => {
+        async (
+            _,
+            dir: string,
+            name: string,
+            description: string,
+            remote: boolean,
+            src?: string
+        ) => {
             let initialVersion: Version;
             let remoteUrl: string = '';
             log.debug('params: ', dir, name, remote, src);
             if (remote) {
-                const response = await remoteRepoService.createRepository(name);
+                const response = await remoteRepoService.createRepository(name, description);
                 if (response.result) {
                     remoteUrl = response.result;
                     initialVersion = await projectManager.init(dir, remoteUrl, src);
@@ -231,7 +238,8 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
                 name: name,
                 owner: initialVersion.author.name,
                 path: dir,
-                remote: remote ? remoteUrl : ''
+                remote: remote ? remoteUrl : '',
+                description: description
             };
             userDataMgr.addRecentProject(newProject);
             return Promise.resolve(newProject);

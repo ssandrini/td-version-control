@@ -164,6 +164,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                         .createProject(
                             selectedPath,
                             projectToClone?.name,
+                            projectToClone?.description,
                             false,
                             projectToClone?.remote
                         )

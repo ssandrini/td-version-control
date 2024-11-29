@@ -60,6 +60,7 @@ const NewProject: React.FC = () => {
             .createProject(
                 formData.location,
                 formData.title,
+                formData.description,
                 formData.pushOnLoad,
                 selectedTemplate?.dir
             )

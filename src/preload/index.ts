@@ -12,8 +12,13 @@ const api = {
     deleteProject: async (path: string) => ipcRenderer.invoke(API_METHODS.DELETE_PROJECT, path),
     checkDependencies: async () => ipcRenderer.invoke(API_METHODS.CHECK_DEPENDENCIES),
     openToe: async (path: string) => ipcRenderer.invoke(API_METHODS.OPEN_TD, path),
-    createProject: async (dir: string, name: string, remote: boolean, src?: string) =>
-        ipcRenderer.invoke(API_METHODS.CREATE_PROJECT, dir, name, remote, src),
+    createProject: async (
+        dir: string,
+        name: string,
+        description: string,
+        remote: boolean,
+        src?: string
+    ) => ipcRenderer.invoke(API_METHODS.CREATE_PROJECT, dir, name, description, remote, src),
     createNewVersion: async (dir: string, name: string, description: string) =>
         ipcRenderer.invoke(API_METHODS.CREATE_VERSION, dir, name, description),
     hasChanges: async (dir: string) => ipcRenderer.invoke(API_METHODS.HAS_CHANGES, dir),

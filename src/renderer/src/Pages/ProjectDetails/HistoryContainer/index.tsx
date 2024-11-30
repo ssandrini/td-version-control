@@ -128,15 +128,6 @@ const HistoryContainer: React.FC<HistoryContainerProps> = ({
         <div className="h-full w-full my-2">
             {wipVersion && (
                 <div className="flex my-5">
-                    <div className="flex flex-col space-x-4 items-center w-full">
-                        <Button
-                            variant="outline"
-                            className="text-black"
-                            onClick={() => setShowNewVersionModal(true)}
-                        >
-                            Create New Version
-                        </Button>
-                    </div>
                     {showNewVersionModal && (
                         <Dialog open>
                             <DialogContent>
@@ -219,6 +210,8 @@ const HistoryContainer: React.FC<HistoryContainerProps> = ({
                 handleGoToVersion={handleGoToVersion}
                 handleCompareVersionSelect={handleCompareVersionSelect}
                 compareVersion={compareVersion}
+                setShowNewVersionModal={setShowNewVersionModal}
+                setCurrentVersion={setCurrentVersion}
             />
         </div>
     );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaArrowsAlt, FaEye, FaBalanceScale, FaTrash } from 'react-icons/fa';
+import { FaArrowsAlt, FaEye, FaBalanceScale, FaTrash, FaPlus } from 'react-icons/fa';
 import { cn } from '@renderer/lib/utils';
 import Project from '../../../../main/models/Project';
 import { Version } from '../../../../main/models/Version';
@@ -16,6 +16,8 @@ interface VersionActionsProps {
     handleGoToVersion: (version: any) => void;
     onVersionSelect: (version: any) => void;
     handleCompareVersionSelect: (version: any) => void;
+    setCurrentVersion: (currentVersion: Version) => void;
+    setShowNewVersionModal?: (boolean: boolean) => void;
 }
 
 const VersionActions: React.FC<VersionActionsProps> = ({
@@ -29,7 +31,9 @@ const VersionActions: React.FC<VersionActionsProps> = ({
     compareVersion,
     handleGoToVersion,
     onVersionSelect,
-    handleCompareVersionSelect
+    handleCompareVersionSelect,
+    setCurrentVersion,
+    setShowNewVersionModal
 }) => {
     const actions =
         version.id !== '[wip]'
@@ -43,7 +47,7 @@ const VersionActions: React.FC<VersionActionsProps> = ({
                               handleGoToVersion(version);
                           }
                       },
-                      disabled: currentVersion?.id === version.id
+                      disabled: currentVersion?.id === version.id || currentVersion?.id === '[wip]'
                   },
                   {
                       icon: <FaEye />,
@@ -90,6 +94,29 @@ const VersionActions: React.FC<VersionActionsProps> = ({
               ]
             : [
                   {
+                      icon: <FaPlus />,
+                      label: 'Add',
+                      description: 'Create new version',
+                      onClick: () => {
+                          if (setShowNewVersionModal) {
+                              setShowNewVersionModal(true);
+                          }
+                      },
+                      disabled: false
+                  },
+                  {
+                      icon: <FaEye />,
+                      label: 'Preview',
+                      description:
+                          'Will only show a preview of the changes without affecting the TouchDesigner project.',
+                      onClick: () => {
+                          if (version.id !== selectedVersion?.id) {
+                              onVersionSelect(version);
+                          }
+                      },
+                      disabled: version.id === selectedVersion?.id
+                  },
+                  {
                       icon: <FaTrash className="text-red-500" />,
                       label: 'Restore',
                       description: 'Remove current changes.',
@@ -101,6 +128,7 @@ const VersionActions: React.FC<VersionActionsProps> = ({
                               .then(() => {
                                   setWipVersion(null);
                                   setSelectedVersion(versions[0]);
+                                  setCurrentVersion(versions[0]);
                               })
                               .catch(() => {})
                               .finally(() => {});

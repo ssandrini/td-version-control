@@ -51,7 +51,6 @@ const ProjectDetail: React.FC = () => {
 
     useEffect(() => {
         const handleProjectChanged = () => {
-            console.log('CALLBACK');
             const wipVersion = new Version(
                 'Work in progress',
                 new Author(user?.username ?? '', user?.email ?? ''),
@@ -60,6 +59,7 @@ const ProjectDetail: React.FC = () => {
             );
             setWipVersion(wipVersion);
             setSelectedVersion(wipVersion);
+            setCurrentVersion(wipVersion);
         };
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -104,6 +104,7 @@ const ProjectDetail: React.FC = () => {
                             );
                             setWipVersion(wipVersion);
                             setSelectedVersion(wipVersion);
+                            setCurrentVersion(wipVersion);
                         } else {
                             if (versions.length != 0) {
                                 setSelectedVersion(currentVersion);

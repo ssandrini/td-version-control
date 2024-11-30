@@ -20,7 +20,9 @@ interface HistoryItemProps {
     handleCompareVersionSelect: (version: Version) => void;
     currentVersion: Version | null;
     compareVersion: Version | null;
+    setCurrentVersion: (version: Version) => void;
     selectedVersion?: Version;
+    setShowNewVersionModal?: (boolean: boolean) => void;
 }
 
 const HistoryItem: React.FC<HistoryItemProps> = ({
@@ -37,7 +39,9 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
     selectedVersion,
     handleGoToVersion,
     handleCompareVersionSelect,
-    compareVersion
+    compareVersion,
+    setShowNewVersionModal,
+    setCurrentVersion
 }) => {
     return (
         <div
@@ -63,7 +67,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
                     version.id === '[wip]') && (
                     <div className="absolute right-0 top-0 z-50">
                         <div className="flex flex-row gap-2">
-                            {(isCurrent || version.id === '[wip]') && (
+                            {version.id === currentVersion?.id && (
                                 <div className="shadow-lg rounded-lg bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] p-1">
                                     <div className="text-white bg-transparent font-bold px-0.5 py-0 rounded-lg">
                                         Current
@@ -100,7 +104,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
                     <div className="flex flex-col w-[70%] h-fit">
                         <div className="w-full text-left flex flex-row gap-0.5 whitespace-pre-wrap break-words overflow-wrap break-word items-center">
                             <FaDiagramProject className="text-sm text-gray-300 mr-2" />
-                            <div>{version?.description ?? '------'}</div>
+                            <div>{version?.name ?? '------'}</div>
                         </div>
                         <div className="w-full text-left flex flex-row gap-0.5 items-center">
                             <FaUserCircle className="text-sm text-gray-300 mr-2" />
@@ -132,6 +136,8 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
                         handleGoToVersion={handleGoToVersion}
                         onVersionSelect={onVersionSelect}
                         handleCompareVersionSelect={handleCompareVersionSelect}
+                        setShowNewVersionModal={setShowNewVersionModal}
+                        setCurrentVersion={setCurrentVersion}
                     />
                 </div>
             </div>

@@ -1,11 +1,18 @@
 import React from 'react';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
+import { Button } from '../../components/ui/button';
+import { motion } from 'framer-motion';
 
 const Settings: React.FC = () => {
     const { user } = useVariableContext();
 
     return (
-        <div className="flex h-full bg-gray-50 overflow-auto">
+        <motion.div
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex h-full bg-gray-50 overflow-auto"
+        >
             <div className="max-w-4xl mx-auto my-8 p-6 w-full bg-white overflow-auto no-scrollbar rounded-lg shadow-md">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
@@ -64,7 +71,7 @@ const Settings: React.FC = () => {
                     &copy; {new Date().getFullYear()} Mariana. All rights reserved.
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

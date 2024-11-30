@@ -46,6 +46,7 @@
         "electron-store": "^10.0.0",
         "electron-toolkit": "^1.0.24",
         "electron-vite": "^2.3.0",
+        "framer-motion": "^11.11.17",
         "fs-extra": "^11.2.0",
         "hidefile": "^3.0.0",
         "lucide-react": "^0.427.0",

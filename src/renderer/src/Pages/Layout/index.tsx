@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { Outlet } from 'react-router-dom';
 import LogIn from './LogIn';
-import MarianaHelper from '../../components/ui/MarianaHelper';
 import Spinner from '../../components/ui/Spinner';
 import { ApiResponse } from '../../../../main/errors/ApiResponse';
 import { User } from '../../../../main/models/api/User';
@@ -12,15 +11,13 @@ import RegisterPage from '@renderer/Pages/RegisterPage';
 import { FaRegWindowMaximize, FaRegWindowMinimize, FaWindowClose } from 'react-icons/fa';
 import { ProjectDependencies } from '@renderer/models/ProjectDependencies';
 import MissingDependenciesDialog from '@renderer/components/ui/MissingDependenciesDialog';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const Layout: React.FC = () => {
     const { hasMissingDependencies, missingDependencies, setMissingDependencies, user, setUser } =
         useVariableContext();
     const [userStateReady, setUserStateReady] = useState<boolean>(false);
     const [expanded, setExpanded] = useState<boolean>(false);
-    const [showAnimation, setShowAnimation] = useState<boolean>(false); // New state for animation
-
-    const [showHome, setShowHome] = useState<boolean>(false);
 
     const [showRegister, setShowRegister] = useState(false);
 
@@ -42,19 +39,6 @@ const Layout: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (user) {
-            // Trigger animation end after 1.5 seconds when the user is defined
-            const timer = setTimeout(() => setShowAnimation(true), 0);
-            setShowHome(true);
-            return () => clearTimeout(timer); // Cleanup timeout on component unmount or user change
-        } else {
-            setShowHome(false);
-            setShowAnimation(false);
-        }
-        return;
-    }, [user]);
-
-    useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api.checkDependencies().then((missingDeps: ProjectDependencies[]) => {
@@ -70,33 +54,24 @@ const Layout: React.FC = () => {
     };
 
     return (
-        <div className="h-screen bg-[#1b1d23] relative">
-            {showAnimation && (
-                <div className="no-scrollbar overflow-hidden">
-                    <div className="animate-grow-shrink no-scrollbar overflow-hidden absolute inset-0 flex items-center justify-center z-50">
-                        <img
-                            src="icon.png"
-                            alt="Mariana Logo"
-                            className="rounded-full no-scrollbar overflow-hidden"
+        <div className="h-screen bg-[#1b1d23]">
+            <div className="topBar w-full justify-between items-center flex flex-row">
+                {user != undefined ? (
+                    <div className="toggleButton flex flex-col justify-start text-white h-10 w-[6rem]">
+                        <HiMenuAlt1
+                            id="showHideMenu"
+                            className="cursor-pointer h-10 w-fit"
+                            onClick={() => setExpanded(!expanded)}
                         />
                     </div>
-                </div>
-            )}
-            <div className="topBar w-full justify-between items-center flex flex-row z-20">
-                {user != undefined ? (
-                    <HiMenuAlt1
-                        id="showHideMenu"
-                        className="toggleButton text-white h-10 w-10 cursor-pointer"
-                        onClick={() => setExpanded(!expanded)}
-                    />
                 ) : (
-                    <div />
+                    <div className="w-[6rem]" />
                 )}
                 <div className="flex flex-row titleBar items-center w-full justify-center">
-                    <img className="topBarMainImg rounded-full" src="icon.png" alt="" />
+                    <img className="topBarMainImg rounded-full mt-1" src="icon.png" alt="" />
                     <div className="title font-bold">Mariana</div>
                 </div>
-                <div className="titleBarButtons">
+                <div className="titleBarButtons w-[6rem]">
                     <button
                         id="minimizeBtn"
                         className="topBtn minimizeBtn text-white"
@@ -129,7 +104,7 @@ const Layout: React.FC = () => {
                             // @ts-expect-error
                             window.api.closeApp();
                         }}
-                        title="Restore"
+                        title="Close"
                     >
                         <FaWindowClose />
                     </button>
@@ -147,27 +122,33 @@ const Layout: React.FC = () => {
             <div id="mySideBar" className="leftMenu"></div>
             {!userStateReady ? (
                 <div className="flex flex-col pb-[50px] h-full items-center justify-evenly pt-10 bg-[#1b1d23] text-white overflow-y-auto">
-                    <MarianaHelper />
                     <Spinner white />
                 </div>
             ) : (
                 <>
-                    {!showHome ? (
-                        <>
-                            {showRegister ? (
-                                <RegisterPage goToLogin={() => setShowRegister(false)} />
-                            ) : (
-                                <LogIn goToRegister={() => setShowRegister(true)} />
-                            )}
-                        </>
-                    ) : (
-                        <div className="h-full pb-[50px] flex flex-row flex-1 overflow-auto">
-                            <Sidebar expanded={expanded} />
-                            <div className="w-full overflow-auto no-scrollbar bg-[#1b1d23]">
-                                <Outlet />
+                    <AnimatePresence mode="wait">
+                        {user == undefined ? (
+                            <>
+                                {showRegister ? (
+                                    <RegisterPage goToLogin={() => setShowRegister(false)} />
+                                ) : (
+                                    <LogIn goToRegister={() => setShowRegister(true)} />
+                                )}
+                            </>
+                        ) : (
+                            <div className="h-full pb-[35px] flex flex-row flex-1 overflow-auto">
+                                <Sidebar expanded={expanded} />
+                                <motion.div
+                                    exit={{ opacity: 0, scale: 1.1 }}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="w-full overflow-auto no-scrollbar bg-[#1b1d23]"
+                                >
+                                    <Outlet />
+                                </motion.div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </AnimatePresence>
                 </>
             )}
         </div>

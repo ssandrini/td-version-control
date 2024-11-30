@@ -4,6 +4,7 @@ import Projects from '../../Projects/Projects';
 import { localPaths } from '@renderer/const';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@renderer/components/ui/button';
+import { motion } from 'framer-motion';
 
 const Main: React.FC = () => {
     const navigate = useNavigate();
@@ -14,9 +15,26 @@ const Main: React.FC = () => {
 
     const [hasProjects, setHasProjects] = useState<boolean>(false);
 
+    const topDivVariants = {
+        initial: { opacity: 0, scale: 1 },
+        animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: 'easeIn' } },
+        exit: { opacity: 0, scale: 0.9, transition: { duration: 0.5, ease: 'easeIn' } }
+    };
+
     return (
-        <div className="flex flex-col items-center justify-center w-full h-full pt-10 text-white overflow-y-auto no-scrollbar">
-            <div className="w-full px-10 mb-10">
+        <motion.div
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col  w-full h-full pt-10 text-white overflow-y-auto no-scrollbar"
+        >
+            <motion.div
+                className="w-full pt-10 pb-20 my-auto"
+                variants={topDivVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+            >
                 <div className="flex flex-col items-center text-center">
                     <h1 className="text-5xl font-bold mb-6">
                         Simplify Your TouchDesigner Workflow
@@ -32,14 +50,15 @@ const Main: React.FC = () => {
                         Start a new project
                     </Button>
                 </div>
-            </div>
+            </motion.div>
+
             <div className={!hasProjects ? 'hidden w-full h-full' : 'w-full h-full'}>
                 <div className="w-full px-28">
                     <div className="w-full border-[0.2rem] bg-gray-700 border-gray-700 rounded-full" />
                 </div>
                 <Projects hideHeader={true} ignoreRemote setHasProjects={setHasProjects} />
             </div>
-        </div>
+        </motion.div>
     );
 };
 

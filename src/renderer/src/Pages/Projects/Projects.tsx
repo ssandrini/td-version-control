@@ -26,6 +26,8 @@ import { useToast } from '../../hooks/use-toast';
 import { CiWarning } from 'react-icons/ci';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { MdOutlineCloud, MdOutlineCloudOff } from 'react-icons/md';
+import { motion } from 'framer-motion';
+import { cn } from '@renderer/lib/utils';
 
 interface ProjectsProps {
     hideHeader?: boolean;
@@ -239,7 +241,12 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
     }
 
     return (
-        <div className="flex flex-col w-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 h-full">
+        <motion.div
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col w-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700"
+        >
             {/* Main Content */}
             <div className="flex-1 p-8 text-white">
                 {/* Header */}
@@ -262,13 +269,15 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                         </div>
                     </div>
                 )}
-                {hideHeader && (
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-semibold">Projects</h3>
-                    </div>
-                )}
 
-                <div className="flex flex-row w-full gap-3 flex-wrap overflow-auto">
+                <div
+                    className={cn(
+                        projects.length != 0
+                            ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+                            : 'flex flex-row flex-wrap items-center justify-center',
+                        'gap-4 w-full max-w-6xl mx-auto'
+                    )}
+                >
                     {projects.length > 0 ? (
                         <>
                             {projects.map((project, index) => (
@@ -277,25 +286,27 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                     key={index}
                                     onClick={(event) => handleCellClick(event, project)}
                                 >
-                                    <div className="flex bg-white rounded-lg flex-col px-8 pb-4">
+                                    <div className="flex bg-gray-200 rounded-lg flex-col px-8 pb-4 h-full">
                                         <div className="whitespace-nowrap flex flex-row items-center justify-between gap-2 text-ellipsis font-bold text-md">
                                             <div>{project.name.split('/').pop()}</div>
-                                            <div className="flex flex-row items-center">
+                                            <div className="flex flex-row items-center pt-1">
                                                 <Button
-                                                    className="mr-2 p-2 bg-transparent text-green-500 hover:text-green-400"
+                                                    className="mr-2 p-2 bg-transparent hover:bg-green-200 text-green-500 hover:text-green-400"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handlePlayProject(project);
                                                     }}
+                                                    title={'Run Project'}
                                                 >
                                                     <FaPlay />
                                                 </Button>
                                                 <Button
-                                                    className="mr-2 p-2 bg-transparent text-red-600 hover:text-red-500"
+                                                    className="mr-2 p-2 bg-transparent hover:bg-red-200 text-red-600 hover:text-red-500"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         confirmDeleteProject(project);
                                                     }}
+                                                    title={'Remove Project'}
                                                 >
                                                     <FaTrashAlt />
                                                 </Button>
@@ -387,7 +398,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                     <div className="flex flex-col items-center justify-center">
                                         <FaFolderOpen className="text-6xl text-gray-300 mb-4" />
                                         <h1 className="text-2xl text-gray-200 mb-2">
-                                            No remote projects, yet
+                                            No remote projects yet
                                         </h1>
                                     </div>
                                 )}
@@ -443,7 +454,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                     <div className="text-white text-2xl">Loading...</div>
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 };
 

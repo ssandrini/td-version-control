@@ -25,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ expanded }) => {
         <div
             className={cn(
                 expanded ? 'w-60' : 'w-16',
-                'transition-all overflow-hidden duration-600 ease-in-out h-full bg-[#1b1d23] text-white flex flex-col overflow-y-auto sticky items-top'
+                'transition-all overflow-hidden duration-600 ease-in-out h-full bg-[#2b2d30] text-white flex flex-col overflow-y-auto sticky items-top'
             )}
         >
             <div
@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ expanded }) => {
                     >
                         <div
                             className={cn(
-                                'flex items-center py-2',
+                                'flex items-center py-2 overflow-hidden flex-nowrap text-nowrap',
                                 expanded ? 'px-4' : 'justify-center'
                             )}
                         >

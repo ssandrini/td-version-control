@@ -4,5 +4,8 @@ export enum APIErrorCode {
     CommunicationError,
     NotFound,
     BadRequest,
+    EntityAlreadyExists,
+    UnprocessableEntity,
+    LocalError,
     UnknownError
 }

@@ -1,4 +1,5 @@
 {
     "id": "template1",
-    "name": "Instancing particles"
+    "name": "Instancing particles",
+    "description": "Dynamic particle system using TOP operators and instancing techniques"
 }

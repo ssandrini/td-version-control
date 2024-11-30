@@ -9,6 +9,9 @@ import { Input } from '@renderer/components/ui/input';
 import { Button } from '@renderer/components/ui/button';
 import Spinner from '@renderer/components/ui/Spinner';
 import { MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
+import { motion } from 'framer-motion';
+import { RegisterUserRequest } from '../../../../main/services/UserService';
+import { APIErrorCode } from '../../../../main/errors/APIErrorCode';
 
 interface RegisterPageProps {
     goToLogin: () => void;
@@ -32,8 +35,31 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
 
     const [isLoadingRegister, setIsLoadingRegister] = useState<boolean>(false);
     const [_, setUserError] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
     const [submitted, setSubmitted] = useState<boolean>(false);
 
+    const buildErrorMessage = (apiErrorCode: APIErrorCode) => {
+        switch (apiErrorCode) {
+            case APIErrorCode.EntityAlreadyExists:
+            case APIErrorCode.UnprocessableEntity:
+                setErrorMessage('An account with this username or email already exists.');
+                break;
+            case APIErrorCode.BadRequest:
+                setErrorMessage(
+                    'The provided information is invalid. Please check your details and try again.'
+                );
+                break;
+            case APIErrorCode.LocalError:
+                setErrorMessage(
+                    'Failed to complete the registration. Please check your internet connection and try again.'
+                );
+                break;
+            default:
+                setErrorMessage(
+                    'Unable to register your account at this time. Please try again later.'
+                );
+        }
+    };
     const validateEmail = (email: string) => {
         const re =
             /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -68,19 +94,19 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
             setPasswordMatch(value === formData.password2);
             setIsPasswordValid(value.length >= 8);
         }
-    };
-
-    const allowLetters = (value: string) => {
-        return value.replace(/[^a-zA-Záéíóúñ´ ]/g, '');
+        setErrorMessage('');
     };
 
     const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
-        const newValue = allowLetters(value);
+        if (value.includes(' ') || value.includes('\n') || value.includes('\t')) {
+            return;
+        }
         setFormData((prevState) => ({
             ...prevState,
-            name: newValue
+            name: value
         }));
+        setErrorMessage('');
     };
 
     const handleEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -93,7 +119,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
             setSubmitted(false);
         }
         setUserError(false);
-
+        setErrorMessage('');
         setIsEmailValid(validateEmail(value));
     };
 
@@ -106,24 +132,31 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
             return;
         }
 
+        const registerUserRequest: RegisterUserRequest = {
+            email: email,
+            username: name,
+            password: password
+        };
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.authenticate(name, password).then((apiResponse: ApiResponse<void>) => {
+        window.api.register(registerUserRequest).then((registerResponse: ApiResponse<User>) => {
             setSubmitted(true);
-            if (apiResponse.errorCode) {
+            if (registerResponse.errorCode) {
                 setUserError(true);
+                buildErrorMessage(registerResponse.errorCode);
                 setIsLoadingRegister(false);
             } else {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error
                 window.api
-                    .getUser()
-                    .then((apiResponse: ApiResponse<User>) => {
-                        if (apiResponse.result) {
-                            setUser(apiResponse.result);
+                    .authenticate(name, password)
+                    .then((apiResponse: ApiResponse) => {
+                        if (!apiResponse.errorCode) {
+                            setUser(registerResponse.result!);
                         } else {
                             setSubmitted(true);
                             setUserError(true);
+                            setErrorMessage('Auto-login failed, please go to login page.');
                         }
                     })
                     .finally(() => {
@@ -147,9 +180,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
     };
 
     return (
-        <div className="flex pb-[50px] flex-col items-center justify-evenly no-scrollbar h-full text-white overflow-y-auto">
+        <motion.div
+            exit={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex pb-[50px] flex-col items-center justify-evenly no-scrollbar h-full text-white overflow-y-auto"
+        >
             <div className="flex justify-center items-center md:w-[40rem] w-[35rem] max-w-[90%] md:mt-0 text-gray-700">
-                <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 py-16 my-3 shadow-lg">
+                <div className="w-full bg-white drop-shadow-lg rounded-3xl md:px-20 px-10 pb-16 pt-8 my-3 shadow-lg">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="flex items-center justify-center">
                             <img
@@ -175,6 +213,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
                                     className="w-full border-input rounded-md shadow-sm "
                                     value={name}
                                     onChange={handleNameChange}
+                                    maxLength={30}
                                 />
                             </div>
                             <div className="w-full space-y-1 h-20">
@@ -270,6 +309,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
                             )}{' '}
                             {/* Error message */}
                         </div>
+                        {errorMessage && (
+                            <div className="mb-4 text-center text-red-500 text-sm">
+                                {errorMessage}
+                            </div>
+                        )}
                         <div className="flex flex-col justify-center content-center pt-4">
                             {!isLoadingRegister ? (
                                 <>
@@ -290,7 +334,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
                                     </div>
                                 </>
                             ) : (
-                                <div className="flex items-center h-10 w-10">
+                                <div className="flex justify-center items-center w-full h-10">
                                     <Spinner />
                                 </div>
                             )}
@@ -298,7 +342,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ goToLogin }) => {
                     </form>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

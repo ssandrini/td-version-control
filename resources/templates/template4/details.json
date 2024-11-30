@@ -1,4 +1,5 @@
 {
     "id": "template4",
-    "name": "Serum"
+    "name": "Serum",
+    "description": "2D particle system simulating fluid dynamics"
 }

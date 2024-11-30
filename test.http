@@ -1,10 +1,10 @@
 ### try post user
-POST http://34.44.41.60:80/api/v1/admin/users
+POST http://35.206.108.190:80/api/v1/admin/users
 Content-Type: application/json
 
 {
-  "username": "BraveJero",
-  "email": "brave@jero.test",
+  "username": "BraveJero2",
+  "email": "brave2@jero.test",
   "password": "testtest",
   "must_change_password": false
 }

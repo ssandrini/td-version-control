@@ -5,6 +5,10 @@
     overflow: hidden;
 }
 
+html {
+    font-size: 80%; /* Reduces sizes by 20% */
+}
+
 body {
     width: 100%;
     height: 100%;
@@ -22,7 +26,7 @@ body {
 }
 
 :root {
-    --topBar: #1b1d23;
+    --topBar: #2b2d30;
     --subMenu: #272c36;
     --background: #2c313c;
     --border: #343b48;
@@ -49,7 +53,7 @@ body {
     background-color: var(--topBar);
     padding-left: 10px;
     padding-right: 10px;
-    height: 50px;
+    height: 35px;
 
     /* this stops users from being able to select / highlight text elements  */
     -webkit-user-select: none;
@@ -105,7 +109,6 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    width: 100px;
 }
 
 .topBtn {
@@ -176,4 +179,43 @@ body {
 
 .read-the-docs {
     color: #888;
+}
+
+@keyframes custom-pulse {
+    50% {
+        opacity: 0.2;
+    }
+}
+
+.custom-animate-pulse {
+    animation: custom-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.loader {
+    width: 100%;
+    height: 100px;
+    z-index: 10;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    pointer-events: none;
+}
+
+.svg-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.loading-text {
+    margin-top: 10px;
+    color: #ffffff;
+    font-size: 16px;
 }

@@ -12,8 +12,10 @@ import { Label } from '../../../components/ui/label';
 import { Input } from '../../../components/ui/input';
 import { Version } from '../../../../../main/models/Version';
 import History from '../../../components/ui/history';
+import Project from '../../../../../main/models/Project';
 
-interface DetailsComponentProps {
+interface HistoryContainerProps {
+    project: Project | undefined;
     versions: Version[];
     setVersions: React.Dispatch<React.SetStateAction<Version[]>>;
     currentVersion: Version | null;
@@ -27,7 +29,8 @@ interface DetailsComponentProps {
     setWipVersion: React.Dispatch<React.SetStateAction<Version | null>>;
 }
 
-const DetailsComponent: React.FC<DetailsComponentProps> = ({
+const HistoryContainer: React.FC<HistoryContainerProps> = ({
+    project,
     versions,
     currentVersion,
     selectedVersion,
@@ -77,7 +80,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
         setSelectedVersion(version);
     };
 
-    const handleCompareVersionSelect = (version: Version) => {
+    const handleCompareVersionSelect = (version: Version | null) => {
         setCompareVersion(version);
     };
     /*
@@ -122,7 +125,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
     };*/
 
     return (
-        <>
+        <div className="h-full w-full my-2">
             {wipVersion && (
                 <div className="flex my-5">
                     <div className="flex flex-col space-x-4 items-center w-full">
@@ -203,8 +206,10 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                     )}
                 </div>
             )}
-            <h2 className="text-white font-semibold my-2">Version History</h2>
             <History
+                project={project}
+                setSelectedVersion={setSelectedVersion}
+                setWipVersion={setWipVersion}
                 wipVersion={wipVersion}
                 versions={versions}
                 path={dir}
@@ -215,8 +220,8 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 handleCompareVersionSelect={handleCompareVersionSelect}
                 compareVersion={compareVersion}
             />
-        </>
+        </div>
     );
 };
 
-export default DetailsComponent;
+export default HistoryContainer;

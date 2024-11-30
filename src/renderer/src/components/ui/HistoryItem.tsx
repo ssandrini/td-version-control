@@ -1,66 +1,138 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Version } from '../../../../main/models/Version';
 import { cn } from '../../lib/utils';
-import { FaCalendar, FaInfo, FaMailBulk, FaUserCircle } from 'react-icons/fa';
+import { FaCalendar, FaUserCircle } from 'react-icons/fa';
+import VersionActions from '@renderer/components/ui/VersionActions';
+import { FaDiagramProject } from 'react-icons/fa6';
+import Project from '../../../../main/models/Project';
 
 interface HistoryItemProps {
-    version?: Version;
+    project: Project | undefined;
+    setSelectedVersion: React.Dispatch<React.SetStateAction<Version | undefined>>;
+    setWipVersion: React.Dispatch<React.SetStateAction<Version | null>>;
+    version: Version;
+    versions: Version[];
     isCurrent: boolean;
     onClick?: () => void;
     isSelected: boolean;
-    orange?: boolean;
+    onVersionSelect: (version: Version) => void;
+    handleGoToVersion: (version: Version) => void;
+    handleCompareVersionSelect: (version: Version) => void;
+    currentVersion: Version | null;
+    compareVersion: Version | null;
+    selectedVersion?: Version;
 }
 
-const HistoryItem: React.FC<HistoryItemProps> = ({ version, isCurrent, onClick, isSelected }) => {
-    const [_showDescription, setShowDescription] = useState<boolean>(false);
-
+const HistoryItem: React.FC<HistoryItemProps> = ({
+    project,
+    setWipVersion,
+    setSelectedVersion,
+    version,
+    versions,
+    isCurrent,
+    onClick,
+    isSelected,
+    onVersionSelect,
+    currentVersion,
+    selectedVersion,
+    handleGoToVersion,
+    handleCompareVersionSelect,
+    compareVersion
+}) => {
     return (
         <div
-            className="flex flex-col h-fit items-center text-nowrap text-ellipsis overflow-hidden w-[20rem]"
+            className="flex flex-row w-full h-fit items-center text-nowrap text-ellipsis overflow-hidden"
             onClick={onClick}
-            onMouseEnter={() => setShowDescription(true)}
-            onMouseLeave={() => setShowDescription(false)}
         >
             <div
                 className={cn(
-                    isSelected || isCurrent ? 'bg-gray-600' : '',
-                    'h-fit rounded-lg m-2 cursor-pointer transform transition-all duration-600 ease-in-out sticky',
-                    'text-gray-100 px-2 py-1 flex flex-col items-center gap-1 justify-center',
-                    'w-[20rem]',
-                    version?.id === '[wip]'
-                        ? 'border-dashed border-2 border-gray-400'
-                        : 'border-solid border-2 border-white'
+                    'h-fit rounded-lg w-full transform transition-all duration-600 ease-in-out sticky',
+                    'text-gray-100 px-2 py-0 flex flex-row items-center gap-1 justify-center'
                 )}
             >
-                <div className="w-full text-left flex flex-row gap-0.5 items-center">
-                    <FaUserCircle className="text-sm text-gray-300 mr-2" />
-                    <div>{version?.author.name ?? '------'}</div>
-                </div>
-                <div className="w-full text-left flex flex-row gap-0.5 items-center">
-                    <FaMailBulk className="text-sm text-gray-300 mr-2" />
-                    <div className="italic underline">{version?.author.email ?? '----------'}</div>
-                </div>
-                <div className="w-full text-left flex flex-row gap-0.5 items-center">
-                    <FaCalendar className="text-sm text-gray-300 mr-2" />
-                    <div>
-                        {version?.date.toLocaleString('en-US', {
-                            year: 'numeric',
-                            month: 'numeric',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false
-                        }) ?? '-------'}
+                {false && (
+                    <div className="absolute left-0 top-0 z-50">
+                        <div className="font-bold bg-orange-500 rounded-lg shadow-lg p-1">
+                            {'TAG'}
+                        </div>
                     </div>
-                </div>
+                )}
+                {(isCurrent ||
+                    version.id === selectedVersion?.id ||
+                    version.id === compareVersion?.id ||
+                    version.id === '[wip]') && (
+                    <div className="absolute right-0 top-0 z-50">
+                        <div className="flex flex-row gap-2">
+                            {(isCurrent || version.id === '[wip]') && (
+                                <div className="shadow-lg rounded-lg bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] p-1">
+                                    <div className="text-white bg-transparent font-bold px-0.5 py-0 rounded-lg">
+                                        Current
+                                    </div>
+                                </div>
+                            )}
+                            {version.id === selectedVersion?.id && (
+                                <div className="shadow-lg rounded-lg bg-gradient-to-r to-cyan-400 via-violet-500 from-red-200 p-1">
+                                    <div className="text-white bg-transparent font-bold px-0.5 py-0 rounded-lg">
+                                        Preview
+                                    </div>
+                                </div>
+                            )}
+                            {version.id === compareVersion?.id && (
+                                <div className="shadow-lg rounded-lg bg-gradient-to-r  from-purple-400 via-pink-500 to-yellow-500 p-1">
+                                    <div className="text-white bg-transparent font-bold px-0.5 py-0 rounded-lg">
+                                        Compare
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
                 <div
                     className={cn(
-                        'w-full text-left flex flex-row gap-0.5 items-center overflow-hidden transition-all duration-500 ease-in-out',
-                        'max-h-16 opacity-100 text-ellipsis w-[20rem]'
+                        isSelected ? 'bg-gray-600' : '',
+                        'mx-3 mb-3 mt-6 p-2 h-fit rounded-lg w-full transform transition-all duration-600 ease-in-out sticky',
+                        'text-gray-100 flex flex-row items-center gap-1 justify-center',
+                        version?.id === '[wip]'
+                            ? 'border-dashed border-2 border-gray-400'
+                            : 'border-solid border-2 border-white'
                     )}
                 >
-                    <FaInfo className="text-sm text-gray-300 mr-2" />
-                    <div>{version?.description ?? '------'}</div>
+                    <div className="flex flex-col w-[70%] h-fit">
+                        <div className="w-full text-left flex flex-row gap-0.5 whitespace-pre-wrap break-words overflow-wrap break-word items-center">
+                            <FaDiagramProject className="text-sm text-gray-300 mr-2" />
+                            <div>{version?.description ?? '------'}</div>
+                        </div>
+                        <div className="w-full text-left flex flex-row gap-0.5 items-center">
+                            <FaUserCircle className="text-sm text-gray-300 mr-2" />
+                            <div>{version?.author.name ?? '------'}</div>
+                        </div>
+                        <div className="w-full text-left flex flex-row gap-0.5 items-center">
+                            <FaCalendar className="text-sm text-gray-300 mr-2" />
+                            <div>
+                                {version?.date.toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: 'numeric',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false
+                                }) ?? '-------'}
+                            </div>
+                        </div>
+                    </div>
+                    <VersionActions
+                        versions={versions}
+                        setSelectedVersion={setSelectedVersion}
+                        setWipVersion={setWipVersion}
+                        project={project}
+                        currentVersion={currentVersion}
+                        version={version}
+                        selectedVersion={selectedVersion}
+                        compareVersion={compareVersion}
+                        handleGoToVersion={handleGoToVersion}
+                        onVersionSelect={onVersionSelect}
+                        handleCompareVersionSelect={handleCompareVersionSelect}
+                    />
                 </div>
             </div>
         </div>

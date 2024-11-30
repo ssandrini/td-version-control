@@ -1,4 +1,5 @@
 {
     "id": "template2",
-    "name": "Hexagons"
+    "name": "Hexagons",
+    "description": "Dynamic TouchDesigner network featuring animated hexagonal grids with smooth transformations"
 }

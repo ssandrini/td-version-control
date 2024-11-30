@@ -1,13 +1,12 @@
-<div style="display: flex; margin-top: 10px; align-items: center; justify-content: center; gap: 10px;">
-  <img src="resources/icon.png" alt="MarianaLogo" width="50" height="50">
-  <span style="font-size: 24px; font-weight: bold;">Mariana</span>
-</div>
+# <img src="resources/icon.png" alt="MarianaLogo" width="50" height="50"> Mariana
 
 **Mariana** is an innovative version control system (VCS) tailored specifically for **TouchDesigner** projects, designed to overcome the limitations of traditional version control tools. Built with **Electron**, **React**, and **TypeScript**, it offers a seamless, user-friendly experience for managing complex multimedia and interactive projects.
 
 ## Table of Contents
 
 - [Introduction](#introduction)
+  - [Why Mariana?](#why-mariana)
+  - [Why Choose Mariana for TouchDesigner?](#why-choose-mariana-for-touchdesigner)
 - [Features](#features)
 - [Project Setup](#project-setup)
     - [Installation](#installation)
@@ -15,7 +14,6 @@
     - [Building for Production](#building-for-production)
 - [Infra Setup](#infra-setup)
 - [Troubleshooting](#troubleshooting)
-- [License](#license)
 
 ## Introduction
 

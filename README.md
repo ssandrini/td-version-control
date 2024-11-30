@@ -1,4 +1,6 @@
-# <img src="resources/icon.png" alt="MarianaLogo" width="50" height="50"> Mariana
+![MarianaLogo](resources/icon.png)
+
+# Mariana
 
 **Mariana** is an innovative version control system (VCS) tailored specifically for **TouchDesigner** projects, designed to overcome the limitations of traditional version control tools. Built with **Electron**, **React**, and **TypeScript**, it offers a seamless, user-friendly experience for managing complex multimedia and interactive projects.
 

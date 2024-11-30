@@ -106,7 +106,7 @@ const Nodes: React.FC<NodesProps> = ({ current, compare, project, selectedVersio
                         <div className="flex max-w-[70%] text-gray-400 text-[1rem] flex-row h-full items-center truncate gap-3">
                             <MdDescription />
                             <div className="truncate whitespace-pre-wrap break-words overflow-wrap break-word max-w-full max-h-[5rem] overflow-hidden">
-                                {selectedVersion?.description}
+                                {selectedVersion?.description ?? '---------'}
                             </div>
                         </div>
                     </div>

@@ -374,7 +374,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                         <h3 className="font-semibold pl-5">Remote Projects</h3>
                         {/* Search bar for remote projects */}
                         {!ignoreRemote && (
-                            <div className="flex flex-col py-4 w-[30rem] max-w-[30%] mb-2 min-w-[10rem]">
+                            <div className="flex flex-col py-4 w-[30rem] max-w-[30%] mb-2 pr-4 min-w-[10rem]">
                                 <Input
                                     type="text"
                                     value={searchQuery}

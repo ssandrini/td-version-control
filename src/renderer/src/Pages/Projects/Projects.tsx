@@ -28,6 +28,7 @@ import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { MdOutlineCloud, MdOutlineCloudOff } from 'react-icons/md';
 import { motion } from 'framer-motion';
 import { cn } from '@renderer/lib/utils';
+import { Input } from '@renderer/components/ui/input';
 
 interface ProjectsProps {
     hideHeader?: boolean;
@@ -35,13 +36,21 @@ interface ProjectsProps {
     setHasProjects?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+const rowAnimationVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.8, ease: 'easeInOut' }
+};
+
 const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasProjects }) => {
     const { toast } = useToast();
     const { user } = useVariableContext();
 
     const [projects, setProjects] = useState<Project[]>([]);
     const [remoteProjects, setRemoteProjects] = useState<Project[]>([]);
-
+    const [filteredProjects, setFilteredProjects] = useState<Project[]>([]); // For filtered projects
+    const [searchQuery, setSearchQuery] = useState<string>(''); // For search input
     const [isLoadingRemote, setIsLoadingRemote] = useState<boolean>(false);
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
@@ -76,6 +85,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                         Array.isArray(externalRemoteProjects.result)
                     ) {
                         setRemoteProjects(externalRemoteProjects.result);
+                        setFilteredProjects(externalRemoteProjects.result); // Initialize filtered projects
                     }
                 })
                 .finally(() => {
@@ -83,6 +93,20 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                 });
         }
     }, [reload]);
+
+    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const query = event.target.value.toLowerCase();
+        setSearchQuery(query);
+
+        const filtered = remoteProjects.filter(
+            (project) =>
+                project.name.toLowerCase().includes(query) ||
+                project.owner?.toLowerCase().includes(query) ||
+                project.description?.toLowerCase().includes(query)
+        );
+
+        setFilteredProjects(filtered);
+    };
 
     const handleFilePick = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -342,17 +366,30 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                     )}
                 </div>
             </div>
+
             {!ignoreRemote && (
-                <div className="flex-1 p-8 text-white">
+                <div className="flex-1 m-8 text-white bg-gray-800 rounded-lg">
                     {/* Header */}
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-semibold">Remote Projects</h3>
+                    <div className="flex flex-row justify-between items-center">
+                        <h3 className="font-semibold pl-5">Remote Projects</h3>
+                        {/* Search bar for remote projects */}
+                        {!ignoreRemote && (
+                            <div className="flex flex-col py-4 w-[30rem] max-w-[30%] mb-2 min-w-[10rem]">
+                                <Input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={handleSearchChange}
+                                    placeholder="Search by name, author, or description..."
+                                    className="p-2 border border-gray-400 rounded-md text-white bg-gray-700"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="overflow-auto">
                         {/* Projects Table or No Projects Message */}
-                        {remoteProjects.length > 0 ? (
-                            <div className="bg-gray-800 rounded-lg">
+                        {filteredProjects.length > 0 ? (
+                            <div className="">
                                 <table className="min-w-full divide-y divide-gray-700">
                                     <thead>
                                         <tr>
@@ -362,17 +399,30 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                                 Author
                                             </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                                Description
+                                            </th>
                                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider"></th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-700">
-                                        {remoteProjects.map((project, index) => (
-                                            <tr key={index}>
+                                        {filteredProjects.map((project, index) => (
+                                            <motion.tr
+                                                key={index}
+                                                variants={rowAnimationVariants}
+                                                initial="hidden"
+                                                animate="visible"
+                                                exit="exit"
+                                                layout
+                                            >
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     {project.name}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     {project.owner}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {project.description}
                                                 </td>
                                                 <td className="py-4 whitespace-nowrap text-center">
                                                     <Button
@@ -385,7 +435,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                                         <FaDownload />
                                                     </Button>
                                                 </td>
-                                            </tr>
+                                            </motion.tr>
                                         ))}
                                     </tbody>
                                 </table>
@@ -393,11 +443,13 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                         ) : (
                             <>
                                 {isLoadingRemote ? (
-                                    <Spinner />
+                                    <div className="h-[10rem] flex items-center justify-center">
+                                        <Spinner />
+                                    </div>
                                 ) : (
                                     <div className="flex flex-col items-center justify-center">
                                         <FaFolderOpen className="text-6xl text-gray-300 mb-4" />
-                                        <h1 className="text-2xl text-gray-200 mb-2">
+                                        <h1 className="text-2xl text-gray-200 mb-10">
                                             No remote projects yet
                                         </h1>
                                     </div>

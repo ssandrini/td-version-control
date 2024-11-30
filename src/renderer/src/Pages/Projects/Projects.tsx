@@ -286,7 +286,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                     key={index}
                                     onClick={(event) => handleCellClick(event, project)}
                                 >
-                                    <div className="flex bg-gray-200 rounded-lg flex-col px-8 pb-4 h-full">
+                                    <div className="flex bg-gray-200 rounded-lg flex-col pl-3 pb-4 h-full">
                                         <div className="whitespace-nowrap flex flex-row items-center justify-between gap-2 text-ellipsis font-bold text-md">
                                             <div>{project.name.split('/').pop()}</div>
                                             <div className="flex flex-row items-center pt-1">

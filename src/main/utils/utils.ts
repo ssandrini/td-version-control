@@ -265,16 +265,6 @@ export const validateTag = (tag: string): void => {
         throw new TagError(`Invalid tag "${tag}": ${reason}`);
     };
 
-    const components = tag.split('/');
-    if (components.length < 2) {
-        fail('must contain at least one slash (/) to separate components.');
-    }
-    if (components.some((part) => part.startsWith('.') || part.endsWith('.lock'))) {
-        fail(
-            'no slash-separated component can begin with a dot (.) or end with the sequence ".lock".'
-        );
-    }
-
     if (tag.includes('..')) {
         fail('cannot contain two consecutive dots (..).');
     }

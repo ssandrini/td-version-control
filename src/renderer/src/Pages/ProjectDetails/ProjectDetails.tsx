@@ -186,7 +186,7 @@ const ProjectDetail: React.FC = () => {
                     selectedVersion={selectedVersion}
                 />
             </div>
-            <div className="flex flex-col h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 bg-[#2b2d30] min-w-[30rem] p-4 w-[27%]">
+            <div className="flex flex-col h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 bg-[#2b2d30] min-w-[30rem] p-4 w-[30%]">
                 <ProjectDetailsHeader
                     project={project}
                     selectedVersion={selectedVersion}

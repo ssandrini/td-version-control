@@ -1,4 +1,4 @@
-![MarianaLogo](resources/icon.png)
+<img src="resources/icon.png" alt="MarianaLogo" width="200" height="200">
 
 # Mariana
 

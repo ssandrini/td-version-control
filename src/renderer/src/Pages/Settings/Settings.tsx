@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 const Settings: React.FC = () => {
     const { user } = useVariableContext();
 
+    console.log(user);
+
     return (
         <motion.div
             exit={{ opacity: 0 }}

@@ -259,7 +259,7 @@ export class SimpleGitTracker implements Tracker {
         try {
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(url);
-            normalizedUrl.protocol = 'http:';
+            normalizedUrl.protocol = 'https:';
             normalizedUrl.username = username;
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();
@@ -489,7 +489,7 @@ export class SimpleGitTracker implements Tracker {
             const remoteUrl = (await this.git.listRemote(['--get-url'])).trim();
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(remoteUrl);
-            normalizedUrl.protocol = 'http:';
+            normalizedUrl.protocol = 'https:';
             normalizedUrl.username = username;
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();

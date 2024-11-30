@@ -107,7 +107,7 @@ export class SimpleGitTracker implements Tracker {
             log.all.map(async (commit) => {
                 const [name, ...description] = commit.message.split(this.separator);
                 const rawTag = await this.git.tag(['--points-at', commit.hash]);
-                const tag = rawTag.trim().split('\n')[0];
+                const tag = rawTag.trim() ? rawTag.trim().split('\n')[0] : undefined;
                 return new Version(
                     name,
                     new Author(commit.author_name, commit.author_email),

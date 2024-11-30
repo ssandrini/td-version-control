@@ -179,7 +179,12 @@ const ProjectDetail: React.FC = () => {
             className="bg-[#1b1d23] flex flex-row justify-between w-full h-full overflow-auto no-scrollbar"
         >
             <div className="h-full p-2 w-[70%]">
-                <Nodes current={currentState} compare={compareState} project={project} />
+                <Nodes
+                    current={currentState}
+                    compare={compareState}
+                    project={project}
+                    selectedVersion={selectedVersion}
+                />
             </div>
             <div className="flex flex-col h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 bg-[#2b2d30] min-w-[30rem] p-4 w-[27%]">
                 <ProjectDetailsHeader

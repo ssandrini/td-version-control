@@ -38,25 +38,27 @@ const History: React.FC<HistoryProps> = ({
 }) => {
     return (
         <div className="flex flex-col w-full items-center no-scrollbar max-h-[90%]">
-            {wipVersion && (
-                <HistoryItem
-                    project={project}
-                    setSelectedVersion={setSelectedVersion}
-                    setWipVersion={setWipVersion}
-                    version={wipVersion}
-                    versions={versions}
-                    isCurrent={wipVersion.id === currentVersion?.id}
-                    isSelected={wipVersion.id === selectedVersion?.id}
-                    onVersionSelect={onVersionSelect}
-                    currentVersion={currentVersion}
-                    selectedVersion={selectedVersion}
-                    handleGoToVersion={handleGoToVersion}
-                    handleCompareVersionSelect={handleCompareVersionSelect}
-                    compareVersion={compareVersion}
-                    setShowNewVersionModal={setShowNewVersionModal}
-                    setCurrentVersion={setCurrentVersion}
-                />
-            )}
+            <div className="flex w-full flex-col items-center justify-center gap-1">
+                {wipVersion && (
+                    <HistoryItem
+                        project={project}
+                        setSelectedVersion={setSelectedVersion}
+                        setWipVersion={setWipVersion}
+                        version={wipVersion}
+                        versions={versions}
+                        isCurrent={wipVersion.id === currentVersion?.id}
+                        isSelected={wipVersion.id === selectedVersion?.id}
+                        onVersionSelect={onVersionSelect}
+                        currentVersion={currentVersion}
+                        selectedVersion={selectedVersion}
+                        handleGoToVersion={handleGoToVersion}
+                        handleCompareVersionSelect={handleCompareVersionSelect}
+                        compareVersion={compareVersion}
+                        setShowNewVersionModal={setShowNewVersionModal}
+                        setCurrentVersion={setCurrentVersion}
+                    />
+                )}
+            </div>
             {versions.length === 0 ? (
                 <div className="flex w-full flex-col items-center justify-center gap-4">
                     <Skeleton className="w-full h-14 py-4" />

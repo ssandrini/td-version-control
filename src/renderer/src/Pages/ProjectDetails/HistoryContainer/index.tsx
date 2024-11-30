@@ -158,6 +158,7 @@ const HistoryContainer: React.FC<HistoryContainerProps> = ({
                 </div>
             )}
             <History
+                setVersions={setVersions}
                 project={project}
                 setSelectedVersion={setSelectedVersion}
                 setWipVersion={setWipVersion}

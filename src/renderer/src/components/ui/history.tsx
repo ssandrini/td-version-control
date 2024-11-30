@@ -20,9 +20,11 @@ interface HistoryProps {
     wipVersion: Version | null;
     setShowNewVersionModal: (boolean: boolean) => void;
     setCurrentVersion: (version: Version) => void;
+    setVersions: React.Dispatch<React.SetStateAction<Version[]>>;
 }
 
 const History: React.FC<HistoryProps> = ({
+    setVersions,
     project,
     versions,
     onVersionSelect,
@@ -43,6 +45,7 @@ const History: React.FC<HistoryProps> = ({
             <div className="flex w-full flex-col items-center justify-center gap-1">
                 {wipVersion && (
                     <HistoryItem
+                        setVersions={setVersions}
                         dir={dir}
                         project={project}
                         setSelectedVersion={setSelectedVersion}
@@ -77,6 +80,7 @@ const History: React.FC<HistoryProps> = ({
                         className="flex w-full flex-col items-center justify-center gap-1"
                     >
                         <HistoryItem
+                            setVersions={setVersions}
                             dir={dir}
                             versions={versions}
                             project={project}

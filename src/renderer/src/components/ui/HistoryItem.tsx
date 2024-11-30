@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Version } from '../../../../main/models/Version';
 import { cn } from '../../lib/utils';
-import { FaCalendar, FaTrash, FaUserCircle } from 'react-icons/fa';
+import { FaCalendar, FaPlus, FaTrash, FaUserCircle } from 'react-icons/fa';
 import VersionActions from '@renderer/components/ui/VersionActions';
 import { FaDiagramProject } from 'react-icons/fa6';
 import Project from '../../../../main/models/Project';
@@ -36,9 +36,11 @@ interface HistoryItemProps {
     selectedVersion?: Version;
     setShowNewVersionModal?: (boolean: boolean) => void;
     dir: string | undefined;
+    setVersions: React.Dispatch<React.SetStateAction<Version[]>>;
 }
 
 const HistoryItem: React.FC<HistoryItemProps> = ({
+    setVersions,
     dir,
     project,
     setWipVersion,
@@ -63,6 +65,9 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
 
     const [isLoadingTag, setIsLoadingTag] = useState<boolean>(false);
 
+    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState<boolean>(false);
+    const [showDeleteIcon, setShowDeleteIcon] = useState<boolean>(false);
+
     const [tagError, setTagError] = useState<boolean>(false);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -75,10 +80,15 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
         window.api
             .addTag(dir, version.id, tag)
             .then(() => {
-                const updatedVersionWithTag = { ...version };
-                updatedVersionWithTag.tag = tag;
-                setSelectedVersion(updatedVersionWithTag);
+                const updatedVersionsWithTag = [...versions];
+                updatedVersionsWithTag.forEach((_, index) => {
+                    if (updatedVersionsWithTag[index].id == version.id) {
+                        updatedVersionsWithTag[index].tag = tag;
+                    }
+                });
+                setVersions(updatedVersionsWithTag);
                 setNewTag('');
+                setShowCreateTagModal(false);
                 setShowCreateTag(false);
             })
             .catch(() => {
@@ -102,13 +112,18 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
         window.api
             .removeTag(dir, version.tag) // IMPORTANT: ONLY THE TAG IS NEEDED TO REMOVE A TAG.
             .then(() => {
-                const updatedVersionWithTag = { ...version };
-                updatedVersionWithTag.tag = '';
-                setSelectedVersion(updatedVersionWithTag);
+                const updatedVersionsWithTag = [...versions];
+                updatedVersionsWithTag.forEach((_, index) => {
+                    if (updatedVersionsWithTag[index].id == version.id) {
+                        updatedVersionsWithTag[index].tag = '';
+                    }
+                });
+                setVersions(updatedVersionsWithTag);
                 setNewTag('');
             })
             .catch(() => {})
             .finally(() => {
+                setShowDeleteConfirmModal(false);
                 setIsLoadingTag(false);
             });
     };
@@ -126,23 +141,20 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
                     'text-gray-100 px-2 py-0 flex flex-row items-center gap-1 justify-center'
                 )}
             >
-                {showCreateTag &&
-                    version.id === selectedVersion?.id &&
-                    version.id != '[wip]' &&
-                    !version.tag && (
-                        <motion.div
-                            className="absolute left-0 top-0 z-50"
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0 }}
-                            transition={{ duration: 0.2, ease: 'easeInOut' }}
-                            onClick={() => setShowCreateTagModal(true)}
-                        >
-                            <div className="font-bold text-center bg-green-500 w-10 h-10 rounded-lg shadow-lg">
-                                {'+'}
-                            </div>
-                        </motion.div>
-                    )}
+                {version.id === selectedVersion?.id && version.id != '[wip]' && !version.tag && (
+                    <motion.div
+                        className="absolute left-0 top-0 z-50 p-2"
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0 }}
+                        transition={{ duration: 0.2, ease: 'easeInOut' }}
+                        onClick={() => setShowCreateTagModal(true)}
+                    >
+                        <div className="font-bold flex flex-row items-center cursor-pointer justify-center text-center bg-green-500 w-6 h-6 rounded-lg shadow-lg">
+                            <FaPlus className="" />
+                        </div>
+                    </motion.div>
+                )}
                 {showCreateTagModal && (
                     <Dialog open>
                         <DialogContent>
@@ -173,6 +185,11 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
                                         }
                                     }}
                                 />
+                                {tagError && (
+                                    <div className="font-regular text-red-500 py-2">
+                                        This tag already exists.
+                                    </div>
+                                )}
                             </div>
                             <DialogFooter>
                                 <Button
@@ -183,26 +200,66 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
                                     Cancelar
                                 </Button>
                                 <Button
+                                    type="submit"
                                     onClick={() => handleAddTag(version, newTag)}
-                                    disabled={isLoadingTag || newTag.length >= 8}
+                                    disabled={isLoadingTag || newTag.length >= 12}
                                     className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
                                 >
-                                    Create Version
+                                    Create Tag
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
                 )}
                 {version.tag && (
-                    <div className="absolute left-0 top-0 z-50">
-                        <div className="flex flex-row bg-orange-500 rounded-lg shadow-lg p-1 gap-2 items-center">
+                    <motion.div
+                        className="absolute left-0 top-0 z-50"
+                        onMouseEnter={() => setShowDeleteIcon(true)}
+                        onMouseLeave={() => setShowDeleteIcon(false)}
+                    >
+                        <div className="flex flex-row bg-orange-500 rounded-lg shadow-lg py-1 px-1.5 gap-2 items-center">
                             <div className="font-bold">{version.tag.split(/\s+/)[0]}</div>
-                            <FaTrash
-                                className="cursor-pointer"
-                                onClick={() => handleRemoveTag(version)}
-                            />
+                            {showDeleteIcon && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                >
+                                    <FaTrash
+                                        className="cursor-pointer"
+                                        onClick={() => setShowDeleteConfirmModal(true)}
+                                    />
+                                </motion.div>
+                            )}
                         </div>
-                    </div>
+                    </motion.div>
+                )}
+                {showDeleteConfirmModal && (
+                    <Dialog open>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Delete tag</DialogTitle>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    disabled={isLoadingTag}
+                                    onClick={() => setShowDeleteConfirmModal(false)}
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    onClick={() => handleRemoveTag(version)}
+                                    disabled={isLoadingTag}
+                                    className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                                >
+                                    Delete Tag
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 )}
                 {(isCurrent ||
                     version.id === selectedVersion?.id ||

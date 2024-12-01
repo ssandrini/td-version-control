@@ -13,12 +13,13 @@ extraResources:
     - resources/templates
 win:
     executableName: Mariana
-    icon: resources/icon.png
+    icon: resources/img.png
 nsis:
     artifactName: ${name}-${version}-setup.${ext}
     shortcutName: ${productName}
     uninstallDisplayName: ${productName}
     createDesktopShortcut: always
+    include: build/installer.nsh
 mac:
     icon: resources/icon.icns
     entitlementsInherit: build/entitlements.mac.plist
@@ -28,11 +29,8 @@ mac:
         NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
         NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
     notarize: false
-dmg:
+    target:
+        - target: pkg
+          arch: universal
+pkg:
     artifactName: ${name}-${version}.${ext}
-appImage:
-    artifactName: ${name}-${version}.${ext}
-npmRebuild: false
-publish:
-    provider: generic
-    url: https://example.com/auto-updates

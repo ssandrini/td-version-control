@@ -1,0 +1,23 @@
+@startuml
+actor User
+participant ProjectManager
+participant Processor
+participant Tracker
+participant FileSystem as FS
+
+User -> ProjectManager : createVersion(dir, versionName, description)
+alt Invalid version name
+    ProjectManager -> User : Reject (RangeError: Version name length invalid)
+else Invalid description length
+    ProjectManager -> User : Reject (RangeError: Description length invalid)
+else Valid input
+    ProjectManager -> FS : validateDirectory(dir)
+    ProjectManager -> Processor : preprocess(dir, hiddenDir)
+    Processor -> FS : Process binary to generate text files
+    ProjectManager -> ProjectManager : Save version state on cache
+    ProjectManager -> Tracker : createVersion(hiddenDirPath, versionName, description)
+    Tracker -> FS : Commit and create version
+    Tracker -> ProjectManager: Created Version
+    ProjectManager -> User: Created Version
+end
+@enduml

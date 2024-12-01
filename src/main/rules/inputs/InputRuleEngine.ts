@@ -4,6 +4,7 @@ import { NetworkFileRule } from './NetworkFileRule';
 import { NFileRule } from './NFileRule';
 import { ParmFileApplyOperatorRule } from './ParmFileApplyOperatorRule';
 import { ParmFileChangeOperatorRule } from './ParmFileChangeOperatorRule';
+import { ParmFileBasicOperatorRule } from './ParmFileBasicOperatorRule';
 
 export class InputRuleEngine {
     private readonly rules: InputRule[];
@@ -13,7 +14,8 @@ export class InputRuleEngine {
             new NetworkFileRule(),
             new NFileRule(),
             new ParmFileApplyOperatorRule(),
-            new ParmFileChangeOperatorRule()
+            new ParmFileChangeOperatorRule(),
+            new ParmFileBasicOperatorRule()
         ];
     }
 

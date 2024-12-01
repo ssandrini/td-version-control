@@ -12,23 +12,13 @@ const MarianaHelper: React.FC<MarianaHelperProps> = ({ animatePulse, forceOpen }
         <div
             className={cn(
                 animatePulse ? 'animate-pulse' : '',
-                'flex flex-col bg-gradient-to-r from-blue-900 to-blue-950 border border-white p-10 rounded-[2rem] gap-4 justify-between shadow-lg'
+                'flex flex-col bg-gradient-to-r from-gray-900 to-gray-950 border border-white p-10 rounded-[2rem] gap-4 justify-between shadow-lg'
             )}
         >
             <div
                 className="text-center cursor-pointer"
                 onClick={() => setShowMiddleDiv(!showMiddleDiv)}
-            >
-                <div className="flex flex-row w-full items-center justify-center gap-3 mb-4">
-                    <img src="icon.png" alt="" className="w-14 h-14 rounded-lg" />
-                    <h1 className="text-6xl font-bold">Mariana</h1>
-                </div>
-                <div className="max-w-lg mx-auto">
-                    <p className="text-xl text-gray-300">
-                        A version control system designed specifically for TouchDesigner projects.
-                    </p>
-                </div>
-            </div>
+            ></div>
 
             {showMiddleDiv && (
                 <div className="flex justify-center space-x-16">

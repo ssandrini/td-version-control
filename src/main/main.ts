@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, screen, session } from 'electron';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import userDataMgr from './managers/UserDataManager';
@@ -11,15 +11,17 @@ import { TDProjectManager } from './managers/TDProjectManager';
 import { SimpleGitTracker } from './trackers/SimpleGitTracker';
 import { TDProcessor } from './processors/TDProcessor';
 import { API_METHODS } from './apiMethods';
-import { filePicker, openToeFile, getTemplates, openDirectory } from './utils/utils';
+import { filePicker, findFileByExt, getTemplates, openDirectory, openToeFile } from './utils/utils';
 import { TDState } from './models/TDState';
 import { TDMergeResult } from './models/TDMergeResult';
 import authService from './services/AuthService';
 import remoteRepoService from './services/RemoteRepoService';
 import { Version } from './models/Version';
-import userService from './services/UserService';
+import userService, { RegisterUserRequest } from './services/UserService';
 // @ts-ignore
 import appIcon from '../../resources/icon.ico?asset';
+import { APIErrorCode } from './errors/APIErrorCode';
+import { ApiResponse } from './errors/ApiResponse';
 
 createRequire(import.meta.url);
 
@@ -38,8 +40,8 @@ function createWindow() {
 
     const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
 
-    const minWidth = 1400;
-    const minHeight = 850;
+    const minWidth = 1000;
+    const minHeight = 550;
 
     const finalWidth = Math.min(screenWidth, minWidth);
     const finalHeight = Math.min(screenHeight, minHeight);
@@ -49,6 +51,7 @@ function createWindow() {
 
     win = new BrowserWindow({
         icon: iconPath,
+        frame: false,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -64,7 +67,46 @@ function createWindow() {
         minHeight: finalHeight
     });
 
+    win.setBackgroundColor('#1b1d23');
+
     win.maximize();
+
+    /* --- Custom Title Bar actions --- */
+    //minimize app
+    ipcMain.on('minimizeApp', () => {
+        console.log('clicked on minimize btn');
+        win?.minimize();
+    });
+
+    //maximize app
+    ipcMain.on('maximizeRestoreApp', () => {
+        console.log('clicked on maximize restore btn');
+        //check status of the window
+        if (win?.isMaximized()) {
+            console.log('--setting restore');
+            win?.restore();
+        } else {
+            console.log('--setting maximize');
+            win?.maximize();
+        }
+    });
+
+    //close app
+    ipcMain.on('closeApp', () => {
+        console.log('clicked on close btn');
+        win?.close();
+    });
+
+    //win.on is used to check events triggers
+    win.on('maximize', () => {
+        win?.webContents.send('isMaximized'); //send an event to the ui
+    });
+
+    win.on('restore', () => {
+        win?.webContents.send('isRestored');
+    });
+    /* --------------------------------- */
+
     const tracker = new SimpleGitTracker();
     const processor = new TDProcessor();
     const projectManager = new TDProjectManager(processor, tracker, '.mar');
@@ -92,7 +134,9 @@ app.whenReady().then(() => {
     electronApp.setAppUserModelId('com.electron');
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
         const responseHeaders = details.responseHeaders || {};
-        responseHeaders['Content-Security-Policy'] = ["img-src 'self' http://34.44.41.60 data:"];
+        responseHeaders['Content-Security-Policy'] = [
+            "img-src 'self' https://api.mariana-api.com.ar data:"
+        ];
         callback({ responseHeaders });
     });
 
@@ -133,9 +177,19 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             projectManager.createVersion(dir, name, description)
     );
 
+    ipcMain.handle(API_METHODS.ADD_TAG, (_, dir: string, versionId: string, tag: string) =>
+        projectManager.addTag(dir, versionId, tag)
+    );
+
+    ipcMain.handle(API_METHODS.REMOVE_TAG, (_, dir: string, tag: string) =>
+        projectManager.removeTag(dir, tag)
+    );
+
     ipcMain.handle(API_METHODS.CURRENT_VERSION, (_, dir: string) =>
         projectManager.currentVersion(dir)
     );
+
+    ipcMain.handle(API_METHODS.HAS_CHANGES, (_, dir: string) => projectManager.hasChanges(dir));
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ipcMain.handle(API_METHODS.FILE_PICKER, (_) => filePicker());
@@ -151,40 +205,44 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
         userDataMgr.removeRecentProject(path)
     );
 
-    ipcMain.handle(API_METHODS.SAVE_TD_PATH, (_, path: string) =>
-        userDataMgr.setTouchDesignerBinPath(path)
-    );
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ipcMain.handle(API_METHODS.GET_TD_PATH, (_) => userDataMgr.getTouchDesignerBinPath());
+    ipcMain.handle(API_METHODS.CHECK_DEPENDENCIES, (_) => {
+        if (process.platform != 'win32' && process.platform != 'darwin') return Promise.resolve([]);
+        return projectManager.checkDependencies();
+    });
 
     ipcMain.handle(API_METHODS.OPEN_TD, (_, path: string) => openToeFile(path));
 
     ipcMain.handle(
         API_METHODS.CREATE_PROJECT,
-        async (_, dir: string, name: string, remote: boolean, src?: string) => {
+        async (
+            _,
+            dir: string,
+            name: string,
+            description: string,
+            remote: boolean,
+            src?: string
+        ) => {
             let initialVersion: Version;
             let remoteUrl: string = '';
-            log.debug('params: ', dir, name, remote, src);
             if (remote) {
-                const response = await remoteRepoService.createRepository(name);
+                const response = await remoteRepoService.createRepository(name, description);
                 if (response.result) {
                     remoteUrl = response.result;
-                    initialVersion = await projectManager.init(dir, remoteUrl, src);
+                    try {
+                        initialVersion = await projectManager.init(dir, remoteUrl, src);
+                    } catch (err) {
+                        log.error('Failed to initialize project locally:', err);
+                        return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
+                    }
                 } else {
-                    // TO DO: fixme
-                    return Promise.reject(new Error('Unexpected error'));
+                    return Promise.resolve(ApiResponse.fromErrorCode(response.errorCode!));
                 }
             } else {
-                initialVersion = await projectManager.init(dir, undefined, src);
-            }
-
-            if (src) {
                 try {
-                    new URL(src);
-                    remoteUrl = src;
-                } catch (error) {
-                    // fixme
+                    initialVersion = await projectManager.init(dir, undefined, src);
+                } catch (err) {
+                    log.error('Failed to initialize project locally:', err);
+                    return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
                 }
             }
 
@@ -192,15 +250,20 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
                 name: name,
                 owner: initialVersion.author.name,
                 path: dir,
-                remote: remoteUrl
+                remote: remote ? remoteUrl : '',
+                description: description
             };
             userDataMgr.addRecentProject(newProject);
-            return Promise.resolve(newProject);
+            return Promise.resolve(ApiResponse.fromResult(newProject));
         }
     );
 
     ipcMain.handle(API_METHODS.GO_TO_VERSION, (_, dir: string, versionId: string) =>
         projectManager.goToVersion(dir, versionId)
+    );
+
+    ipcMain.handle(API_METHODS.DISCARD_CHANGES, (_, dir: string) =>
+        projectManager.discardChanges(dir)
     );
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -214,21 +277,34 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     ipcMain.handle(API_METHODS.PUSH, (_, dir: string) => projectManager.push(dir));
 
-    ipcMain.handle(API_METHODS.FINISH_MERGE, (_, dir: string, state: T) =>
-        projectManager.finishMerge(dir, state)
+    ipcMain.handle(
+        API_METHODS.FINISH_MERGE,
+        (_, dir: string, state: T, versionName: string, description: string) =>
+            projectManager.finishMerge(dir, state, versionName, description)
     );
     // -----*-----
 
-    ipcMain.on(API_METHODS.WATCH_PROJECT, (_, path: string) =>
-        watcherMgr.registerWatcher(path, () => {
-            // Registrar los callbacks que necesitemos acá
-            // yo creo que los callbacks van a ser mensajes hacia el Render process que va a usar para
-            // mostrar en pantalla algo cuando se detectó un cambio, por ejemplo "queres crear una nueva version?"
-            log.debug('Project ' + path + ' changed.');
-        })
-    );
+    ipcMain.handle(API_METHODS.WATCH_PROJECT, (_, dir: string) => {
+        const toePath = path.join(dir, findFileByExt('toe', dir)!);
+        log.debug(`Adding ${toePath} to watcher`);
+        watcherMgr.registerWatcher(toePath!, async () => {
+            const currentVersion: Version = await projectManager.currentVersion(dir);
+            const lastVersion: Version = await projectManager.lastVersion(dir);
+            log.debug('currentVersionId: ', currentVersion.id);
+            log.debug('lastVersionId: ', lastVersion.id);
+            const hasChanges: boolean = await projectManager.hasChanges(dir);
 
-    ipcMain.on(API_METHODS.UNWATCH_PROJECT, (_, path: string) => watcherMgr.removeWatcher(path));
+            if (currentVersion.id === lastVersion.id && hasChanges) {
+                win?.webContents.send(API_METHODS.PROJECT_CHANGED, { message: 'Project changed' });
+            }
+        });
+    });
+
+    ipcMain.handle(API_METHODS.UNWATCH_PROJECT, (_, dir: string) => {
+        const toePath = path.join(dir, findFileByExt('toe', dir)!);
+        log.debug(`Adding ${toePath} to watcher`);
+        watcherMgr.removeWatcher(toePath);
+    });
 
     ipcMain.handle(API_METHODS.GET_STATE, async (_, path: string, versionId?: string) => {
         log.debug('get state main handler');
@@ -282,5 +358,17 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     ipcMain.handle(API_METHODS.SEARCH_USER, async (_, username: string) => {
         return userService.searchUser(username);
+    });
+
+    ipcMain.handle(API_METHODS.REGISTER, async (_, req: RegisterUserRequest) => {
+        return userService.registerUser(req);
+    });
+
+    ipcMain.handle(API_METHODS.GET_MERGE_STATUS, async (_, dir: string) => {
+        return projectManager.getMergeStatus(dir);
+    });
+
+    ipcMain.handle(API_METHODS.LAST_VERSION, async (_, dir: string) => {
+        return projectManager.lastVersion(dir);
     });
 };

@@ -1,4 +1,5 @@
 {
     "id": "template3",
-    "name": "Mouse feedback"
+    "name": "Mouse feedback",
+    "description": "Template that transforms mouse movements into fiery, fluid visuals. Real-time experience"
 }

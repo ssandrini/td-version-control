@@ -1,5 +1,6 @@
 import {
     parseMergeConflicts,
+    preprocessMergeConflicts,
     resolveFileConflicts,
     resolveWithCurrentBranch,
     resolveWithIncomingBranch
@@ -193,5 +194,111 @@ describe('Conflict Resolution Functions with Multiple Conflicts', () => {
             'environment Production';
 
         expect(resolvedContent).toBe(expectedContent);
+    });
+});
+
+describe('preprocessMergeConflicts', () => {
+    const ignoreProperties = [/^pageindex\b/, /^v\b/];
+
+    test('conflicto con propiedades ignoradas sincronizadas', () => {
+        const input = `
+<<<<<<< HEAD
+horzsource 67108864 none
+pageindex 67108864 1
+v 118.371 433.381 0.62898
+vertsource 67108864 red
+=======
+horzsource 67108864 asd
+pageindex 67108864 2
+v 119.371 432.381 0.70000
+vertsource 67108864 blue
+>>>>>>> 21dasd123123
+        `;
+        const expectedOutput = `
+<<<<<<< HEAD
+horzsource 67108864 none
+pageindex 67108864 1
+v 118.371 433.381 0.62898
+vertsource 67108864 red
+=======
+horzsource 67108864 asd
+pageindex 67108864 1
+v 118.371 433.381 0.62898
+vertsource 67108864 blue
+>>>>>>> 21dasd123123
+        `;
+
+        const result = preprocessMergeConflicts(input, ignoreProperties);
+        expect(result.trim()).toBe(expectedOutput.trim());
+    });
+
+    test('conflicto solo con propiedades ignoradas (se elimina)', () => {
+        const input = `
+<<<<<<< HEAD
+pageindex 67108864 1
+=======
+pageindex 67108864 2
+>>>>>>> 21dasd123123
+        `;
+        const expectedOutput = `pageindex 67108864 1`;
+
+        const result = preprocessMergeConflicts(input, ignoreProperties);
+        expect(result.trim()).toBe(expectedOutput.trim());
+    });
+
+    test('conflicto sin propiedades ignoradas (se conserva)', () => {
+        const input = `
+<<<<<<< HEAD
+vertsource 67108864 red
+=======
+vertsource 67108864 blue
+>>>>>>> 21dasd123123
+        `;
+        const expectedOutput = `
+<<<<<<< HEAD
+vertsource 67108864 red
+=======
+vertsource 67108864 blue
+>>>>>>> 21dasd123123
+        `;
+
+        const result = preprocessMergeConflicts(input, ignoreProperties);
+        expect(result.trim()).toBe(expectedOutput.trim());
+    });
+
+    test('múltiples conflictos en un archivo', () => {
+        const input = `
+<<<<<<< HEAD
+horzsource 67108864 none
+pageindex 67108864 1
+=======
+horzsource 67108864 asd
+pageindex 67108864 2
+>>>>>>> 21dasd123123
+
+<<<<<<< HEAD
+vertsource 67108864 red
+=======
+vertsource 67108864 blue
+>>>>>>> 21dasd123123
+        `;
+        const expectedOutput = `
+<<<<<<< HEAD
+horzsource 67108864 none
+pageindex 67108864 1
+=======
+horzsource 67108864 asd
+pageindex 67108864 1
+>>>>>>> 21dasd123123
+
+<<<<<<< HEAD
+vertsource 67108864 red
+=======
+vertsource 67108864 blue
+>>>>>>> 21dasd123123
+        `;
+
+        const result = preprocessMergeConflicts(input, ignoreProperties);
+        expect(result.trim()).toBe(expectedOutput.trim());
     });
 });

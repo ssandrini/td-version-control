@@ -7,7 +7,7 @@ import { AuthToken } from '../models/api/AuthToken';
 export const successResponseInterceptor = (response: AxiosResponse) => {
     log.debug(`Response from: ${response.config.url}`);
     log.debug(`Response status: ${response.status}`);
-    log.debug(`Response data: ${JSON.stringify(response.data)}`);
+    //log.debug(`Response data: ${JSON.stringify(response.data)}`);
     return response;
 };
 
@@ -33,11 +33,11 @@ export const errorResponseInterceptor = (error: any) => {
 };
 
 export const addAuthenticationTokenInterceptor = (config: InternalAxiosRequestConfig) => {
-    log.debug(`Request to: ${config.url}`);
-    log.debug(`Request body: ${JSON.stringify(config.data)}`);
-    log.debug(`Request headers: ${JSON.stringify(config.headers)}`);
-
-    if (config.url && config.url.includes('/tokens') && config.method!.toLowerCase() === 'post') {
+    if (
+        config.url &&
+        (config.url.includes('/tokens') || config.url.includes('/admin')) &&
+        config.method!.toLowerCase() === 'post'
+    ) {
         log.debug('Skipping auth token for authentication request.');
         return config;
     }

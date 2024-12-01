@@ -16,6 +16,7 @@ import path from 'node:path';
 import { Content, Filename, MergeStatus, TrackerMergeResult } from '../merge/TrackerMergeResult';
 import {
     parseMergeConflicts,
+    preprocessMergeConflicts,
     resolveFileConflicts,
     resolveWithCurrentBranch
 } from '../merge/MergeParser';
@@ -27,22 +28,34 @@ export class SimpleGitTracker implements Tracker {
     readonly git: SimpleGit;
     readonly separator = '//';
     readonly EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
-    readonly ignoredFiles = ['diff', 'workingState.json'];
+    readonly ignoredFiles = ['diff', 'workingState.json', 'checkout.timestamp'];
+    readonly attributes: ReadonlyMap<string, string[]>;
 
     constructor() {
         this.git = simpleGit();
+        this.attributes = new Map([['**/*.lod', ['binary', 'merge=ours', '-text']]]);
     }
 
     async init(dir: string, dst?: string): Promise<void> {
         await this.git.cwd(dir);
         await this.git.init();
+        await this.git.raw(['branch', '-m', 'main']);
+
         const user: User = userDataManager.getUser()!;
         await this.git.raw(['config', '--local', 'core.autocrlf', 'false']);
         await this.git.raw(['config', '--local', 'user.name', user.username]);
         await this.git.raw(['config', '--local', 'user.email', user.email]);
         await this.git.raw(['config', '--local', 'push.autoSetupRemote', 'true']);
+
         const gitignorePath = path.join(dir, '.gitignore');
         await fs.writeFile(gitignorePath, this.ignoredFiles.join('\n'), 'utf-8');
+
+        const gitAttributesPath = path.join(dir, '.gitattributes');
+        const attributesContent = Array.from(this.attributes)
+            .flatMap(([pattern, attributes]) => attributes.map((attr) => `${pattern} ${attr}`))
+            .join('\n');
+        await fs.writeFile(gitAttributesPath, attributesContent, 'utf-8');
+
         if (dst) {
             await this.git.addRemote('origin', dst);
         }
@@ -90,16 +103,21 @@ export class SimpleGitTracker implements Tracker {
     async listVersions(dir: string): Promise<Version[]> {
         await this.git.cwd(dir);
         const log = await this.git.log(['--branches']);
-        return log.all.map((commit) => {
-            const [name, ...description] = commit.message.split(this.separator);
-            return new Version(
-                name,
-                new Author(commit.author_name, commit.author_email),
-                commit.hash,
-                new Date(commit.date),
-                description.join(this.separator)
-            );
-        });
+        return await Promise.all(
+            log.all.map(async (commit) => {
+                const [name, ...description] = commit.message.split(this.separator);
+                const rawTag = await this.git.tag(['--points-at', commit.hash]);
+                const tag = rawTag.trim() ? rawTag.trim().split('\n')[0] : undefined;
+                return new Version(
+                    name,
+                    new Author(commit.author_name, commit.author_email),
+                    commit.hash,
+                    new Date(commit.date),
+                    description.join(this.separator),
+                    tag
+                );
+            })
+        );
     }
 
     async createVersion(dir: string, versionName: string, description?: string): Promise<Version> {
@@ -111,13 +129,54 @@ export class SimpleGitTracker implements Tracker {
         return this.currentVersion(dir);
     }
 
+    async addTag(dir: string, versionId: string, tag: string): Promise<void> {
+        log.info(`Creating tag ${tag} for ${versionId}`);
+        await this.git.cwd(dir);
+        try {
+            await this.git.tag([tag, versionId]);
+            log.info(`Tag "${tag}" added to version "${versionId}".`);
+        } catch (error) {
+            this.handleError(error, `Failed to add tag "${tag}" to version "${versionId}".`);
+        }
+    }
+
+    async removeTag(dir: string, tag: string): Promise<void> {
+        log.info(`Deleting tag ${tag}`);
+        await this.git.cwd(dir);
+        try {
+            await this.git.tag(['-d', tag]);
+            log.info(`Tag "${tag}" removed.`);
+        } catch (error) {
+            this.handleError(error, `Failed to remove tag "${tag}".`);
+        }
+    }
+
     async goToVersion(dir: string, versionId: string): Promise<Version> {
         await this.git.cwd(dir);
+
         const log = await this.git.log(['--all']);
         const commit = log.all.find((c) => c.hash === versionId);
         if (!commit) {
             throw new TrackerError(`Version with id "${versionId}" not found.`);
         }
+
+        try {
+            const mainLog = await this.git.log(['main']);
+            if (mainLog.latest?.hash === versionId) {
+                await this.git.checkout('main');
+                const [name, ...description] = mainLog.latest.message.split(this.separator);
+                return new Version(
+                    name,
+                    new Author(mainLog.latest.author_name, mainLog.latest.author_email),
+                    mainLog.latest.hash,
+                    new Date(mainLog.latest.date),
+                    description.join('\n')
+                );
+            }
+        } catch {
+            throw new TrackerError(`Branch 'main' does not exist.`);
+        }
+
         await this.git.checkout(commit.hash);
         const [name, ...description] = commit.message.split(this.separator);
         return new Version(
@@ -127,6 +186,12 @@ export class SimpleGitTracker implements Tracker {
             new Date(commit.date),
             description.join('\n')
         );
+    }
+
+    async discardChanges(dir: string): Promise<void> {
+        await this.git.cwd(dir);
+        await this.git.raw(['restore', '.']);
+        await this.git.raw(['clean', '-fd']);
     }
 
     async compare(
@@ -194,7 +259,7 @@ export class SimpleGitTracker implements Tracker {
         try {
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(url);
-            normalizedUrl.protocol = 'http:';
+            normalizedUrl.protocol = 'https:';
             normalizedUrl.username = username;
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();
@@ -206,7 +271,11 @@ export class SimpleGitTracker implements Tracker {
         }
     }
 
-    async pull(dir: string, excludedFiles: RegExp[]): Promise<TrackerMergeResult> {
+    async pull(
+        dir: string,
+        excludedFiles: RegExp[],
+        linesMatching: RegExp[]
+    ): Promise<TrackerMergeResult> {
         this.git.cwd(dir);
         log.info('Starting pull operation');
 
@@ -268,8 +337,8 @@ export class SimpleGitTracker implements Tracker {
             let currentContent = this.readFileContent(filePath);
 
             log.info(`Conflict detected in file "${conflict.file}" due to: ${conflict.reason}`);
-
-            if (excludedFiles.some((regex) => regex.test(filePath))) {
+            const normalizedFilePath = filePath.replace(/\\/g, '/');
+            if (excludedFiles.some((regex) => regex.test(normalizedFilePath))) {
                 log.info(`Auto-resolving conflict for excluded file: ${filePath}`);
                 currentContent = resolveWithCurrentBranch(currentContent);
                 fs.writeFileSync(filePath, currentContent);
@@ -280,7 +349,19 @@ export class SimpleGitTracker implements Tracker {
             log.info(
                 `Unable to auto-resolve conflict in file "${conflict.file}". Marking as unresolved.`
             );
-            conflictMap.set(extractFileName(conflict.file!)!, parseMergeConflicts(currentContent));
+
+            log.debug(`Preprocessing file ${conflict.file}`);
+            const newContent = preprocessMergeConflicts(currentContent, linesMatching);
+            if (newContent !== currentContent) {
+                fs.writeFileSync(filePath, newContent);
+            }
+
+            const conflictSet: Set<[Content, Content]> = parseMergeConflicts(newContent);
+            if (conflictSet.size > 0) {
+                conflictMap.set(extractFileName(conflict.file!)!, conflictSet);
+            } else {
+                await this.git.add(conflict.file!);
+            }
         }
 
         if (conflictMap.size > 0) {
@@ -296,8 +377,20 @@ export class SimpleGitTracker implements Tracker {
         await this.git.cwd(dir);
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            const result = await this.git.push(remoteUrl);
-            log.info(`Push successful: ${result.pushed.length} references updated.`);
+            const branches = await this.git.branch(['--list']);
+            const currentBranch = branches.current;
+
+            const hasUpstream = branches.all.some((branch) =>
+                branch.includes(`remotes/origin/${currentBranch}`)
+            );
+
+            if (!hasUpstream) {
+                log.info(`Setting upstream branch for the first push.`);
+                await this.git.push(['-u', remoteUrl, 'HEAD']);
+            } else {
+                const result = await this.git.push(remoteUrl, '--tags');
+                log.info(`Push successful: ${result.pushed.length} references updated.`);
+            }
         } catch (error) {
             const errorMessage = `Failed to push changes from ${dir}`;
             this.handleError(error, errorMessage);
@@ -396,7 +489,7 @@ export class SimpleGitTracker implements Tracker {
             const remoteUrl = (await this.git.listRemote(['--get-url'])).trim();
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(remoteUrl);
-            normalizedUrl.protocol = 'http:';
+            normalizedUrl.protocol = 'https:';
             normalizedUrl.username = username;
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();

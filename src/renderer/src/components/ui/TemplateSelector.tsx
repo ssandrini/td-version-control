@@ -28,7 +28,7 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onTemplateSelect })
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto bg-gray-900 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-500 scrollbar-track-gray-700">
+        <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-500 scrollbar-track-gray-700">
             {loading ? (
                 <div className="flex justify-center items-center h-full">
                     <ImSpinner2 className="animate-spin text-white text-4xl" />
@@ -42,23 +42,28 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onTemplateSelect })
                             <span className="ml-4">No templates available.</span>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {marianaTemplates.map((template) => (
                                 <div
                                     key={template.id}
                                     onClick={() => handleTemplateClick(template)}
-                                    className={`bg-gray-700 text-white p-4 rounded-lg cursor-pointer text-center border-2 ${
+                                    className={`bg-gray-800 text-white p-4 rounded-lg cursor-pointer border-2 ${
                                         selectedTemplateId === template.id
                                             ? 'border-blue-500'
                                             : 'border-transparent'
                                     } hover:border-blue-300 transition-colors`}
                                 >
-                                    <p className="mb-2 font-semibold">{template.name}</p>
-                                    <img
-                                        src={template.imagePath}
-                                        alt={template.name}
-                                        className="w-full h-auto"
-                                    />
+                                    <div className="relative w-full h-48 overflow-hidden rounded-md">
+                                        <img
+                                            src={template.imagePath}
+                                            alt={template.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                    <p className="mt-4 font-semibold text-lg">{template.name}</p>
+                                    <p className="mt-2 text-gray-400 text-sm">
+                                        {template.description || 'No description available.'}
+                                    </p>
                                 </div>
                             ))}
                         </div>

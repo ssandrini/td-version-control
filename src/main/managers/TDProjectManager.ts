@@ -7,14 +7,19 @@ import path from 'node:path';
 import { Tracker } from '../trackers/interfaces/Tracker';
 import { TDNode } from '../models/TDNode';
 import {
+    checkDependencies,
     dumpDiffToFile,
     dumpTDStateToFile,
+    dumpTimestampToFile,
     extractNodeNameFromToc,
     findContainers,
     findFileByExt,
+    getLastModifiedDate,
     getNodeInfoFromNFile,
+    readDateFromFile,
     splitSet,
-    validateDirectory
+    validateDirectory,
+    validateTag
 } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 import { TDState } from '../models/TDState';
@@ -26,6 +31,8 @@ import { TDEdge } from '../models/TDEdge';
 import { MergeStatus, TrackerMergeResult } from '../merge/TrackerMergeResult';
 import { TDMergeResult, TDMergeStatus } from '../models/TDMergeResult';
 import { resolveWithCurrentBranch, resolveWithIncomingBranch } from '../merge/MergeParser';
+import { TagError } from '../errors/TagError';
+import { ProjectDependencies } from '../../renderer/src/models/ProjectDependencies';
 
 export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> {
     readonly processor: Processor;
@@ -34,11 +41,13 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     readonly propertyRuleEngine: PropertyRuleEngine;
     readonly inputRuleEngine: InputRuleEngine;
     readonly excludedFiles: RegExp[];
+    readonly excludedProperties: RegExp[] = [/^pageindex\b/, /^view\b/, /^flags\b/, /^v\b/];
     private versionNameMax = 256;
     private descriptionMax = 1024;
     private stateFile = 'state.json';
     private workingStateFile = 'workingState.json';
     private diffFile = 'diff';
+    private checkoutTimestampFile = 'checkout.timestamp';
 
     constructor(processor: Processor, tracker: Tracker, hiddenDir: string) {
         this.processor = processor;
@@ -47,7 +56,31 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         this.propertyRuleEngine = new PropertyRuleEngine();
         this.inputRuleEngine = new InputRuleEngine();
 
-        this.excludedFiles = [/\.build$/, /\.lod$/, /\.bin$/, /^local\/.*$/, /\.json$/];
+        this.excludedFiles = [
+            /\.build$/,
+            /\.lod$/,
+            /\.bin$/,
+            /^local\/.*$/,
+            /\.json$/,
+            /.*\.dir\/[^/]+\.(n|parm|panel)$/
+        ];
+    }
+
+    async getMergeStatus(dir: string): Promise<TDMergeResult> {
+        const hiddenDirPath = this.hiddenDirPath(dir);
+        const result: TrackerMergeResult = await this.tracker.getMergeResult(hiddenDirPath);
+        log.debug('Getting merge status:', result.mergeStatus);
+
+        if (result.mergeStatus === MergeStatus.FINISHED) {
+            log.debug('No merge in progress');
+            return Promise.resolve(new TDMergeResult(TDMergeStatus.FINISHED, null, null));
+        }
+
+        log.debug('Merge status is IN_PROGRESS.');
+        const [currentState, incomingState] = await this.createStatesFromConflicts(dir);
+        return Promise.resolve(
+            new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState)
+        );
     }
 
     async init(dir: string, dst?: string, src?: string): Promise<Version> {
@@ -141,12 +174,94 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         }
     }
 
+    async hasChanges(dir: string): Promise<boolean> {
+        await validateDirectory(dir);
+
+        if (!(await this.isLastVersion(dir))) {
+            return false;
+        }
+
+        const lastReferenceDate = await this.getLastReferenceDate(dir);
+        const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+        const lastModified = await getLastModifiedDate(toeFile);
+
+        log.debug(`${toeFile} was last modified at ${lastModified}`);
+
+        return lastReferenceDate < lastModified;
+    }
+
+    async addTag(dir: string, versionId: string, tag: string): Promise<void> {
+        await validateDirectory(dir);
+        validateTag(tag);
+        const hiddenDirPath = this.hiddenDirPath(dir);
+        try {
+            await this.tracker.addTag(hiddenDirPath, versionId, tag);
+        } catch (error: any) {
+            log.error(`Error creating tag for ${versionId}. Cause:`, error);
+            if (error.message.includes('already exists')) {
+                return Promise.reject(new TagError(`Tag ${tag} already exists`));
+            }
+            return Promise.reject(error);
+        }
+    }
+
+    async removeTag(dir: string, versionId: string): Promise<void> {
+        await validateDirectory(dir);
+        const hiddenDirPath = this.hiddenDirPath(dir);
+        try {
+            await this.tracker.removeTag(hiddenDirPath, versionId);
+        } catch (error) {
+            log.error(`Error creating tag for ${versionId}. Cause:`, error);
+            return Promise.reject(error);
+        }
+    }
+
     async goToVersion(dir: string, versionId: string): Promise<Version> {
         await validateDirectory(dir);
-        return this.tracker.goToVersion(this.hiddenDirPath(dir), versionId);
+
+        if (await this.hasChanges(dir)) {
+            log.error(`Unable to checkout to ${versionId}: working directory dirty.`);
+            return Promise.reject(`Cannot move to version because of current changes.`);
+        }
+
+        const hiddenDir = this.hiddenDirPath(dir);
+        await this.tracker.discardChanges(hiddenDir);
+        await this.tracker.goToVersion(hiddenDir, versionId);
+        await this.processor.postprocess(hiddenDir, dir);
+
+        const currentVersion = await this.currentVersion(dir);
+        const lastVersion = await this.lastVersion(dir);
+
+        if (currentVersion.id === lastVersion.id) {
+            const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+            const lastModified = await getLastModifiedDate(toeFile);
+            await dumpTimestampToFile(
+                lastModified,
+                path.join(hiddenDir, this.checkoutTimestampFile)
+            );
+        }
+
+        return currentVersion;
+    }
+
+    async discardChanges(dir: string): Promise<void> {
+        await validateDirectory(dir);
+        const hiddenDirPath = this.hiddenDirPath(dir);
+        log.debug(`Discarded changes from ${dir}`);
+        await this.tracker.discardChanges(this.hiddenDirPath(dir));
+        if (await this.isLastVersion(dir)) {
+            await this.processor.postprocess(hiddenDirPath, dir);
+            const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+            const lastModified = await getLastModifiedDate(toeFile);
+            await dumpTimestampToFile(
+                lastModified,
+                path.join(hiddenDirPath, this.checkoutTimestampFile)
+            );
+        }
     }
 
     async getVersionState(dir: string, versionId?: string): Promise<TDState> {
+        log.debug('GetVersionState: ', versionId);
         const hiddenDir = this.hiddenDirPath(dir);
         if (versionId) {
             const content = await this.tracker.readFile(
@@ -192,10 +307,14 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     }
 
     async pull(dir: string): Promise<TDMergeResult> {
+        if (await this.hasChanges(dir)) {
+            return Promise.reject(`Cannot pull because of current changes.`);
+        }
         const hiddenDirPath = this.hiddenDirPath(dir);
         const result: TrackerMergeResult = await this.tracker.pull(
             hiddenDirPath,
-            this.excludedFiles
+            this.excludedFiles,
+            this.excludedProperties
         );
 
         if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
@@ -206,12 +325,24 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         ) {
             await this.processor.postprocess(hiddenDirPath, dir);
             await this.saveVersionState(dir, this.stateFile);
+            const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+            const lastModified = await getLastModifiedDate(toeFile);
+            await dumpTimestampToFile(
+                lastModified,
+                path.join(hiddenDirPath, this.checkoutTimestampFile)
+            );
             return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
         } else if (result.mergeStatus === MergeStatus.FINISHED) {
             await this.processor.postprocess(hiddenDirPath, dir);
             await this.saveVersionState(dir, this.stateFile);
             await this.tracker.createVersion(hiddenDirPath, 'MergeVersion');
             await this.tracker.push(hiddenDirPath);
+            const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+            const lastModified = await getLastModifiedDate(toeFile);
+            await dumpTimestampToFile(
+                lastModified,
+                path.join(hiddenDirPath, this.checkoutTimestampFile)
+            );
             return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
         } else if (
             result.mergeStatus === MergeStatus.IN_PROGRESS &&
@@ -230,6 +361,9 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
     }
 
     async push(dir: string): Promise<void> {
+        if (await this.hasChanges(dir)) {
+            return Promise.reject(`Cannot push because of current changes.`);
+        }
         const hiddenDirPath = this.hiddenDirPath(dir);
         await this.tracker.push(hiddenDirPath);
     }
@@ -238,7 +372,12 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         return path.join(dir, this.hiddenDir);
     };
 
-    async finishMerge(dir: string, userInputState: TDState): Promise<void> {
+    async finishMerge(
+        dir: string,
+        userInputState: TDState,
+        versionName: string,
+        description: string
+    ): Promise<void> {
         const hiddenDirPath = this.hiddenDirPath(dir);
         const result: TrackerMergeResult = await this.tracker.getMergeResult(hiddenDirPath);
         log.debug('Merge result status:', result.mergeStatus);
@@ -276,9 +415,20 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await this.tracker.settleConflicts(hiddenDirPath, resolvedContents);
         await this.processor.postprocess(hiddenDirPath, dir);
         await this.saveVersionState(dir, this.stateFile);
-        await this.tracker.createVersion(hiddenDirPath, 'MergeVersion');
+        await this.tracker.createVersion(hiddenDirPath, versionName, description);
+        const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+        const lastModified = await getLastModifiedDate(toeFile);
+        await dumpTimestampToFile(
+            lastModified,
+            path.join(hiddenDirPath, this.checkoutTimestampFile)
+        );
         await this.tracker.push(hiddenDirPath);
         log.debug('Merge resolution complete.');
+    }
+
+    async lastVersion(dir: string): Promise<Version> {
+        await validateDirectory(dir);
+        return (await this.tracker.listVersions(this.hiddenDirPath(dir)))[0];
     }
 
     private async saveVersionState(dir: string, file: string): Promise<TDState> {
@@ -325,6 +475,15 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             }
         }
 
+        await this.processMissingEdgesForRenderNodes(
+            state,
+            hiddenDirPath,
+            versionId,
+            transformContent,
+            toeDir,
+            container
+        );
+
         return state;
     }
 
@@ -364,7 +523,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             })
         );
 
-        return Promise.resolve(this.extractNodeAndInputs(nodeName, fileContents, true));
+        return Promise.resolve(this.extractNodeAndInputs(nodeName, fileContents));
     }
 
     private processProperties(content: string, properties: Map<string, string>) {
@@ -373,17 +532,11 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         });
     }
 
-    private extractNodeAndInputs(
-        nodeName: string,
-        fileContents: string[],
-        nFile: boolean
-    ): [TDNode, TDEdge[]] {
+    private extractNodeAndInputs(nodeName: string, fileContents: string[]): [TDNode, TDEdge[]] {
         const properties = new Map<string, string>();
         fileContents.forEach((content) => this.processProperties(content, properties));
 
-        const [type, subtype] = nFile
-            ? getNodeInfoFromNFile(fileContents[0])!
-            : [undefined, undefined];
+        const [type, subtype] = getNodeInfoFromNFile(fileContents[0])!;
         const node = new TDNode(nodeName, type, subtype, properties);
 
         const nodeInputs: TDEdge[] = [];
@@ -394,8 +547,8 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         return [node, nodeInputs];
     }
 
-    private async findFileWithCheck(hiddenDirPath: string, extension: string): Promise<string> {
-        const file = findFileByExt(extension, hiddenDirPath);
+    private async findFileWithCheck(dir: string, extension: string): Promise<string> {
+        const file = findFileByExt(extension, dir);
         if (!file) {
             return Promise.reject(new MissingFileError(`Could not find ${extension} file`));
         }
@@ -428,6 +581,12 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await this.tracker.clone(hiddenDirPath, url);
         hidefile.hideSync(hiddenDirPath);
         await this.processor.postprocess(hiddenDirPath, dir);
+        const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
+        const lastModified = await getLastModifiedDate(toeFile);
+        await dumpTimestampToFile(
+            lastModified,
+            path.join(hiddenDirPath, this.checkoutTimestampFile)
+        );
         return await this.tracker.initialVersion(hiddenDirPath);
     }
 
@@ -443,5 +602,86 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             resolveWithIncomingBranch
         );
         return [currentState, incomingState];
+    }
+
+    private async isLastVersion(dir: string): Promise<boolean> {
+        const currentVersion = await this.currentVersion(dir);
+        const lastVersion = await this.lastVersion(dir);
+        return currentVersion.id === lastVersion.id;
+    }
+
+    private async getLastReferenceDate(dir: string): Promise<Date> {
+        const hiddenDir = this.hiddenDirPath(dir);
+
+        const checkoutTimestamp = await readDateFromFile(
+            path.join(hiddenDir, this.checkoutTimestampFile)
+        );
+        const lastCommitDate = (await this.tracker.listVersions(hiddenDir))[0].date;
+
+        // Return the most recent date or fallback to lastCommitDate if checkoutTimestamp is undefined
+        if (!checkoutTimestamp) {
+            return lastCommitDate;
+        }
+
+        return checkoutTimestamp > lastCommitDate ? checkoutTimestamp : lastCommitDate;
+    }
+
+    private async processMissingEdgesForRenderNodes(
+        state: TDState,
+        hiddenDirPath: string,
+        versionId: string | undefined,
+        transformContent: (content: string) => string,
+        toeDir: string,
+        container: string
+    ): Promise<void> {
+        const topRenderNodes = state.nodes.filter(
+            (node) => node.type === 'TOP' && node.subtype === 'render'
+        );
+        const compGeoNodes = state.nodes
+            .filter((node) => node.type === 'COMP' && node.subtype === 'geo')
+            .map((node) => node.name);
+        const compLightNodes = state.nodes
+            .filter(
+                (node) =>
+                    node.type === 'COMP' &&
+                    (node.subtype === 'light' || node.subtype === 'environment')
+            )
+            .map((node) => node.name);
+
+        for (const node of topRenderNodes) {
+            const parmFilePath = path.posix.join(toeDir, container, `${node.name}.parm`);
+            let parmFileContent = '';
+
+            try {
+                parmFileContent = await this.tracker.readFile(
+                    hiddenDirPath,
+                    parmFilePath,
+                    versionId
+                );
+                parmFileContent = transformContent(parmFileContent);
+            } catch {
+                log.warn(`Missing or inaccessible .parm file for node ${node.name}`);
+            }
+
+            if (!parmFileContent.split('\n').some((line) => line.startsWith('camera'))) {
+                state.inputs.get(node.name)?.push(new TDEdge('cam1', true));
+            }
+
+            if (!parmFileContent.split('\n').some((line) => line.startsWith('geometry'))) {
+                for (const geoNode of compGeoNodes) {
+                    state.inputs.get(node.name)?.push(new TDEdge(geoNode, true));
+                }
+            }
+
+            if (!parmFileContent.split('\n').some((line) => line.startsWith('lights'))) {
+                for (const lightNode of compLightNodes) {
+                    state.inputs.get(node.name)?.push(new TDEdge(lightNode, true));
+                }
+            }
+        }
+    }
+
+    checkDependencies(): Promise<ProjectDependencies[]> {
+        return checkDependencies();
     }
 }

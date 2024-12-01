@@ -12,7 +12,7 @@ import { APIErrorCode } from '../errors/APIErrorCode';
 
 export class GiteaAPIConnector {
     private readonly apiClient: AxiosInstance;
-    private readonly baseURL: string = 'http://34.44.41.60/api/v1/';
+    private readonly baseURL: string = 'https://api.mariana-api.com.ar/api/v1/';
 
     constructor() {
         this.apiClient = axios.create({
@@ -70,6 +70,10 @@ export class GiteaAPIConnector {
                 return APIErrorCode.InvalidCredentials;
             case 404:
                 return APIErrorCode.NotFound;
+            case 409:
+                return APIErrorCode.EntityAlreadyExists;
+            case 422:
+                return APIErrorCode.UnprocessableEntity;
             case 503:
                 return APIErrorCode.CommunicationError;
             default:

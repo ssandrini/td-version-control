@@ -3,4 +3,5 @@ export default interface Project {
     owner: string;
     path?: string;
     remote?: string;
+    description?: string;
 }

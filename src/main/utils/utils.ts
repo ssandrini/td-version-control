@@ -1,10 +1,14 @@
-import { dialog, shell } from 'electron';
+import { app, dialog, shell } from 'electron';
 import log from 'electron-log/main.js';
 import fs from 'fs-extra';
+import { readFile, stat, writeFile } from 'fs/promises';
 import Template from '../models/Template';
 import path from 'node:path';
 import { TDState } from '../models/TDState';
-import { app } from 'electron';
+import { TagError } from '../errors/TagError';
+import { ProjectDependencies } from '../../renderer/src/models/ProjectDependencies';
+import simpleGit from 'simple-git';
+import { execSync } from 'node:child_process';
 
 /**
  * Searches for the first file in the current directory with the specified extension.
@@ -227,7 +231,7 @@ export const splitSet = (set: Set<[string, string]>): [string[], string[]] => {
 };
 
 export const extractFileName = (filePath: string): string | null => {
-    const match = filePath.match(/[^\/\\]+$/);
+    const match = filePath.match(/[^/\\]+$/);
     return match ? match[0] : null;
 };
 
@@ -254,4 +258,152 @@ export const openDirectory = async (directoryPath: string): Promise<void> => {
         log.error('Unexpected error while opening directory:', error);
         return Promise.reject(new Error('Unexpected error while opening directory.'));
     }
+};
+
+export const validateTag = (tag: string): void => {
+    const fail = (reason: string) => {
+        throw new TagError(`Invalid tag "${tag}": ${reason}`);
+    };
+
+    if (tag.includes('..')) {
+        fail('cannot contain two consecutive dots (..).');
+    }
+
+    // eslint-disable-next-line no-control-regex
+    const invalidCharacters = new RegExp('[\\x00-\\x1F\\x7F ~^:?*\\[]');
+    if (invalidCharacters.test(tag)) {
+        fail(
+            'cannot contain ASCII control characters, space, tilde (~), caret (^), colon (:), question mark (?), asterisk (*), or open bracket ([).'
+        );
+    }
+
+    if (tag.startsWith('/')) {
+        fail('cannot begin with a slash (/).');
+    }
+    if (tag.endsWith('/')) {
+        fail('cannot end with a slash (/).');
+    }
+    if (tag.includes('//')) {
+        fail('cannot contain multiple consecutive slashes (//).');
+    }
+
+    if (tag.endsWith('.')) {
+        fail('cannot end with a dot (.).');
+    }
+
+    if (tag.includes('@{')) {
+        fail('cannot contain the sequence "@{".');
+    }
+
+    if (tag === '@') {
+        fail('cannot be the single character "@".');
+    }
+
+    if (tag.includes('.')) {
+        fail('cannot contain a bare dot (.).');
+    }
+};
+
+export const getLastModifiedDate = async (filePath: string): Promise<Date> => {
+    try {
+        const stats = await stat(filePath);
+        return stats.mtime; // Modification time
+    } catch (error: any) {
+        throw new Error(
+            `Unable to retrieve the last modified date for file "${filePath}": ${error.message}`
+        );
+    }
+};
+
+export const dumpTimestampToFile = async (date: Date, path: string): Promise<void> => {
+    try {
+        const dateString = date.toISOString();
+        await writeFile(path, dateString, 'utf-8');
+        log.debug(`Date ${dateString} written to file ${dateString} successfully.`);
+    } catch (error: any) {
+        log.error(`Failed to write date to file: ${error.message}`);
+        throw new Error(`Error writing date to file at path "${path}": ${error.message}`);
+    }
+};
+
+export const readDateFromFile = async (path: string): Promise<Date | undefined> => {
+    let content: string;
+
+    try {
+        // Attempt to read the file content
+        content = await readFile(path, 'utf-8');
+    } catch (error: any) {
+        if (error.code === 'ENOENT') {
+            log.warn(`File not found at path ${path}.`);
+            return undefined;
+        }
+        log.error(`Unable to read content from ${path} due to:`, error.message);
+        throw error;
+    }
+
+    const parsedDate = new Date(Date.parse(content.trim()));
+    if (isNaN(parsedDate.getTime())) {
+        log.error(`Invalid date format in file ${path}: ${content.trim()}`);
+        throw new Error(`Invalid date format in file ${path}: ${content.trim()}`);
+    }
+
+    return parsedDate;
+};
+
+export const checkDependencies = async (): Promise<ProjectDependencies[]> => {
+    if (process.platform === 'win32') {
+        return checkDependenciesWin();
+    } else if (process.platform === 'darwin') {
+        return checkDependenciesMac();
+    }
+    throw new Error('Linux is not supported');
+};
+
+const checkDependenciesWin = async (): Promise<ProjectDependencies[]> => {
+    // check git
+    const missingDeps: ProjectDependencies[] = [];
+    try {
+        if (!(await simpleGit().version()).installed) {
+            log.error('Git is not installed');
+            missingDeps.push(ProjectDependencies.GIT);
+        }
+    } catch (err: any) {
+        log.error('Error trying git version:', err.message);
+        missingDeps.push(ProjectDependencies.GIT);
+    }
+
+    // find touchdesigner on path
+    try {
+        const pathVariable = process.env.PATH || '';
+        if (!pathVariable.includes('TouchDesigner')) {
+            log.error('TouchDesigner not found on PATH');
+            missingDeps.push(ProjectDependencies.TOUCH_DESIGNER_PATH);
+        }
+    } catch (err: any) {
+        log.error('Unable to get PATH:', err.message);
+        missingDeps.push(ProjectDependencies.TOUCH_DESIGNER_PATH);
+    }
+
+    const checkCommandExists = (command: string): boolean => {
+        try {
+            execSync(command, {
+                stdio: ['ignore', 'ignore', 'ignore'],
+                windowsHide: true
+            });
+            return true;
+        } catch (err: any) {
+            // Check for CommandNotFoundException by FullyQualifiedErrorId
+            return !(err instanceof Error && err.message.includes('CommandNotFoundException'));
+        }
+    };
+
+    if (!checkCommandExists('toeexpand') || !checkCommandExists('toecollapse')) {
+        missingDeps.push(ProjectDependencies.TOE_COMMANDS);
+    }
+
+    return missingDeps;
+};
+
+const checkDependenciesMac = async (): Promise<ProjectDependencies[]> => {
+    return Promise.resolve([]);
 };

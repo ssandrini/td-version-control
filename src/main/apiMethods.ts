@@ -1,16 +1,19 @@
 export const API_METHODS = {
     LIST_VERSIONS: 'list-versions',
     CREATE_VERSION: 'create-version',
+    ADD_TAG: 'add-tag',
+    REMOVE_TAG: 'remove-tag',
     CURRENT_VERSION: 'current-version',
+    HAS_CHANGES: 'has-changes',
     FILE_PICKER: 'file-picker',
     RECENT_PROJECTS: 'recent-projects',
     SAVE_PROJECT: 'save-project',
     DELETE_PROJECT: 'delete_project',
-    SAVE_TD_PATH: 'save-td-path',
-    GET_TD_PATH: 'get-td-path',
+    CHECK_DEPENDENCIES: 'check-dependencies',
     OPEN_TD: 'open-toe',
     CREATE_PROJECT: 'create-project',
     GO_TO_VERSION: 'go-to-version',
+    DISCARD_CHANGES: 'discard-changes',
     WATCH_PROJECT: 'watch-project',
     UNWATCH_PROJECT: 'unwatch-project',
     GET_TEMPLATES: 'get-templates',
@@ -27,5 +30,9 @@ export const API_METHODS = {
     ADD_COLLABORATOR: 'add-collaborator',
     REMOVE_COLLABORATOR: 'remove-collaborator',
     OPEN_DIRECTORY: 'open-directory',
-    SEARCH_USER: 'search-user'
+    SEARCH_USER: 'search-user',
+    REGISTER: 'register',
+    GET_MERGE_STATUS: 'get-merge-status',
+    PROJECT_CHANGED: 'project-changed',
+    LAST_VERSION: 'last-version'
 };

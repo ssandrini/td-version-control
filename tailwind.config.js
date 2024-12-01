@@ -10,7 +10,7 @@ module.exports = {
     prefix: '',
     theme: {
         boxShadow: {
-            lg: '0 0 10px rgba(0, 0, 0, 0.3)',
+            lg: '0 0 15px rgba(0, 0, 0, 0.4)',
             md: '0 0 7px rgba(0, 0, 0, 0.2)',
             sm: '0 0 5px rgba(0, 0, 0, 0.1)'
         },

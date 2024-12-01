@@ -16,6 +16,7 @@ This repository contains the Terraform configurations for deploying the backend 
 -   [Destroying the Infrastructure](#destroying-the-infrastructure)
 -   [Troubleshooting](#troubleshooting)
 -   [Setting Up the gcloud SDK](#setting-up-the-gcloud-sdk)
+-   [Deploy to the Artifact registry](#deploy-to-the-artifact-registry)
 
 ## Architecture Overview
 
@@ -80,6 +81,7 @@ gitea_port           = 3000
 gitea_admin_username = "admin"
 gitea_admin_password = "strongpassword"
 gitea_db_password    = "your-secure-password"
+repository_id        = "ar-repository-id"
 ```
 
 ### 3. Initialize Terraform
@@ -195,6 +197,7 @@ To interact with GCP resources, and depliy the infraestructure, ensure the Googl
 
     ```bash
     gcloud services enable compute.googleapis.com
+    gcloud services enable artifactregistry.googleapis.com
     ```
 
 6. **Test your connection**:
@@ -205,3 +208,34 @@ To interact with GCP resources, and depliy the infraestructure, ensure the Googl
     ```
 
     If your instance is listed, the SDK is ready for use.
+
+## Deploy to the Artifact registry
+
+To deploy an image to the artifact registry follow these commands:
+
+1. Set up `gcloud` to push to the corresponding docker pkg.
+
+    ```bash
+    gcloud auth configure-docker <var.registry_region>-docker.pkg.dev
+    ```
+
+    > The region in `<var.registry_region>` should be set to the correct region.
+
+2. Build the image with a name.`image_name`
+
+    ```bash
+    docker build -t <image_name> .
+    ```
+
+3. Tag the image with the corresponding artifact registry location
+
+    ```bash
+    docker tag <image_name> <var.registry_region>-docker.pkg.dev-docker.pkg.dev/<var.project_id>/<ar_repository_name>/<image_name>
+    ```
+
+    > Remember to replace all `<vars>` with the corresponding values.
+
+4. Push the tagged image to the remote docker registry
+    ```bash
+    docker push <var.registry_region>-docker.pkg.dev/<var.project_id</<output.ar_repository_name</<image_name>
+    ```

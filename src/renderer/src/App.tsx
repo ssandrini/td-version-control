@@ -9,31 +9,23 @@ import Layout from './Pages/Layout';
 import { VariableProvider } from './hooks/Variables/useVariableContext';
 import { localPaths } from './const';
 import NewProject from './Pages/NewProject/NewProjects';
-import InnerLayout from './Pages/InnerLayout';
+import { AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
     return (
         <VariableProvider>
             <HashRouter>
-                <Routes>
-                    <Route path={localPaths.HOME} element={<Layout />}>
-                        <Route path="" element={<InnerLayout />}>
+                <AnimatePresence mode="wait">
+                    <Routes>
+                        <Route path={localPaths.HOME} element={<Layout />}>
                             <Route path="" element={<Main />} />
+                            <Route path={localPaths.PROJECTS} element={<Projects />} />
+                            <Route path={localPaths.SETTINGS} element={<Settings />} />
+                            <Route path={localPaths.PROJECT_DETAIL} element={<ProjectDetail />} />
+                            <Route path={localPaths.NEW_PROJECT} element={<NewProject />} />
                         </Route>
-                        <Route path={localPaths.PROJECTS} element={<InnerLayout />}>
-                            <Route path="" element={<Projects />} />
-                        </Route>
-                        <Route path={localPaths.SETTINGS} element={<InnerLayout />}>
-                            <Route path="" element={<Settings />} />
-                        </Route>
-                        <Route path={localPaths.PROJECT_DETAIL} element={<InnerLayout />}>
-                            <Route path="" element={<ProjectDetail />} />
-                        </Route>
-                        <Route path={localPaths.NEW_PROJECT} element={<InnerLayout />}>
-                            <Route path="" element={<NewProject />} />
-                        </Route>
-                    </Route>
-                </Routes>
+                    </Routes>
+                </AnimatePresence>
             </HashRouter>
         </VariableProvider>
     );

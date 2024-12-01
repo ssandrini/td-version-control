@@ -106,7 +106,8 @@ export class SimpleGitTracker implements Tracker {
         return await Promise.all(
             log.all.map(async (commit) => {
                 const [name, ...description] = commit.message.split(this.separator);
-                const tag = await this.git.tag(['--points-at', commit.hash]);
+                const rawTag = await this.git.tag(['--points-at', commit.hash]);
+                const tag = rawTag.trim() ? rawTag.trim().split('\n')[0] : undefined;
                 return new Version(
                     name,
                     new Author(commit.author_name, commit.author_email),
@@ -258,7 +259,7 @@ export class SimpleGitTracker implements Tracker {
         try {
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(url);
-            normalizedUrl.protocol = 'http:';
+            normalizedUrl.protocol = 'https:';
             normalizedUrl.username = username;
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();
@@ -488,7 +489,7 @@ export class SimpleGitTracker implements Tracker {
             const remoteUrl = (await this.git.listRemote(['--get-url'])).trim();
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(remoteUrl);
-            normalizedUrl.protocol = 'http:';
+            normalizedUrl.protocol = 'https:';
             normalizedUrl.username = username;
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();

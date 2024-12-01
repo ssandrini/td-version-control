@@ -51,7 +51,6 @@ const ProjectDetail: React.FC = () => {
 
     useEffect(() => {
         const handleProjectChanged = () => {
-            console.log('CALLBACK');
             const wipVersion = new Version(
                 'Work in progress',
                 new Author(user?.username ?? '', user?.email ?? ''),
@@ -60,6 +59,7 @@ const ProjectDetail: React.FC = () => {
             );
             setWipVersion(wipVersion);
             setSelectedVersion(wipVersion);
+            setCurrentVersion(wipVersion);
         };
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -104,6 +104,7 @@ const ProjectDetail: React.FC = () => {
                             );
                             setWipVersion(wipVersion);
                             setSelectedVersion(wipVersion);
+                            setCurrentVersion(wipVersion);
                         } else {
                             if (versions.length != 0) {
                                 setSelectedVersion(currentVersion);
@@ -178,9 +179,14 @@ const ProjectDetail: React.FC = () => {
             className="bg-[#1b1d23] flex flex-row justify-between w-full h-full overflow-auto no-scrollbar"
         >
             <div className="h-full p-2 w-[70%]">
-                <Nodes current={currentState} compare={compareState} project={project} />
+                <Nodes
+                    current={currentState}
+                    compare={compareState}
+                    project={project}
+                    selectedVersion={selectedVersion}
+                />
             </div>
-            <div className="flex flex-col h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 bg-[#2b2d30] min-w-[30rem] p-4 w-[27%]">
+            <div className="flex flex-col h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 bg-[#2b2d30] min-w-[30rem] p-4 w-[30%]">
                 <ProjectDetailsHeader
                     project={project}
                     selectedVersion={selectedVersion}

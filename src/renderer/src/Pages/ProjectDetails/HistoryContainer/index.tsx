@@ -83,60 +83,11 @@ const HistoryContainer: React.FC<HistoryContainerProps> = ({
     const handleCompareVersionSelect = (version: Version | null) => {
         setCompareVersion(version);
     };
-    /*
-    // TODO: implement this
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleAddTag = (version: Version, tag: string) => {
-        log.info('Adding tag:', { tag: tag, version: version.name });
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        window.api
-            .addTag(dir, version.id, tag)
-            .then((_) => {
-                log.info('Tag succesfully added:', { tag: tag, version: version.name });
-            })
-            .catch((err: any) => {
-                log.error(`Error adding tag:`, err);
-            })
-            .finally(() => {});
-    };
-
-    // TODO: implement this
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleRemoveTag = (version: Version) => {
-        if (!version.tag) {
-            log.info(`No tag for version ${version.id}`);
-            return;
-        }
-        log.info('Removing tag:', { tag: version.tag, version: version.name });
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        window.api
-            .removeTag(dir, version.tag) // IMPORTANT: ONLY THE TAG IS NEEDED TO REMOVE A TAG.
-            .then((_) => {
-                log.info('Tag succesfully removed:', { version: version.name });
-            })
-            .catch((err: any) => {
-                log.error(`Error removing tag:`, err);
-            })
-            .finally(() => {});
-    };*/
 
     return (
         <div className="h-full w-full my-2">
             {wipVersion && (
                 <div className="flex my-5">
-                    <div className="flex flex-col space-x-4 items-center w-full">
-                        <Button
-                            variant="outline"
-                            className="text-black"
-                            onClick={() => setShowNewVersionModal(true)}
-                        >
-                            Create New Version
-                        </Button>
-                    </div>
                     {showNewVersionModal && (
                         <Dialog open>
                             <DialogContent>
@@ -207,6 +158,7 @@ const HistoryContainer: React.FC<HistoryContainerProps> = ({
                 </div>
             )}
             <History
+                setVersions={setVersions}
                 project={project}
                 setSelectedVersion={setSelectedVersion}
                 setWipVersion={setWipVersion}
@@ -219,6 +171,9 @@ const HistoryContainer: React.FC<HistoryContainerProps> = ({
                 handleGoToVersion={handleGoToVersion}
                 handleCompareVersionSelect={handleCompareVersionSelect}
                 compareVersion={compareVersion}
+                setShowNewVersionModal={setShowNewVersionModal}
+                setCurrentVersion={setCurrentVersion}
+                dir={dir}
             />
         </div>
     );

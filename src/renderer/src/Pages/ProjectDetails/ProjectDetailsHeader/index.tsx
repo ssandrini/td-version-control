@@ -1,7 +1,6 @@
 import { Button } from '@renderer/components/ui/button';
-import { FaCheck, FaCloud, FaFolderOpen, FaPlay } from 'react-icons/fa';
+import { FaArrowUp, FaCheck, FaCloud, FaFolderOpen, FaPlay, FaSyncAlt } from 'react-icons/fa';
 import Spinner from '@renderer/components/ui/Spinner';
-import { cn } from '@renderer/lib/utils';
 import { Skeleton } from '@renderer/components/ui/skeleton';
 import React, { SetStateAction, useState } from 'react';
 import { CiWarning } from 'react-icons/ci';
@@ -11,7 +10,6 @@ import log from 'electron-log/renderer';
 import { Version } from '../../../../../main/models/Version';
 import { TDState } from '../../../../../main/models/TDState';
 import { useToast } from '@renderer/hooks/use-toast';
-import { FaDiagramProject } from 'react-icons/fa6';
 
 interface ProjectDetailsHeaderProps {
     project?: Project;
@@ -47,6 +45,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
     const { toast } = useToast();
 
     const [isLoadingPush, setIsLoadingPush] = useState(false);
+    const [isLoadingPull, setIsLoadingPull] = useState(false);
 
     const handlePush = () => {
         setIsLoadingPush(true);
@@ -111,7 +110,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
         if (!project) return;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.openToe(project.path).catch((error) => {
+        window.api.openToe(project.path).catch((error: any) => {
             log.error('Unexpected error:', error);
             toast({
                 className: '',
@@ -143,7 +142,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
         if (!project) return;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        window.api.openDirectory(project.path).catch((error) => {
+        window.api.openDirectory(project.path).catch((error: any) => {
             log.error('Unexpected error:', error);
             toast({
                 className: '',
@@ -171,6 +170,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
     };
 
     const handlePull = () => {
+        setIsLoadingPull(true);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
@@ -256,6 +256,9 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                         </div>
                     )
                 });
+            })
+            .finally(() => {
+                setIsLoadingPull(false);
             });
     };
 
@@ -270,17 +273,14 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                     {project?.name}
                                 </h2>
                             </div>
-                            <h2 className="text-xl flex items-center font-bold flex-row gap-2">
-                                <div className="font-bold">
-                                    <FaDiagramProject />
-                                </div>
+                            <p className="text-sm flex items-center flex-row gap-2">
                                 <div className="w-full pr-2 whitespace-pre-wrap break-words overflow-wrap break-word">
-                                    {selectedVersion?.name}
+                                    {project?.description}
                                 </div>
-                            </h2>
+                            </p>
                             <hr className="border-gray-500 opacity-50 w-full my-1" />
-                            <div className="text-xs">{project?.path}</div>
-                            <p className="text-sm mt-1 mb-1">
+                            {/*<div className="text-xs">{project?.path}</div>*/}
+                            {/*<p className="text-sm mt-1 mb-1">
                                 {selectedVersion?.date.toLocaleString('en-US', {
                                     year: 'numeric',
                                     month: 'long',
@@ -289,78 +289,91 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                     minute: '2-digit',
                                     hour12: false
                                 })}
-                            </p>
-                            <div className="flex mb-1 w-full items-center justify-center p-1 flex-row gap-4">
-                                <Button
-                                    className="mr-2 p-2 bg-transparent text-green-500 hover:bg-green-200"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handlePlayProject(project);
-                                    }}
-                                    title={'Run Project'}
-                                >
-                                    <FaPlay />
-                                </Button>
-                                <Button
-                                    onClick={() => handleOpenDirectory(project)}
-                                    className="mr-2 p-2 bg-transparent text-gray-800 hover:bg-gray-200"
-                                    title={'Open folder'}
-                                >
-                                    <FaFolderOpen />
-                                </Button>
+                            </p>*/}
+                            <div className="flex w-full items-center justify-end p-2 gap-6">
+                                <div className="flex items-center gap-6 justify-end">
+                                    <div className="flex flex-col items-center text-xs">
+                                        <span>Run</span>
+                                        <Button
+                                            className="p-4 bg-transparent text-green-500 hover:bg-green-200 text-lg"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handlePlayProject(project);
+                                            }}
+                                            title={'Run Project'}
+                                        >
+                                            <FaPlay size={16} />
+                                        </Button>
+                                    </div>
+                                    <div className="flex flex-col items-center text-xs">
+                                        <span>Open</span>
+                                        <Button
+                                            onClick={() => handleOpenDirectory(project)}
+                                            className="p-4 bg-transparent text-gray-800 hover:bg-gray-200 text-lg"
+                                            title={'Open folder'}
+                                        >
+                                            <FaFolderOpen size={16} />
+                                        </Button>
+                                    </div>
+                                    {project?.remote ? (
+                                        <>
+                                            <div className="flex flex-col items-center text-xs">
+                                                <span>Push</span>
+                                                <Button
+                                                    className="p-4 bg-gray-300 text-gray-800 hover:bg-gray-400 text-lg"
+                                                    onClick={() => handlePush()}
+                                                    disabled={isLoadingPush}
+                                                    title={'Push changes'}
+                                                >
+                                                    {isLoadingPush ? (
+                                                        <div className="scale-75">
+                                                            <Spinner />
+                                                        </div>
+                                                    ) : (
+                                                        <FaArrowUp size={16} />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                            <div className="flex flex-col items-center text-xs">
+                                                <span>Pull</span>
+                                                <Button
+                                                    className="p-4 bg-gray-300 text-gray-800 hover:bg-gray-400 text-lg"
+                                                    onClick={() => handlePull()}
+                                                    title={'Pull changes'}
+                                                >
+                                                    {isLoadingPull ? (
+                                                        <div className="scale-75">
+                                                            <Spinner />
+                                                        </div>
+                                                    ) : (
+                                                        <FaSyncAlt size={16} />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center text-xs">
+                                            <span>Publish</span>
+                                            <Button
+                                                className="p-4 bg-white text-gray-800 hover:bg-gray-200 text-lg"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handlePush();
+                                                }}
+                                                title={'Publish to Mariana Cloud'}
+                                            >
+                                                {isLoadingPush ? (
+                                                    <div className="scale-75">
+                                                        <Spinner />
+                                                    </div>
+                                                ) : (
+                                                    <FaCloud size={16} />
+                                                )}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            {project?.remote ? (
-                                <div className="flex flex-row w-full gap-4 items-center justify-center">
-                                    <Button
-                                        variant="secondary2"
-                                        className="w-fit min-w-48 flex flex-row gap-2"
-                                        onClick={() => handlePush()}
-                                        disabled={isLoadingPush}
-                                    >
-                                        {isLoadingPush ? (
-                                            <div className="scale-75">
-                                                <Spinner />
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <div>Upload changes</div>
-                                                <FaCloud />
-                                            </>
-                                        )}
-                                    </Button>
-                                    <Button
-                                        variant="default"
-                                        className="w-fit flex flex-row gap-2"
-                                        onClick={() => handlePull()}
-                                    >
-                                        Refresh project
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="w-full flex flex-row items-center justify-center">
-                                    <Button
-                                        variant="default"
-                                        className={cn(
-                                            'w-fit min-w-48 hover:scale-105 transform ease-in-out duration-600 transition-all'
-                                        )}
-                                        disabled={isLoadingPush}
-                                        onClick={() => handlePush()}
-                                    >
-                                        {isLoadingPush ? (
-                                            <div className="scale-75">
-                                                <Spinner white />
-                                            </div>
-                                        ) : (
-                                            <>
-                                                Publish in &nbsp;
-                                                <div className="flex font-bold italic">
-                                                    Mariana Cloud &copy;
-                                                </div>
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>

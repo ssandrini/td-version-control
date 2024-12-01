@@ -130,7 +130,7 @@ const NewProject: React.FC = () => {
                     <div className="flex flex-col justify-start bg-gray-800 p-8 rounded-lg shadow-lg overflow-auto no-scrollbar w-full max-w-[1000px] h-fit">
                         <div className="sticky top-0 bg-gray-800 z-10 pb-4">
                             <h1 className="text-2xl font-semibold">
-                                {!error &&
+                                {!(error || success) &&
                                     (step === 'select' ? 'Select a template' : 'Project Details')}
                             </h1>
                         </div>

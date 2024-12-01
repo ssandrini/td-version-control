@@ -1,10 +1,11 @@
 import React from 'react';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
-import { Button } from '../../components/ui/button';
 import { motion } from 'framer-motion';
 
 const Settings: React.FC = () => {
     const { user } = useVariableContext();
+
+    console.log(user);
 
     return (
         <motion.div

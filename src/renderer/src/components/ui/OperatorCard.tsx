@@ -344,7 +344,14 @@ const PROPERTY_NAME_MAP: Record<string, string> = {
     outputgreenchan: 'Output Green Channel',
     outputbluechan: 'Output Blue Channel',
     outputalphachan: 'Output Alpha Channel',
-    modifiers: 'Modifiers'
+    modifiers: 'Modifiers',
+    midpointx: 'Midpoint X',
+    midpointy: 'Midpoint Y',
+    ressource: 'Resolution Source',
+    aspect1: 'Aspect 1',
+    aspect2: 'Aspect 2',
+    offsetx: 'Offset X',
+    offsety: 'Offset Y'
 };
 
 interface OperatorCardProps {

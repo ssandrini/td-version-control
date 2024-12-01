@@ -27,3 +27,28 @@ describe('NetworkFileRule', () => {
         expect(rule.match(content)).toBe(false);
     });
 });
+
+describe('TDEdge', () => {
+    it('should serialize a TDEdge object correctly', () => {
+        const tdEdge = new TDEdge('comp1', true);
+        const serialized = tdEdge.serialize();
+
+        expect(serialized).toEqual({
+            destination: 'comp1',
+            parm: true
+        });
+    });
+
+    it('should deserialize a TDEdge object correctly', () => {
+        const data = {
+            destination: 'comp1',
+            parm: true
+        };
+
+        const tdEdge = TDEdge.deserialize(data);
+
+        expect(tdEdge).toBeInstanceOf(TDEdge);
+        expect(tdEdge.destination).toBe('comp1');
+        expect(tdEdge.parm).toBe(true);
+    });
+});

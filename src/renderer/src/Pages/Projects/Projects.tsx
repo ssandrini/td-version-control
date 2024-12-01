@@ -195,7 +195,35 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                             projectToClone?.remote
                         )
                         .then((response) => {
-                            console.log(response);
+                            if (Object.prototype.hasOwnProperty.call(response, 'errorCode')) {
+                                toast({
+                                    className: '',
+                                    style: {
+                                        borderTop: '0.35rem solid transparent',
+                                        borderBottom: 'transparent',
+                                        borderRight: 'transparent',
+                                        borderLeft: 'transparent',
+                                        borderImage:
+                                            'linear-gradient(to right, rgb(255, 0, 0), rgb(252, 80, 80))',
+                                        borderImageSlice: '1'
+                                    },
+                                    description: (
+                                        <div className="w-full h-full flex flex-row items-start gap-2">
+                                            <CiWarning className="bg-gradient-to-r from-red-400 to-red-600 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                                            <div className="flex flex-col">
+                                                <div className="font-p1_bold text-h3">
+                                                    Error on download
+                                                </div>
+                                                <div className="font-p1_regular">
+                                                    Please try again or contact the mariana team @
+                                                    marianamasabra@gmail.com.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                });
+                                return;
+                            }
                             setReload(!reload);
                             toast({
                                 className: '',
@@ -432,7 +460,17 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                                             setProjectToClone(project);
                                                         }}
                                                     >
-                                                        <FaDownload />
+                                                        {projectToClone?.name === project.name ? (
+                                                            <div className="flex justify-center items-center">
+                                                                <div
+                                                                    className={cn(
+                                                                        'animate-spin rounded-full h-8 w-8 border-t-4 border-solid border-green-500'
+                                                                    )}
+                                                                ></div>
+                                                            </div>
+                                                        ) : (
+                                                            <FaDownload />
+                                                        )}
                                                     </Button>
                                                 </td>
                                             </motion.tr>
@@ -467,6 +505,13 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                         </DialogDescription>
                                     </DialogHeader>
                                     <DialogFooter>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            onClick={() => setProjectToClone(undefined)}
+                                        >
+                                            Cancel
+                                        </Button>
                                         <Button type="button" onClick={handleCloneProject}>
                                             Select location
                                         </Button>

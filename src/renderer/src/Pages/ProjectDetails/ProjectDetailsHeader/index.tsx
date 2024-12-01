@@ -200,6 +200,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                             </div>
                         )
                     });
+                    return;
                 }
                 if (result.status === TDMergeStatus.FINISHED) {
                     toast({

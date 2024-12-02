@@ -27,6 +27,7 @@ const ProjectDetail: React.FC = () => {
     const { user } = useVariableContext();
     const [wipVersion, setWipVersion] = useState<Version | null>(null);
     const [fetch, setFetch] = useState(false);
+    const [isPublished, setIsPublished] = useState(false);
 
     const [mergeConflicts, setMergeConflicts] = useState<
         | {
@@ -171,6 +172,14 @@ const ProjectDetail: React.FC = () => {
             });
     }, [compareVersion]);
 
+    useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.isPublished(project?.path).then((isPublished: boolean) => {
+            setIsPublished(isPublished);
+        });
+    }, []);
+
     return (
         <motion.div
             exit={{ opacity: 0, scale: 1.1 }}
@@ -184,6 +193,7 @@ const ProjectDetail: React.FC = () => {
                     compare={compareState}
                     project={project}
                     selectedVersion={selectedVersion}
+                    isPublished={isPublished}
                 />
             </div>
             <div className="flex flex-col h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 bg-[#2b2d30] min-w-[30rem] p-4 w-[30%]">
@@ -191,6 +201,8 @@ const ProjectDetail: React.FC = () => {
                     project={project}
                     selectedVersion={selectedVersion}
                     setMergeConflicts={setMergeConflicts}
+                    isPublished={isPublished}
+                    setIsPublished={setIsPublished}
                 />
 
                 {mergeConflicts && (

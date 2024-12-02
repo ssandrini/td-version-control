@@ -17,6 +17,7 @@ interface NodesProps {
     project?: Project;
     current: TDState | undefined;
     compare: TDState | undefined;
+    isPublished: boolean;
 }
 
 const Viz: {
@@ -31,7 +32,13 @@ const Viz: {
     CONFLICTS: 'CONFLICTS'
 };
 
-const Nodes: React.FC<NodesProps> = ({ current, compare, project, selectedVersion }) => {
+const Nodes: React.FC<NodesProps> = ({
+    current,
+    compare,
+    project,
+    selectedVersion,
+    isPublished
+}) => {
     const [graphViz, setGraphViz] = useState<string>(Viz.GRAPH);
 
     return (
@@ -58,7 +65,7 @@ const Nodes: React.FC<NodesProps> = ({ current, compare, project, selectedVersio
                         </motion.div>
 
                         {/* COLLABORATORS Tab */}
-                        {project?.remote && (
+                        {isPublished && (
                             <motion.div
                                 layout
                                 initial={false}

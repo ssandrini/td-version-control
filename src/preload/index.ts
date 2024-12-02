@@ -38,6 +38,9 @@ const api = {
         }
         return await ipcRenderer.invoke(API_METHODS.GET_STATE, path, versionId);
     },
+    publish: async (dir: string, name: string, description: string) =>
+        ipcRenderer.invoke(API_METHODS.PUBLISH, dir, name, description),
+    isPublished: async (dir: string) => ipcRenderer.invoke(API_METHODS.IS_PUBLISHED, dir),
     pull: async (dir: string) => ipcRenderer.invoke(API_METHODS.PULL, dir),
     push: async (dir: string) => ipcRenderer.invoke(API_METHODS.PUSH, dir),
     finishMerge: async (dir: string, state: TDState, versionName: string, description: string) =>

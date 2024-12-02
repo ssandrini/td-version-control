@@ -30,6 +30,20 @@ class UserDataManager {
         }
     }
 
+    addRemoteToProject(name: string, remoteUrl: string): void {
+        log.info(`Adding remote ${remoteUrl} to ${name}`);
+        const projects = this.getRecentProjects();
+        const project = projects.find((proj) => proj.name === name);
+        if (!project) {
+            log.error(`Project ${name} not found.`);
+            return;
+        }
+        project.remote = remoteUrl;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        this.store.set('recentProjects', projects);
+    }
+
     removeRecentProject(projectPath: string): void {
         log.info(`Attempting to remove project with path: ${projectPath}`);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

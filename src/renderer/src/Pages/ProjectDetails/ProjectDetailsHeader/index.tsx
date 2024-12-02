@@ -35,17 +35,22 @@ interface ProjectDetailsHeaderProps {
             | undefined
         >
     >;
+    isPublished: boolean;
+    setIsPublished: React.Dispatch<SetStateAction<boolean>>;
 }
 
 const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
     project,
     selectedVersion,
-    setMergeConflicts
+    setMergeConflicts,
+    isPublished,
+    setIsPublished
 }) => {
     const { toast } = useToast();
 
     const [isLoadingPush, setIsLoadingPush] = useState(false);
     const [isLoadingPull, setIsLoadingPull] = useState(false);
+    const [isLoadingPublish, setIsLoadingPublish] = useState(false);
 
     const handlePush = () => {
         setIsLoadingPush(true);
@@ -106,6 +111,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                 setIsLoadingPush(false);
             });
     };
+
     const handlePlayProject = (project: Project | undefined) => {
         if (!project) return;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -263,6 +269,72 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
             });
     };
 
+    const handlePublish = () => {
+        if (!project) {
+            return;
+        }
+
+        setIsLoadingPublish(true);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api
+            .publish(project.path, project.name, project.description)
+            .then(() => {
+                setIsPublished(true);
+                toast({
+                    className: '',
+                    style: {
+                        borderTop: '0.35rem solid transparent',
+                        borderBottom: 'transparent',
+                        borderRight: 'transparent',
+                        borderLeft: 'transparent',
+                        borderImage: 'linear-gradient(to right, rgb(10, 27, 182), rgb(0, 0, 255))',
+                        borderImageSlice: '1'
+                    },
+                    description: (
+                        <div className="w-full h-full flex flex-row items-start gap-2">
+                            <FaCheck className="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                            <div className="flex flex-col">
+                                <div className="font-p1_bold text-h3">Project published!</div>
+                                <div className="font-p1_regular">
+                                    Project is now available on Mariana Cloud.
+                                </div>
+                            </div>
+                        </div>
+                    )
+                });
+                return;
+            })
+            .catch(() => {
+                toast({
+                    className: '',
+                    style: {
+                        borderTop: '0.35rem solid transparent',
+                        borderBottom: 'transparent',
+                        borderRight: 'transparent',
+                        borderLeft: 'transparent',
+                        borderImage: 'linear-gradient(to right, rgb(255, 0, 0), rgb(252, 80, 80))',
+                        borderImageSlice: '1'
+                    },
+                    description: (
+                        <div className="w-full h-full flex flex-row items-start gap-2">
+                            <CiWarning className="bg-gradient-to-r from-red-400 to-red-600 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                            <div className="flex flex-col">
+                                <div className="font-p1_bold text-h3">Error publishing</div>
+                                <div className="font-p1_regular">
+                                    Please try again or contact the mariana team @
+                                    marianamasabra@gmail.com.
+                                </div>
+                            </div>
+                        </div>
+                    )
+                });
+            })
+            .finally(() => {
+                setIsLoadingPublish(false);
+            });
+    };
+
     return (
         <>
             {selectedVersion && project ? (
@@ -316,7 +388,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                             <FaFolderOpen size={16} />
                                         </Button>
                                     </div>
-                                    {project?.remote ? (
+                                    {isPublished ? (
                                         <>
                                             <div className="flex flex-col items-center text-xs">
                                                 <span>Push</span>
@@ -359,11 +431,11 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                                 className="p-4 bg-white text-gray-800 hover:bg-gray-200 text-lg"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handlePush();
+                                                    handlePublish();
                                                 }}
                                                 title={'Publish to Mariana Cloud'}
                                             >
-                                                {isLoadingPush ? (
+                                                {isLoadingPublish ? (
                                                     <div className="scale-75">
                                                         <Spinner />
                                                     </div>

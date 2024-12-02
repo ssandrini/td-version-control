@@ -19,6 +19,8 @@ export const API_METHODS = {
     GET_TEMPLATES: 'get-templates',
     COMPARE: 'compare-versions',
     GET_STATE: 'get-state',
+    PUBLISH: 'publish',
+    IS_PUBLISHED: 'is-published',
     PULL: 'pull',
     PUSH: 'push',
     FINISH_MERGE: 'finish-merge',

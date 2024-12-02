@@ -16,6 +16,8 @@ export interface Tracker {
 
     // Remote handling
     clone(dir: string, url: string): Promise<void>;
+    getRemote(dir: string): Promise<string | undefined>;
+    setRemote(dir: string, remoteUrl: string): Promise<void>;
     pull(
         dir: string,
         excludedFiles: RegExp[],

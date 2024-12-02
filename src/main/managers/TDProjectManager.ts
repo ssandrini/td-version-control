@@ -34,6 +34,9 @@ import { TDMergeResult, TDMergeStatus } from '../models/TDMergeResult';
 import { resolveWithCurrentBranch, resolveWithIncomingBranch } from '../merge/MergeParser';
 import { TagError } from '../errors/TagError';
 import { ProjectDependencies } from '../../renderer/src/models/ProjectDependencies';
+import remoteRepoService from '../services/RemoteRepoService';
+import { RemoteError } from '../errors/RemoteError';
+import userDataManager from './UserDataManager';
 
 export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> {
     readonly processor: Processor;
@@ -675,5 +678,44 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     checkDependencies(): Promise<ProjectDependencies[]> {
         return checkDependencies();
+    }
+
+    async isPublished(dir: string): Promise<boolean> {
+        log.info(`Checking if ${dir} is published.`);
+        await validateDirectory(dir);
+        const hiddenDir = this.hiddenDirPath(dir);
+        try {
+            const remoteUrl = await this.tracker.getRemote(hiddenDir);
+            return remoteUrl !== undefined;
+        } catch (error: any) {
+            log.error(`Error getting remote due to ${error.message}.`);
+            return Promise.reject(new TDError(`Error verifying if ${hiddenDir} is published`));
+        }
+    }
+
+    async publish(dir: string, name: string, description: string): Promise<void> {
+        log.info(`Publishing ${dir} to Mariana Cloud`);
+        await validateDirectory(dir);
+        const hiddenDir = this.hiddenDirPath(dir);
+        const response = await remoteRepoService.createRepository(name, description);
+        if (response.errorCode) {
+            log.error(`Could not publish ${dir}: received ${response.errorCode}`);
+            return Promise.reject(new RemoteError('Unable to publish project', response.errorCode));
+        }
+        const remoteUrl = response.result!;
+        try {
+            await this.tracker.setRemote(hiddenDir, remoteUrl);
+            userDataManager.addRemoteToProject(name, remoteUrl);
+        } catch (error: any) {
+            log.error(`Unable to set remote to ${dir}: ${error.message}`);
+            return Promise.reject(new TDError(`Error publishing project to Mariana Cloud.`));
+        }
+
+        try {
+            await this.tracker.push(hiddenDir);
+        } catch (error: any) {
+            log.error(`Unable to push to ${dir}: ${error.message}`);
+            return Promise.reject(new TDError(`Error pushing project content to Mariana Cloud.`));
+        }
     }
 }

@@ -280,6 +280,17 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
     ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
     // Remote handling
+    ipcMain.handle(
+        API_METHODS.PUBLISH,
+        async (_, dir: string, name: string, description: string) => {
+            return projectManager.publish(dir, name, description);
+        }
+    );
+
+    ipcMain.handle(API_METHODS.IS_PUBLISHED, async (_, dir: string) =>
+        projectManager.isPublished(dir)
+    );
+
     ipcMain.handle(API_METHODS.PULL, async (_, dir: string) => {
         const result = (await projectManager.pull(dir)) as TDMergeResult;
         return result.serialize();

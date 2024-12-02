@@ -256,7 +256,9 @@ export class SimpleGitTracker implements Tracker {
         }
     }
 
-    async clone(dir: string, url: string): Promise<void> {
+    // clone into output within directory dir
+    async clone(dir: string, output: string, url: string): Promise<void> {
+        await this.git.cwd(dir);
         try {
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(url);
@@ -265,7 +267,7 @@ export class SimpleGitTracker implements Tracker {
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();
             log.debug('remote with cred: ', remoteWithCredentials);
-            await this.git.clone(remoteWithCredentials, dir);
+            await this.git.clone(remoteWithCredentials, output);
         } catch (error) {
             const errorMessage = `Failed cloning ${url} into ${dir}`;
             this.handleError(error, errorMessage);

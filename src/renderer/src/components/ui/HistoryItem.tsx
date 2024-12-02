@@ -59,7 +59,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
     setShowNewVersionModal,
     setCurrentVersion
 }) => {
-    const [showCreateTag, setShowCreateTag] = useState<boolean>(false);
+    const [_showCreateTag, setShowCreateTag] = useState<boolean>(false);
     const [showCreateTagModal, setShowCreateTagModal] = useState<boolean>(false);
     const [newTag, setNewTag] = useState<string>('');
 

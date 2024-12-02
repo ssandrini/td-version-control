@@ -15,6 +15,7 @@ import { Input } from '@renderer/components/ui/input';
 import { useToast } from '@renderer/hooks/use-toast';
 import { FaCheck } from 'react-icons/fa';
 import { MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
+import { ApiResponse } from '../../../../main/errors/ApiResponse';
 
 interface SettingsProps {}
 
@@ -29,42 +30,58 @@ const Settings: React.FC<SettingsProps> = () => {
     const [passwordType, setPasswordType] = useState('password');
     const [confirmPasswordType, setConfirmPasswordType] = useState('password');
     const [passwordMatch, setPasswordMatch] = useState(true);
+    const [passwordError, setPasswordError] = useState('');
 
     const handleUpdatePassword = () => {
         if (!passwordMatch) return;
-
         setIsSubmitting(true);
-
-        // Simulate an API call
-        setTimeout(() => {
-            toast({
-                className: '',
-                style: {
-                    borderTop: '0.35rem solid transparent',
-                    borderBottom: 'transparent',
-                    borderRight: 'transparent',
-                    borderLeft: 'transparent',
-                    borderImage: 'linear-gradient(to right, rgb(10, 27, 182), rgb(0, 0, 255))',
-                    borderImageSlice: '1'
-                },
-                description: (
-                    <div className="w-full h-full flex flex-row items-start gap-2">
-                        <FaCheck className="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
-                        <div className="flex flex-col">
-                            <div className="font-p1_bold text-h3">
-                                Password updated successfully!
+        setPasswordError('');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api
+            .changePassword(user?.username, currentPassword, newPassword)
+            .then((response: ApiResponse) => {
+                console.log(response);
+                if (!response.errorCode) {
+                    setShowUpdatePasswordModal(false);
+                    toast({
+                        className: '',
+                        style: {
+                            borderTop: '0.35rem solid transparent',
+                            borderBottom: 'transparent',
+                            borderRight: 'transparent',
+                            borderLeft: 'transparent',
+                            borderImage:
+                                'linear-gradient(to right, rgb(10, 27, 182), rgb(0, 0, 255))',
+                            borderImageSlice: '1'
+                        },
+                        description: (
+                            <div className="w-full h-full flex flex-row items-start gap-2">
+                                <FaCheck className="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                                <div className="flex flex-col">
+                                    <div className="font-p1_bold text-h3">
+                                        Password updated successfully!
+                                    </div>
+                                    <div className="font-p1_regular">
+                                        Your password has been changed.
+                                    </div>
+                                </div>
                             </div>
-                            <div className="font-p1_regular">Your password has been changed.</div>
-                        </div>
-                    </div>
-                )
+                        )
+                    });
+                } else {
+                    setPasswordError('Incorrect current password. Please try again.');
+                }
+            })
+            .catch((_err: any) => {
+                setPasswordError('An unexpected error occurred. Please try again.');
+            })
+            .finally(() => {
+                setIsSubmitting(false);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
             });
-            setShowUpdatePasswordModal(false);
-            setIsSubmitting(false);
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-        }, 1000);
     };
 
     const handlePasswordToggle = () => {
@@ -80,6 +97,11 @@ const Settings: React.FC<SettingsProps> = () => {
         setPasswordMatch(value === confirmPassword);
     };
 
+    const handleCurrentPasswordChange = (value: string) => {
+        setCurrentPassword(value);
+        setPasswordError('');
+    };
+
     const handleConfirmPasswordChange = (value: string) => {
         setConfirmPassword(value);
         setPasswordMatch(value === newPassword);
@@ -90,7 +112,7 @@ const Settings: React.FC<SettingsProps> = () => {
             exit={{ opacity: 0 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex h-full bg-gray-50 overflow-auto"
+            className="flex h-full bg-gray-650 overflow-auto"
         >
             <div className="max-w-4xl mx-auto my-8 p-6 w-full bg-white overflow-auto no-scrollbar rounded-lg shadow-md">
                 {/* Header */}
@@ -133,7 +155,7 @@ const Settings: React.FC<SettingsProps> = () => {
                         </div>
                         <div className="flex flex-row w-full items-center justify-center">
                             <div
-                                className="font-regular text-gray-600 underline hover:scale-105 cursor-pointer"
+                                className="font-regular text-gray-600 underline cursor-pointer"
                                 onClick={() => setShowUpdatePasswordModal(true)}
                             >
                                 Update Password
@@ -163,9 +185,12 @@ const Settings: React.FC<SettingsProps> = () => {
                                     id="currentPassword"
                                     type="password"
                                     value={currentPassword}
-                                    onChange={(e) => setCurrentPassword(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
+                                    onChange={(e) => handleCurrentPasswordChange(e.target.value)}
+                                    className={`w-full p-2 border ${passwordError ? 'border-red-500' : 'border-gray-300'} rounded`}
                                 />
+                                {passwordError && (
+                                    <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+                                )}
                             </div>
                             <div className="mb-4">
                                 <Label
@@ -232,7 +257,10 @@ const Settings: React.FC<SettingsProps> = () => {
                             </div>
                             <DialogFooter>
                                 <Button
-                                    onClick={() => setShowUpdatePasswordModal(false)}
+                                    onClick={() => {
+                                        setShowUpdatePasswordModal(false);
+                                        setPasswordError('');
+                                    }}
                                     disabled={isSubmitting}
                                 >
                                     Cancel

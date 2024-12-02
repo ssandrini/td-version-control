@@ -381,4 +381,11 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
     ipcMain.handle(API_METHODS.LAST_VERSION, async (_, dir: string) => {
         return projectManager.lastVersion(dir);
     });
+
+    ipcMain.handle(
+        API_METHODS.CHANGE_PASSWORD,
+        async (_, username: string, oldPassword: string, newPassword: string) => {
+            return authService.changePassword(username, oldPassword, newPassword);
+        }
+    );
 };

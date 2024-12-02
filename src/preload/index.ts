@@ -75,6 +75,8 @@ const api = {
     watchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.WATCH_PROJECT, dir),
     unwatchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.UNWATCH_PROJECT, dir),
     getLastVersion: async (dir: string) => ipcRenderer.invoke(API_METHODS.LAST_VERSION, dir),
+    changePassword: async (username: string, oldPassword: string, newPassword: string) =>
+        ipcRenderer.invoke(API_METHODS.CHANGE_PASSWORD, username, oldPassword, newPassword),
 
     // MAIN TO RENDERER METHODS
     onProjectChanged: (callback: (data: any) => void) => {

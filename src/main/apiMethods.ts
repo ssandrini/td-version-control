@@ -34,5 +34,6 @@ export const API_METHODS = {
     REGISTER: 'register',
     GET_MERGE_STATUS: 'get-merge-status',
     PROJECT_CHANGED: 'project-changed',
-    LAST_VERSION: 'last-version'
+    LAST_VERSION: 'last-version',
+    CHANGE_PASSWORD: 'change-password'
 };

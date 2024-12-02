@@ -416,3 +416,14 @@ export const verifyUrl = (url: string): boolean => {
         return false;
     }
 };
+
+export const createProjectDirectory = async (dir: string, name: string): Promise<string> => {
+    const completePath = path.join(dir, name);
+    try {
+        fs.mkdirSync(completePath);
+        return completePath;
+    } catch (error) {
+        log.error(`Error creating directory ${completePath}. Cause:`, error);
+        return Promise.reject(error);
+    }
+};

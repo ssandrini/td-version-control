@@ -12,6 +12,7 @@ import { SimpleGitTracker } from './trackers/SimpleGitTracker';
 import { TDProcessor } from './processors/TDProcessor';
 import { API_METHODS } from './apiMethods';
 import {
+    createProjectDirectory,
     filePicker,
     findFileByExt,
     getTemplates,
@@ -229,6 +230,13 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             createRemoteRepo: boolean,
             src?: string
         ) => {
+            let completePath = '';
+            try {
+                completePath = await createProjectDirectory(dir, name);
+            } catch (error: any) {
+                return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
+            }
+
             let initialVersion: Version;
             let remoteUrl: string = '';
             if (createRemoteRepo) {
@@ -236,7 +244,7 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
                 if (response.result) {
                     remoteUrl = response.result;
                     try {
-                        initialVersion = await projectManager.init(dir, remoteUrl, src);
+                        initialVersion = await projectManager.init(completePath, remoteUrl, src);
                     } catch (err) {
                         log.error('Failed to initialize project locally:', err);
                         return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
@@ -246,7 +254,7 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
                 }
             } else {
                 try {
-                    initialVersion = await projectManager.init(dir, undefined, src);
+                    initialVersion = await projectManager.init(completePath, undefined, src);
                     if (verifyUrl(src!)) {
                         remoteUrl = src!;
                     }
@@ -259,7 +267,7 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             const newProject: Project = {
                 name: name,
                 owner: initialVersion.author.name,
-                path: dir,
+                path: completePath,
                 remote: remoteUrl,
                 description: description
             };

@@ -573,7 +573,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     private async initFromUrl(dir: string, url: string): Promise<Version> {
         const hiddenDirPath = this.hiddenDirPath(dir);
-        await this.tracker.clone(hiddenDirPath, url);
+        await this.tracker.clone(dir, this.hiddenDir, url);
         hidefile.hideSync(hiddenDirPath);
         await this.processor.postprocess(hiddenDirPath, dir);
         const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));

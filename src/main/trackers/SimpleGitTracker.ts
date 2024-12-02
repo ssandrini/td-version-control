@@ -282,7 +282,7 @@ export class SimpleGitTracker implements Tracker {
         let fetchResult: FetchResult;
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            fetchResult = await this.git.fetch(remoteUrl);
+            fetchResult = await this.git.fetch(remoteUrl, ['--tags']);
             log.info('Fetch completed successfully.');
         } catch (fetchError) {
             this.handleError(fetchError, 'Fetch failed during pull operation');
@@ -387,8 +387,10 @@ export class SimpleGitTracker implements Tracker {
             if (!hasUpstream) {
                 log.info(`Setting upstream branch for the first push.`);
                 await this.git.push(['-u', remoteUrl, 'HEAD']);
+                await this.git.pushTags(remoteUrl);
             } else {
-                const result = await this.git.push(remoteUrl, '--tags');
+                const result = await this.git.push(remoteUrl);
+                await this.git.pushTags(remoteUrl);
                 log.info(`Push successful: ${result.pushed.length} references updated.`);
             }
         } catch (error) {

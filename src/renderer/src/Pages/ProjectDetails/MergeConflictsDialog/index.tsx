@@ -33,6 +33,7 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
 }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
 
     const handleResolveConflict = (
         resolvedState: TDState | undefined,
@@ -55,17 +56,32 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
             });
     };
 
+    const handleAbortMerge = () => {
+        // Logic to abort the merge
+        console.log('Merge aborted.');
+        setMergeConflicts(undefined);
+        setShowConfirmationDialog(false);
+    };
+
     return (
         <>
+            {/* Main Merge Conflicts Dialog */}
             <Dialog open>
                 <DialogContent className="min-w-[90%] max-w-[90%] w-[90%] min-h-[90%] max-h-[90%] h-[90%] flex flex-col bg-gray-600 items-center">
+                    <Button
+                        className="absolute right-5 top-5"
+                        variant="destructive"
+                        onClick={() => setShowConfirmationDialog(true)}
+                    >
+                        Abort
+                    </Button>
                     <div className="w-fit flex flex-col items-center">
                         <div className="w-fit text-[3rem] font-bold bg-gradient-to-r from-purple-400 via-pink-500 to-yellow-500 text-transparent bg-clip-text">
                             Oh no!
                         </div>
                         <div className="text-white">
-                            It looks like the changes stored in Mariana Cloud differs from the
-                            changes in your computer, please choose what state to preserve.
+                            It looks like the changes stored in Mariana Cloud differ from the
+                            changes in your computer. Please choose what state to preserve.
                         </div>
                         <div className="text-white font-semibold">
                             You have to leave a name and a description to identify the conflict in
@@ -94,7 +110,7 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                             />
                             <Button
                                 className="w-1/2 mt-2"
-                                disabled={name.length == 0 || description.length == 0}
+                                disabled={name.length === 0 || description.length === 0}
                                 onClick={() => {
                                     handleResolveConflict(
                                         mergeConflicts?.currentState ?? undefined,
@@ -113,7 +129,7 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                             />
                             <Button
                                 className="w-1/2 mt-2"
-                                disabled={name.length == 0 || description.length == 0}
+                                disabled={name.length === 0 || description.length === 0}
                                 onClick={() => {
                                     handleResolveConflict(
                                         mergeConflicts?.incomingState ?? undefined,
@@ -135,6 +151,31 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Confirmation Dialog */}
+            {showConfirmationDialog && (
+                <Dialog open>
+                    <DialogContent className="w-[30rem] bg-gray-600 rounded-md p-6 flex flex-col items-center">
+                        <h2 className="text-2xl text-white font-bold mb-4">
+                            Are you sure you want to close?
+                        </h2>
+                        <p className="text-white mb-6 text-center">
+                            Aborting the merge will discard the Cloud state.
+                        </p>
+                        <div className="flex gap-4">
+                            <Button
+                                variant="secondary"
+                                onClick={() => setShowConfirmationDialog(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button variant="destructive" onClick={handleAbortMerge}>
+                                Abort Merge
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </>
     );
 };

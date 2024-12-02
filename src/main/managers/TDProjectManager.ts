@@ -19,7 +19,8 @@ import {
     readDateFromFile,
     splitSet,
     validateDirectory,
-    validateTag
+    validateTag,
+    verifyUrl
 } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 import { TDState } from '../models/TDState';
@@ -87,7 +88,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await validateDirectory(dir);
 
         if (src) {
-            if (this.verifyUrl(src)) {
+            if (verifyUrl(src)) {
                 return this.initFromUrl(dir, src);
             }
 
@@ -565,15 +566,6 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             }
         });
         return nodeNames;
-    }
-
-    private verifyUrl(url: string): boolean {
-        try {
-            const parsedUrl = new URL(url);
-            return parsedUrl.href.includes('git');
-        } catch (error) {
-            return false;
-        }
     }
 
     private async initFromUrl(dir: string, url: string): Promise<Version> {

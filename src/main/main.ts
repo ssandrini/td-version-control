@@ -11,7 +11,14 @@ import { TDProjectManager } from './managers/TDProjectManager';
 import { SimpleGitTracker } from './trackers/SimpleGitTracker';
 import { TDProcessor } from './processors/TDProcessor';
 import { API_METHODS } from './apiMethods';
-import { filePicker, findFileByExt, getTemplates, openDirectory, openToeFile } from './utils/utils';
+import {
+    filePicker,
+    findFileByExt,
+    getTemplates,
+    openDirectory,
+    openToeFile,
+    verifyUrl
+} from './utils/utils';
 import { TDState } from './models/TDState';
 import { TDMergeResult } from './models/TDMergeResult';
 import authService from './services/AuthService';
@@ -219,12 +226,12 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             dir: string,
             name: string,
             description: string,
-            remote: boolean,
+            createRemoteRepo: boolean,
             src?: string
         ) => {
             let initialVersion: Version;
             let remoteUrl: string = '';
-            if (remote) {
+            if (createRemoteRepo) {
                 const response = await remoteRepoService.createRepository(name, description);
                 if (response.result) {
                     remoteUrl = response.result;
@@ -240,6 +247,9 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             } else {
                 try {
                     initialVersion = await projectManager.init(dir, undefined, src);
+                    if (verifyUrl(src!)) {
+                        remoteUrl = src!;
+                    }
                 } catch (err) {
                     log.error('Failed to initialize project locally:', err);
                     return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
@@ -250,7 +260,7 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
                 name: name,
                 owner: initialVersion.author.name,
                 path: dir,
-                remote: remote ? remoteUrl : '',
+                remote: remoteUrl,
                 description: description
             };
             userDataMgr.addRecentProject(newProject);

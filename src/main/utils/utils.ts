@@ -407,3 +407,12 @@ const checkDependenciesWin = async (): Promise<ProjectDependencies[]> => {
 const checkDependenciesMac = async (): Promise<ProjectDependencies[]> => {
     return Promise.resolve([]);
 };
+
+export const verifyUrl = (url: string): boolean => {
+    try {
+        const parsedUrl = new URL(url);
+        return parsedUrl.href.includes('git');
+    } catch (error) {
+        return false;
+    }
+};

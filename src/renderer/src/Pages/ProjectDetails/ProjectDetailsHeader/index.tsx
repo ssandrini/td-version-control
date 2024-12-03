@@ -388,15 +388,15 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                             <FaFolderOpen size={16} />
                                         </Button>
                                     </div>
-                                    {isPublished ? (
+                                    {!isPublished ? (
                                         <>
                                             <div className="flex flex-col items-center text-xs">
-                                                <span>Push</span>
+                                                <span>Publish</span>
                                                 <Button
-                                                    className="p-4 bg-gray-300 text-gray-800 hover:bg-gray-400 text-lg"
+                                                    className="p-4 bg-transparent text-gray-800 hover:bg-gray-200 text-lg"
                                                     onClick={() => handlePush()}
                                                     disabled={isLoadingPush}
-                                                    title={'Push changes'}
+                                                    title={'Publish changes to the cloud'}
                                                 >
                                                     {isLoadingPush ? (
                                                         <div className="scale-75">
@@ -408,11 +408,11 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                                 </Button>
                                             </div>
                                             <div className="flex flex-col items-center text-xs">
-                                                <span>Pull</span>
+                                                <span>Refresh</span>
                                                 <Button
-                                                    className="p-4 bg-gray-300 text-gray-800 hover:bg-gray-400 text-lg"
+                                                    className="p-4 bg-transparent text-gray-800 hover:bg-gray-200 text-lg"
                                                     onClick={() => handlePull()}
-                                                    title={'Pull changes'}
+                                                    title={'Refresh project with cloud'}
                                                 >
                                                     {isLoadingPull ? (
                                                         <div className="scale-75">

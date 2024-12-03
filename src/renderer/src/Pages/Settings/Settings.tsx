@@ -171,7 +171,7 @@ const Settings: React.FC<SettingsProps> = () => {
                     <h2 className="text-lg font-semibold text-gray-800 mb-2">
                         Profile Information
                     </h2>
-                    <div className="bg-gray-100 p-4 rounded-md">
+                    <div className="bg-gray-100 p-4 rounded-md border border-gray-300">
                         <div className="mb-2">
                             <span className="text-gray-600">Username: </span>
                             <span className="font-medium text-gray-800">
@@ -199,7 +199,7 @@ const Settings: React.FC<SettingsProps> = () => {
                     <h2 className="text-lg font-semibold text-gray-800 mb-4">
                         Default Project Location
                     </h2>
-                    <div className="bg-gray-100 p-4 rounded-md shadow-md border border-gray-300">
+                    <div className="bg-gray-100 p-4 rounded-md border border-gray-300">
                         <p className="text-sm text-gray-600 mb-4">
                             This is the folder where all your projects managed by Mariana will be
                             stored. Ensure you select a location with enough space and proper

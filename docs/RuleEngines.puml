@@ -1,0 +1,46 @@
+@startuml
+' Define paquetes para organización vertical
+package "Rule Engines" {
+    interface RuleEngine {
+        + initializeRules(): void
+        + applyRules(): void
+    }
+
+    class PropertyRuleEngine {
+        + initializeRules(): void
+        + applyRules(): void
+    }
+
+    class InputRuleEngine {
+        + initializeRules(): void
+        + applyRules(): void
+    }
+
+    RuleEngine <|-- PropertyRuleEngine
+    RuleEngine <|-- InputRuleEngine
+}
+
+package "Input Rules" {
+    interface InputRule {
+        + name: string
+        + description: string
+        + match(content: string): boolean
+        + extract(content: string): TDEdge[]
+    }
+
+    InputRuleEngine "1" *-- "n" InputRule
+}
+
+package "Property Rules" {
+    interface PropertyRule {
+        + name: string
+        + description: string
+        + match(line: string): boolean
+        + extract(line: string, nodeProperties: Map<string, string>): void
+    }
+
+
+    PropertyRuleEngine "1" *-- "n" PropertyRule
+}
+
+@enduml

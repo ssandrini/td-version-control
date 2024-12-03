@@ -1,0 +1,21 @@
+@startuml
+interface Tracker
+interface Processor
+interface ProjectManager
+
+class SimpleGitTracker
+class TDProcessor
+class TDProjectManager {
+    - tracker: SimpleGitTracker
+    - processor: TDProcessor
+}
+
+together {
+    Tracker <|-- SimpleGitTracker
+    Processor <|-- TDProcessor
+    ProjectManager <|-- TDProjectManager
+}
+
+TDProjectManager --> SimpleGitTracker : uses
+TDProjectManager --> TDProcessor : uses
+@enduml

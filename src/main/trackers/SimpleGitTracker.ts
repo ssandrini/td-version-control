@@ -267,7 +267,14 @@ export class SimpleGitTracker implements Tracker {
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();
             log.debug('remote with cred: ', remoteWithCredentials);
-            await this.git.clone(remoteWithCredentials, output);
+            await this.git.clone(remoteWithCredentials, output, {
+                '--config': 'core.autocrlf=false'
+            });
+            await this.git.cwd(path.join(dir, output));
+            const user: User = userDataManager.getUser()!;
+            await this.git.raw(['config', '--local', 'user.name', user.username]);
+            await this.git.raw(['config', '--local', 'user.email', user.email]);
+            await this.git.raw(['config', '--local', 'push.autoSetupRemote', 'true']);
         } catch (error) {
             const errorMessage = `Failed cloning ${url} into ${dir}`;
             this.handleError(error, errorMessage);

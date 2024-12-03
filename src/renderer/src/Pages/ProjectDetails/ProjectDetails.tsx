@@ -173,8 +173,8 @@ const ProjectDetail: React.FC = () => {
     }, [compareVersion]);
 
     useEffect(() => {
-        console.log(project?.remote)
-        setIsPublished(project?.remote != undefined)
+        console.log(project?.remote);
+        setIsPublished(project?.remote != undefined);
         /*
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error

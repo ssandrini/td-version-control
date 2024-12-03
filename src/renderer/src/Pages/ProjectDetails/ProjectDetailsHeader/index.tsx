@@ -434,7 +434,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                                     onClick={() => setShowCollaboratorsModal(true)}
                                                     title={'Manage collaborators'}
                                                 >
-                                                        <MdPeople size={16} />
+                                                    <MdPeople size={16} />
                                                 </Button>
                                             </div>
                                             <Collaborators

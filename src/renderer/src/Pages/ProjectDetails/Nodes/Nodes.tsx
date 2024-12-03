@@ -25,11 +25,7 @@ const Viz: {
     CONFLICTS: 'CONFLICTS'
 };
 
-const Nodes: React.FC<NodesProps> = ({
-    current,
-    compare,
-    selectedVersion,
-}) => {
+const Nodes: React.FC<NodesProps> = ({ current, compare, selectedVersion }) => {
     const [graphViz, setGraphViz] = useState<string>(Viz.GRAPH);
 
     return (

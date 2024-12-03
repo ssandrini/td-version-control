@@ -9,4 +9,7 @@ export default interface VariableContextType {
     isLoggedIn: () => boolean;
     user: User | undefined;
     setUser: Dispatch<SetStateAction<User | undefined>>;
+    defaultProjectLocation: string;
+    setDefaultProjectLocation: Dispatch<SetStateAction<string>>;
+    hasDefaultProjectLocation: () => boolean;
 }

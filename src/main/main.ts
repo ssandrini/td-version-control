@@ -407,4 +407,12 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             return authService.changePassword(username, oldPassword, newPassword);
         }
     );
+
+    ipcMain.handle(API_METHODS.SAVE_DEFAULT_PROJECTS_FOLDER, async (_, path: string) => {
+        return userDataMgr.saveDefaultProjectsLocation(path);
+    });
+
+    ipcMain.handle(API_METHODS.GET_DEFAULT_PROJECTS_FOLDER, async () => {
+        return userDataMgr.getDefaultProjectsLocation();
+    });
 };

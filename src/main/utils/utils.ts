@@ -299,7 +299,7 @@ export const validateTag = (tag: string): void => {
         fail('cannot be the single character "@".');
     }
 
-    if (tag.includes('.')) {
+    if (tag.includes('..')) {
         fail('cannot contain a bare dot (.).');
     }
 };

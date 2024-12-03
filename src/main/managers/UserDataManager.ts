@@ -170,6 +170,27 @@ class UserDataManager {
         this.store.delete('user');
         log.info('User cleared successfully.');
     }
+
+    saveDefaultProjectsLocation(path: string): void {
+        log.info(`Saving default projects location: ${path}`);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        this.store.set('defaultProjectsLocation', path);
+        log.info('Default projects location saved successfully.');
+    }
+
+    getDefaultProjectsLocation(): string | null {
+        log.info('Retrieving default projects location.');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const path = this.store.get('defaultProjectsLocation', null) as string | null;
+        if (path) {
+            log.info(`Default projects location retrieved: ${path}`);
+        } else {
+            log.warn('No default projects location found.');
+        }
+        return path;
+    }
 }
 
 export default new UserDataManager();

@@ -80,7 +80,10 @@ const api = {
     getLastVersion: async (dir: string) => ipcRenderer.invoke(API_METHODS.LAST_VERSION, dir),
     changePassword: async (username: string, oldPassword: string, newPassword: string) =>
         ipcRenderer.invoke(API_METHODS.CHANGE_PASSWORD, username, oldPassword, newPassword),
-
+    saveDefaultProjectsFolder: async (dir: string) =>
+        ipcRenderer.invoke(API_METHODS.SAVE_DEFAULT_PROJECTS_FOLDER, dir),
+    getDefaultProjectsFolder: async () =>
+        ipcRenderer.invoke(API_METHODS.GET_DEFAULT_PROJECTS_FOLDER),
     // MAIN TO RENDERER METHODS
     onProjectChanged: (callback: (data: any) => void) => {
         ipcRenderer.on(API_METHODS.PROJECT_CHANGED, (_event, data) => callback(data));

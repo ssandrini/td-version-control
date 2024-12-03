@@ -37,5 +37,7 @@ export const API_METHODS = {
     GET_MERGE_STATUS: 'get-merge-status',
     PROJECT_CHANGED: 'project-changed',
     LAST_VERSION: 'last-version',
-    CHANGE_PASSWORD: 'change-password'
+    CHANGE_PASSWORD: 'change-password',
+    SAVE_DEFAULT_PROJECTS_FOLDER: 'save-default-projects-folder',
+    GET_DEFAULT_PROJECTS_FOLDER: 'get-default-projects-folder'
 };

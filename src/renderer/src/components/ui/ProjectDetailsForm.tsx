@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaFolder } from 'react-icons/fa';
 import { Checkbox } from './checkbox';
+import { useVariableContext } from '@renderer/hooks/Variables/useVariableContext';
 
 interface ProjectDetailsFormProps {
     onFormChange: (formData: {
@@ -16,6 +17,7 @@ const ProjectDetailsForm: React.FC<ProjectDetailsFormProps> = ({ onFormChange })
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [pushOnLoad, setPushOnLoad] = useState(false);
+    const { defaultProjectLocation } = useVariableContext();
 
     useEffect(() => {
         onFormChange({
@@ -25,6 +27,10 @@ const ProjectDetailsForm: React.FC<ProjectDetailsFormProps> = ({ onFormChange })
             pushOnLoad: pushOnLoad
         });
     }, [title, location, description, pushOnLoad]);
+
+    useEffect(() => {
+        setLocation(defaultProjectLocation);
+    }, [defaultProjectLocation]);
 
     const handleLocationPick = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -74,11 +80,11 @@ const ProjectDetailsForm: React.FC<ProjectDetailsFormProps> = ({ onFormChange })
                         type="text"
                         value={location}
                         readOnly
-                        onClick={handleLocationPick} // Permite abrir el selector al hacer clic en el input.
+                        onClick={handleLocationPick}
                         className="w-full p-4 bg-gray-700 text-white rounded-lg pr-12 cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none text-lg"
                     />
                     <FaFolder
-                        onClick={handleLocationPick} // También abre el selector al hacer clic en el ícono.
+                        onClick={handleLocationPick}
                         className="absolute right-4 text-gray-400 hover:text-gray-300 cursor-pointer text-2xl"
                     />
                 </div>

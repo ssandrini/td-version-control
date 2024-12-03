@@ -38,6 +38,9 @@ const api = {
         }
         return await ipcRenderer.invoke(API_METHODS.GET_STATE, path, versionId);
     },
+    publish: async (dir: string, name: string, description: string) =>
+        ipcRenderer.invoke(API_METHODS.PUBLISH, dir, name, description),
+    isPublished: async (dir: string) => ipcRenderer.invoke(API_METHODS.IS_PUBLISHED, dir),
     pull: async (dir: string) => ipcRenderer.invoke(API_METHODS.PULL, dir),
     push: async (dir: string) => ipcRenderer.invoke(API_METHODS.PUSH, dir),
     finishMerge: async (dir: string, state: TDState, versionName: string, description: string) =>
@@ -75,7 +78,12 @@ const api = {
     watchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.WATCH_PROJECT, dir),
     unwatchProject: async (dir: string) => ipcRenderer.invoke(API_METHODS.UNWATCH_PROJECT, dir),
     getLastVersion: async (dir: string) => ipcRenderer.invoke(API_METHODS.LAST_VERSION, dir),
-
+    changePassword: async (username: string, oldPassword: string, newPassword: string) =>
+        ipcRenderer.invoke(API_METHODS.CHANGE_PASSWORD, username, oldPassword, newPassword),
+    saveDefaultProjectsFolder: async (dir: string) =>
+        ipcRenderer.invoke(API_METHODS.SAVE_DEFAULT_PROJECTS_FOLDER, dir),
+    getDefaultProjectsFolder: async () =>
+        ipcRenderer.invoke(API_METHODS.GET_DEFAULT_PROJECTS_FOLDER),
     // MAIN TO RENDERER METHODS
     onProjectChanged: (callback: (data: any) => void) => {
         ipcRenderer.on(API_METHODS.PROJECT_CHANGED, (_event, data) => callback(data));

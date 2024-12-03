@@ -25,7 +25,7 @@ import Spinner from '../../components/ui/Spinner';
 import { useToast } from '../../hooks/use-toast';
 import { CiWarning } from 'react-icons/ci';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
-import { MdOutlineCloud, MdOutlineCloudOff } from 'react-icons/md';
+import { MdCloud, MdOutlineCloudOff } from 'react-icons/md';
 import { motion } from 'framer-motion';
 import { cn } from '@renderer/lib/utils';
 import { Input } from '@renderer/components/ui/input';
@@ -52,6 +52,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
     const [filteredProjects, setFilteredProjects] = useState<Project[]>([]); // For filtered projects
     const [searchQuery, setSearchQuery] = useState<string>(''); // For search input
     const [isLoadingRemote, setIsLoadingRemote] = useState<boolean>(false);
+    const [isLoadingClone, setIsLoadingClone] = useState<boolean>(false);
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
@@ -183,6 +184,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
             .filePicker()
             .then((files) => {
                 if (files.filePaths.length > 0) {
+                    setIsLoadingClone(true);
                     const selectedPath = files.filePaths[0];
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-expect-error
@@ -194,8 +196,8 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                             false,
                             projectToClone?.remote
                         )
-                        .then((response) => {
-                            if (Object.prototype.hasOwnProperty.call(response, 'errorCode')) {
+                        .then((response: ApiResponse<Project>) => {
+                            if (response.errorCode) {
                                 toast({
                                     className: '',
                                     style: {
@@ -281,6 +283,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                             });
                         })
                         .finally(() => {
+                            setIsLoadingClone(false);
                             setProjectToClone(undefined);
                         });
                 } else {
@@ -366,11 +369,16 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                                     <FaTrashAlt />
                                                 </Button>
                                                 <Button
-                                                    className="mr-2 p-2 bg-transparent hover:cursor-default"
-                                                    disabled={true}
+                                                    className="mr-2 p-2 bg-transparent hover:bg-transparent"
+                                                    disabled={false}
+                                                    title={
+                                                        project.remote
+                                                            ? 'This project is published in Mariana Cloud'
+                                                            : 'This project is not published in Mariana Cloud'
+                                                    }
                                                 >
                                                     {project.remote ? (
-                                                        <MdOutlineCloud className="text-green-500" />
+                                                        <MdCloud className="text-green-500" />
                                                     ) : (
                                                         <MdOutlineCloudOff className="text-red-600" />
                                                     )}
@@ -502,10 +510,16 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                 <DialogContent className="sm:max-w-[425px]">
                                     <DialogHeader>
                                         <DialogTitle>Select location for download</DialogTitle>
-                                        <DialogDescription>
-                                            Please select a location to store the project. It must
-                                            be an empty folder.
-                                        </DialogDescription>
+                                        {!isLoadingClone ? (
+                                            <DialogDescription>
+                                                Please select a location to store the project. It
+                                                must be an empty folder.
+                                            </DialogDescription>
+                                        ) : (
+                                            <div className="h-[10rem] flex items-center justify-center">
+                                                <Spinner />
+                                            </div>
+                                        )}
                                     </DialogHeader>
                                     <DialogFooter>
                                         <Button

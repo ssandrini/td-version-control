@@ -21,6 +21,8 @@ export interface ProjectManager<S, R> {
     // Remote handling
     pull(dir: string): Promise<R>;
     push(dir: string): Promise<void>;
+    publish(dir: string, name: string, description: string): Promise<void>;
+    isPublished(dir: string): Promise<boolean>;
     finishMerge(dir: string, userInput: S, versionName: string, description: string): Promise<void>;
     getMergeStatus(dir: string): Promise<R>;
 }

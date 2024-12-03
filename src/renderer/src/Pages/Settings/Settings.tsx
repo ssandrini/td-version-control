@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { motion } from 'framer-motion';
 import { Button } from '@renderer/components/ui/button';
@@ -14,13 +14,15 @@ import { Label } from '@renderer/components/ui/label';
 import { Input } from '@renderer/components/ui/input';
 import { useToast } from '@renderer/hooks/use-toast';
 import { FaCheck } from 'react-icons/fa';
-import { MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
+import { MdFolderOpen, MdOutlineVisibility, MdOutlineVisibilityOff } from 'react-icons/md';
+import { ApiResponse } from '../../../../main/errors/ApiResponse';
+import log from 'electron-log/renderer.js';
 
 interface SettingsProps {}
 
 const Settings: React.FC<SettingsProps> = () => {
     const { toast } = useToast();
-    const { user } = useVariableContext();
+    const { user, defaultProjectLocation, setDefaultProjectLocation } = useVariableContext();
     const [showUpdatePasswordModal, setShowUpdatePasswordModal] = useState(false);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -29,42 +31,88 @@ const Settings: React.FC<SettingsProps> = () => {
     const [passwordType, setPasswordType] = useState('password');
     const [confirmPasswordType, setConfirmPasswordType] = useState('password');
     const [passwordMatch, setPasswordMatch] = useState(true);
+    const [passwordError, setPasswordError] = useState('');
+
+    useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.getDefaultProjectsFolder().then((path: string) => {
+            if (path) {
+                setDefaultProjectLocation(path);
+            }
+        });
+    }, [setDefaultProjectLocation]);
+
+    const handleSetLocation = async () => {
+        try {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            const files = await window.api.filePicker();
+
+            if (files.filePaths.length > 0) {
+                const selectedPath = files.filePaths[0];
+                log.debug('SELECTED PATH', selectedPath);
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                await window.api.saveDefaultProjectsFolder(selectedPath);
+                setDefaultProjectLocation(selectedPath);
+            }
+        } catch (error) {
+            log.error('Error selecting file:', error);
+            // TO DO: error
+        }
+    };
 
     const handleUpdatePassword = () => {
         if (!passwordMatch) return;
-
         setIsSubmitting(true);
-
-        // Simulate an API call
-        setTimeout(() => {
-            toast({
-                className: '',
-                style: {
-                    borderTop: '0.35rem solid transparent',
-                    borderBottom: 'transparent',
-                    borderRight: 'transparent',
-                    borderLeft: 'transparent',
-                    borderImage: 'linear-gradient(to right, rgb(10, 27, 182), rgb(0, 0, 255))',
-                    borderImageSlice: '1'
-                },
-                description: (
-                    <div className="w-full h-full flex flex-row items-start gap-2">
-                        <FaCheck className="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
-                        <div className="flex flex-col">
-                            <div className="font-p1_bold text-h3">
-                                Password updated successfully!
+        setPasswordError('');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api
+            .changePassword(user?.username, currentPassword, newPassword)
+            .then((response: ApiResponse) => {
+                console.log(response);
+                if (!response.errorCode) {
+                    setShowUpdatePasswordModal(false);
+                    toast({
+                        className: '',
+                        style: {
+                            borderTop: '0.35rem solid transparent',
+                            borderBottom: 'transparent',
+                            borderRight: 'transparent',
+                            borderLeft: 'transparent',
+                            borderImage:
+                                'linear-gradient(to right, rgb(10, 27, 182), rgb(0, 0, 255))',
+                            borderImageSlice: '1'
+                        },
+                        description: (
+                            <div className="w-full h-full flex flex-row items-start gap-2">
+                                <FaCheck className="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                                <div className="flex flex-col">
+                                    <div className="font-p1_bold text-h3">
+                                        Password updated successfully!
+                                    </div>
+                                    <div className="font-p1_regular">
+                                        Your password has been changed.
+                                    </div>
+                                </div>
                             </div>
-                            <div className="font-p1_regular">Your password has been changed.</div>
-                        </div>
-                    </div>
-                )
+                        )
+                    });
+                } else {
+                    setPasswordError('Incorrect current password. Please try again.');
+                }
+            })
+            .catch((_err: any) => {
+                setPasswordError('An unexpected error occurred. Please try again.');
+            })
+            .finally(() => {
+                setIsSubmitting(false);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
             });
-            setShowUpdatePasswordModal(false);
-            setIsSubmitting(false);
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-        }, 1000);
     };
 
     const handlePasswordToggle = () => {
@@ -80,6 +128,11 @@ const Settings: React.FC<SettingsProps> = () => {
         setPasswordMatch(value === confirmPassword);
     };
 
+    const handleCurrentPasswordChange = (value: string) => {
+        setCurrentPassword(value);
+        setPasswordError('');
+    };
+
     const handleConfirmPasswordChange = (value: string) => {
         setConfirmPassword(value);
         setPasswordMatch(value === newPassword);
@@ -90,7 +143,7 @@ const Settings: React.FC<SettingsProps> = () => {
             exit={{ opacity: 0 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex h-full bg-gray-50 overflow-auto"
+            className="flex h-full bg-gray-650 overflow-auto"
         >
             <div className="max-w-4xl mx-auto my-8 p-6 w-full bg-white overflow-auto no-scrollbar rounded-lg shadow-md">
                 {/* Header */}
@@ -133,10 +186,35 @@ const Settings: React.FC<SettingsProps> = () => {
                         </div>
                         <div className="flex flex-row w-full items-center justify-center">
                             <div
-                                className="font-regular text-gray-600 underline hover:scale-105 cursor-pointer"
+                                className="font-regular text-gray-600 underline cursor-pointer"
                                 onClick={() => setShowUpdatePasswordModal(true)}
                             >
                                 Update Password
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="project-location-section mb-8">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                        Default Project Location
+                    </h2>
+                    <div className="bg-gray-100 p-4 rounded-md shadow-md border border-gray-300">
+                        <p className="text-sm text-gray-600 mb-4">
+                            This is the folder where all your projects managed by Mariana will be
+                            stored. Ensure you select a location with enough space and proper
+                            permissions.
+                        </p>
+                        <div>
+                            <div className="flex items-center relative">
+                                <input
+                                    type="text"
+                                    value={defaultProjectLocation}
+                                    readOnly
+                                    onClick={handleSetLocation}
+                                    className="w-full p-4 bg-white rounded-lg pr-12 cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none text-lg"
+                                />
+                                <MdFolderOpen className="absolute right-4 text-gray-400 hover:text-gray-300 cursor-pointer text-2xl" />
                             </div>
                         </div>
                     </div>
@@ -163,9 +241,12 @@ const Settings: React.FC<SettingsProps> = () => {
                                     id="currentPassword"
                                     type="password"
                                     value={currentPassword}
-                                    onChange={(e) => setCurrentPassword(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
+                                    onChange={(e) => handleCurrentPasswordChange(e.target.value)}
+                                    className={`w-full p-2 border ${passwordError ? 'border-red-500' : 'border-gray-300'} rounded`}
                                 />
+                                {passwordError && (
+                                    <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+                                )}
                             </div>
                             <div className="mb-4">
                                 <Label
@@ -232,7 +313,10 @@ const Settings: React.FC<SettingsProps> = () => {
                             </div>
                             <DialogFooter>
                                 <Button
-                                    onClick={() => setShowUpdatePasswordModal(false)}
+                                    onClick={() => {
+                                        setShowUpdatePasswordModal(false);
+                                        setPasswordError('');
+                                    }}
                                     disabled={isSubmitting}
                                 >
                                     Cancel

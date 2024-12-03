@@ -30,6 +30,20 @@ class UserDataManager {
         }
     }
 
+    addRemoteToProject(name: string, remoteUrl: string): void {
+        log.info(`Adding remote ${remoteUrl} to ${name}`);
+        const projects = this.getRecentProjects();
+        const project = projects.find((proj) => proj.name === name);
+        if (!project) {
+            log.error(`Project ${name} not found.`);
+            return;
+        }
+        project.remote = remoteUrl;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        this.store.set('recentProjects', projects);
+    }
+
     removeRecentProject(projectPath: string): void {
         log.info(`Attempting to remove project with path: ${projectPath}`);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -155,6 +169,27 @@ class UserDataManager {
         // @ts-expect-error
         this.store.delete('user');
         log.info('User cleared successfully.');
+    }
+
+    saveDefaultProjectsLocation(path: string): void {
+        log.info(`Saving default projects location: ${path}`);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        this.store.set('defaultProjectsLocation', path);
+        log.info('Default projects location saved successfully.');
+    }
+
+    getDefaultProjectsLocation(): string | null {
+        log.info('Retrieving default projects location.');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const path = this.store.get('defaultProjectsLocation', null) as string | null;
+        if (path) {
+            log.info(`Default projects location retrieved: ${path}`);
+        } else {
+            log.warn('No default projects location found.');
+        }
+        return path;
     }
 }
 

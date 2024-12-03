@@ -30,6 +30,7 @@ export class SimpleGitTracker implements Tracker {
     readonly EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
     readonly ignoredFiles = ['diff', 'workingState.json', 'checkout.timestamp'];
     readonly attributes: ReadonlyMap<string, string[]>;
+    readonly REMOTE_NAME = 'origin';
 
     constructor() {
         this.git = simpleGit();
@@ -255,7 +256,9 @@ export class SimpleGitTracker implements Tracker {
         }
     }
 
-    async clone(dir: string, url: string): Promise<void> {
+    // clone into output within directory dir
+    async clone(dir: string, output: string, url: string): Promise<void> {
+        await this.git.cwd(dir);
         try {
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(url);
@@ -264,7 +267,7 @@ export class SimpleGitTracker implements Tracker {
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();
             log.debug('remote with cred: ', remoteWithCredentials);
-            await this.git.clone(remoteWithCredentials, dir);
+            await this.git.clone(remoteWithCredentials, output);
         } catch (error) {
             const errorMessage = `Failed cloning ${url} into ${dir}`;
             this.handleError(error, errorMessage);
@@ -282,7 +285,7 @@ export class SimpleGitTracker implements Tracker {
         let fetchResult: FetchResult;
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            fetchResult = await this.git.fetch(remoteUrl);
+            fetchResult = await this.git.fetch(remoteUrl, ['--tags']);
             log.info('Fetch completed successfully.');
         } catch (fetchError) {
             this.handleError(fetchError, 'Fetch failed during pull operation');
@@ -387,8 +390,10 @@ export class SimpleGitTracker implements Tracker {
             if (!hasUpstream) {
                 log.info(`Setting upstream branch for the first push.`);
                 await this.git.push(['-u', remoteUrl, 'HEAD']);
+                await this.git.pushTags(remoteUrl);
             } else {
-                const result = await this.git.push(remoteUrl, '--tags');
+                const result = await this.git.push(remoteUrl);
+                await this.git.pushTags(remoteUrl);
                 log.info(`Push successful: ${result.pushed.length} references updated.`);
             }
         } catch (error) {
@@ -525,5 +530,37 @@ export class SimpleGitTracker implements Tracker {
         }
 
         return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
+    }
+
+    async setRemote(dir: string, url: string): Promise<void> {
+        log.info(`Setting remote to URL "${url}" in ${dir}`);
+        await this.git.cwd(dir);
+        try {
+            const remotes = await this.git.getRemotes();
+            const existingRemote = remotes.find((remote) => remote.name === this.REMOTE_NAME);
+            if (existingRemote) {
+                // If the remote already exists, update the URL
+                await this.git.remote(['set-url', this.REMOTE_NAME, url]);
+            } else {
+                // Otherwise, add a new remote
+                await this.git.addRemote(this.REMOTE_NAME, url);
+            }
+            log.info(`Remote set to "${url}" successfully.`);
+        } catch (error) {
+            this.handleError(error, `Failed to set remote to "${url}".`);
+        }
+    }
+
+    async getRemote(dir: string): Promise<string | undefined> {
+        log.info(`Fetching URL for remote in ${dir}`);
+        await this.git.cwd(dir);
+        try {
+            // Get the URL of the specified remote
+            const remoteUrl = (await this.git.remote(['get-url', this.REMOTE_NAME])) || undefined;
+            log.info(`Remote URL: ${remoteUrl}`);
+            return remoteUrl;
+        } catch (error) {
+            this.handleError(error, `Failed to fetch URL for remote.`);
+        }
     }
 }

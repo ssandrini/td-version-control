@@ -11,7 +11,15 @@ import { TDProjectManager } from './managers/TDProjectManager';
 import { SimpleGitTracker } from './trackers/SimpleGitTracker';
 import { TDProcessor } from './processors/TDProcessor';
 import { API_METHODS } from './apiMethods';
-import { filePicker, findFileByExt, getTemplates, openDirectory, openToeFile } from './utils/utils';
+import {
+    createProjectDirectory,
+    filePicker,
+    findFileByExt,
+    getTemplates,
+    openDirectory,
+    openToeFile,
+    verifyUrl
+} from './utils/utils';
 import { TDState } from './models/TDState';
 import { TDMergeResult } from './models/TDMergeResult';
 import authService from './services/AuthService';
@@ -219,17 +227,24 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             dir: string,
             name: string,
             description: string,
-            remote: boolean,
+            createRemoteRepo: boolean,
             src?: string
         ) => {
+            let completePath = '';
+            try {
+                completePath = await createProjectDirectory(dir, name);
+            } catch (error: any) {
+                return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
+            }
+
             let initialVersion: Version;
             let remoteUrl: string = '';
-            if (remote) {
+            if (createRemoteRepo) {
                 const response = await remoteRepoService.createRepository(name, description);
                 if (response.result) {
                     remoteUrl = response.result;
                     try {
-                        initialVersion = await projectManager.init(dir, remoteUrl, src);
+                        initialVersion = await projectManager.init(completePath, remoteUrl, src);
                     } catch (err) {
                         log.error('Failed to initialize project locally:', err);
                         return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
@@ -239,7 +254,10 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
                 }
             } else {
                 try {
-                    initialVersion = await projectManager.init(dir, undefined, src);
+                    initialVersion = await projectManager.init(completePath, undefined, src);
+                    if (verifyUrl(src!)) {
+                        remoteUrl = src!;
+                    }
                 } catch (err) {
                     log.error('Failed to initialize project locally:', err);
                     return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
@@ -249,8 +267,8 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
             const newProject: Project = {
                 name: name,
                 owner: initialVersion.author.name,
-                path: dir,
-                remote: remote ? remoteUrl : '',
+                path: completePath,
+                remote: remoteUrl,
                 description: description
             };
             userDataMgr.addRecentProject(newProject);
@@ -270,6 +288,17 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
     ipcMain.handle(API_METHODS.GET_TEMPLATES, (_) => getTemplates());
 
     // Remote handling
+    ipcMain.handle(
+        API_METHODS.PUBLISH,
+        async (_, dir: string, name: string, description: string) => {
+            return projectManager.publish(dir, name, description);
+        }
+    );
+
+    ipcMain.handle(API_METHODS.IS_PUBLISHED, async (_, dir: string) =>
+        projectManager.isPublished(dir)
+    );
+
     ipcMain.handle(API_METHODS.PULL, async (_, dir: string) => {
         const result = (await projectManager.pull(dir)) as TDMergeResult;
         return result.serialize();
@@ -370,5 +399,20 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     ipcMain.handle(API_METHODS.LAST_VERSION, async (_, dir: string) => {
         return projectManager.lastVersion(dir);
+    });
+
+    ipcMain.handle(
+        API_METHODS.CHANGE_PASSWORD,
+        async (_, username: string, oldPassword: string, newPassword: string) => {
+            return authService.changePassword(username, oldPassword, newPassword);
+        }
+    );
+
+    ipcMain.handle(API_METHODS.SAVE_DEFAULT_PROJECTS_FOLDER, async (_, path: string) => {
+        return userDataMgr.saveDefaultProjectsLocation(path);
+    });
+
+    ipcMain.handle(API_METHODS.GET_DEFAULT_PROJECTS_FOLDER, async () => {
+        return userDataMgr.getDefaultProjectsLocation();
     });
 };

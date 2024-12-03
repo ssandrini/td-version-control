@@ -173,12 +173,15 @@ const ProjectDetail: React.FC = () => {
     }, [compareVersion]);
 
     useEffect(() => {
+        console.log(project?.remote)
+        setIsPublished(project?.remote != undefined)
+        /*
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api.isPublished(project?.path).then((isPublished: boolean) => {
             setIsPublished(isPublished);
-        });
-    }, []);
+        });*/
+    }, [project]);
 
     return (
         <motion.div
@@ -191,9 +194,7 @@ const ProjectDetail: React.FC = () => {
                 <Nodes
                     current={currentState}
                     compare={compareState}
-                    project={project}
                     selectedVersion={selectedVersion}
-                    isPublished={isPublished}
                 />
             </div>
             <div className="flex flex-col h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 bg-[#2b2d30] min-w-[30rem] p-4 w-[30%]">

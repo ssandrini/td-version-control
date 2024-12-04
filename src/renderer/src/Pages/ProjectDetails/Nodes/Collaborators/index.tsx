@@ -3,7 +3,7 @@ import { FaTrash } from 'react-icons/fa';
 import { ApiResponse } from '../../../../../../main/errors/ApiResponse';
 import { User } from '../../../../../../main/models/api/User';
 import Project from '../../../../../../main/models/Project';
-import { Dialog, DialogContent } from '../../../../components/ui/dialog';
+import { Dialog, DialogContent } from '@renderer/components/ui/dialog';
 
 interface CollaboratorProps {
     project?: Project;
@@ -20,7 +20,7 @@ const Collaborators: React.FC<CollaboratorProps> = ({ project, showModal, setSho
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (project?.remote !== '') {
+        if (project && project.remote && project.remote !== '') {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             window.api

@@ -344,7 +344,7 @@ const Settings: React.FC<SettingsProps> = () => {
                         <h3 className="text-xl font-semibold mb-4 text-white">Did You Know?</h3>
                         <p className="text-white">
                             This VCS is designed specifically for TouchDesigner files, allowing you
-                            to easily version control and collaborate on your visual projects, a
+                            to easily version control and collaborate on your visual projects. A
                             little assistant that reminds you of everything you have done!
                         </p>
                     </div>

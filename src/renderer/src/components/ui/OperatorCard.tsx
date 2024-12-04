@@ -351,7 +351,8 @@ const PROPERTY_NAME_MAP: Record<string, string> = {
     aspect1: 'Aspect 1',
     aspect2: 'Aspect 2',
     offsetx: 'Offset X',
-    offsety: 'Offset Y'
+    offsety: 'Offset Y',
+    speed: 'Speed'
 };
 
 interface OperatorCardProps {

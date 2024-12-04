@@ -174,7 +174,7 @@ const ProjectDetail: React.FC = () => {
 
     useEffect(() => {
         console.log(project?.remote);
-        setIsPublished(project?.remote != undefined);
+        setIsPublished(project?.remote !== '');
         /*
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error

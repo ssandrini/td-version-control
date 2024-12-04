@@ -20,11 +20,11 @@ const Collaborators: React.FC<CollaboratorProps> = ({ project, showModal, setSho
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (project?.remote) {
+        if (project?.remote !== '') {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             window.api
-                .getCollaborators(project.owner ?? '', project.name)
+                .getCollaborators(project?.owner ?? '', project?.name)
                 .then((response: ApiResponse<User[]>) => {
                     if (response.result) {
                         setCollaborators(response.result);

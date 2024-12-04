@@ -328,9 +328,12 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                 <div
                     className={cn(
                         projects.length != 0
-                            ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-                            : 'flex flex-row flex-wrap items-center justify-center',
-                        'gap-4 w-full max-w-6xl mx-auto'
+                            ? 'items-center justify-start'
+                            : 'items-center justify-center',
+                        ignoreRemote
+                            ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-6xl mx-auto'
+                            : 'flex flex-row flex-wrap',
+                        'gap-4 w-full'
                     )}
                 >
                     {projects.length > 0 ? (
@@ -404,7 +407,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
             </div>
 
             {!ignoreRemote && (
-                <div className="flex-1 m-8 text-white bg-gray-800 rounded-lg">
+                <div className="flex-1 m-8 text-white bg-[#2b2d30] rounded-lg">
                     {/* Header */}
                     <div className="flex flex-row justify-between items-center">
                         <h3 className="font-semibold pl-5">Remote Projects</h3>
@@ -416,7 +419,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                     value={searchQuery}
                                     onChange={handleSearchChange}
                                     placeholder="Search by name, author, or description..."
-                                    className="p-2 border border-gray-400 rounded-md text-white bg-gray-700"
+                                    className="p-2 border border-gray-400 rounded-md !text-white bg-[#2b2d30]"
                                 />
                             </div>
                         )}

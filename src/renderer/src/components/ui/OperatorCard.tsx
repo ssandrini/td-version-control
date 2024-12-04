@@ -387,7 +387,19 @@ const OperatorCard: React.FC<OperatorCardProps> = ({ node, Icon, iconColor, comp
 
     return (
         <Popover modal>
-            <PopoverTrigger className="flex bg-gray-700 rounded-md w-full h-full flex-col items-center">
+            <PopoverTrigger
+                className={
+                    (iconColor === 'text-blue-800'
+                        ? 'border-2 border-3 border-blue-800'
+                        : iconColor === 'text-red-600'
+                          ? 'border-2 border-3 border-red-600'
+                          : iconColor === 'text-green-500'
+                            ? 'border-2 border-3 border-green-500'
+                            : '') +
+                    ' m-1 flex bg-gray-700 rounded-md w-full h-full flex-col items-center'
+                }
+            >
+                {' '}
                 <div className="w-full h-full text-white rounded-md p-2 relative flex justify-center items-center">
                     <img
                         src={getFileImage(node.type)}

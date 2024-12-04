@@ -10,6 +10,8 @@ import log from 'electron-log/renderer';
 import { Version } from '../../../../../main/models/Version';
 import { TDState } from '../../../../../main/models/TDState';
 import { useToast } from '@renderer/hooks/use-toast';
+import { MdPeople } from 'react-icons/md';
+import Collaborators from '../Nodes/Collaborators';
 
 interface ProjectDetailsHeaderProps {
     project?: Project;
@@ -51,6 +53,8 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
     const [isLoadingPush, setIsLoadingPush] = useState(false);
     const [isLoadingPull, setIsLoadingPull] = useState(false);
     const [isLoadingPublish, setIsLoadingPublish] = useState(false);
+
+    const [showCollaboratorsModal, setShowCollaboratorsModal] = useState(false);
 
     const handlePush = () => {
         setIsLoadingPush(true);
@@ -391,12 +395,12 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                     {isPublished ? (
                                         <>
                                             <div className="flex flex-col items-center text-xs">
-                                                <span>Push</span>
+                                                <span>Publish</span>
                                                 <Button
-                                                    className="p-4 bg-gray-300 text-gray-800 hover:bg-gray-400 text-lg"
+                                                    className="p-4 bg-transparent text-gray-800 hover:bg-gray-200 text-lg"
                                                     onClick={() => handlePush()}
                                                     disabled={isLoadingPush}
-                                                    title={'Push changes'}
+                                                    title={'Publish changes to the cloud'}
                                                 >
                                                     {isLoadingPush ? (
                                                         <div className="scale-75">
@@ -408,11 +412,11 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                                 </Button>
                                             </div>
                                             <div className="flex flex-col items-center text-xs">
-                                                <span>Pull</span>
+                                                <span>Refresh</span>
                                                 <Button
-                                                    className="p-4 bg-gray-300 text-gray-800 hover:bg-gray-400 text-lg"
+                                                    className="p-4 bg-transparent text-gray-800 hover:bg-gray-200 text-lg"
                                                     onClick={() => handlePull()}
-                                                    title={'Pull changes'}
+                                                    title={'Refresh project with cloud'}
                                                 >
                                                     {isLoadingPull ? (
                                                         <div className="scale-75">
@@ -423,6 +427,21 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                                                     )}
                                                 </Button>
                                             </div>
+                                            <div className="flex flex-col items-center text-xs">
+                                                <span>Collaborators</span>
+                                                <Button
+                                                    className="p-4 bg-transparent text-gray-800 hover:bg-gray-200 text-lg"
+                                                    onClick={() => setShowCollaboratorsModal(true)}
+                                                    title={'Manage collaborators'}
+                                                >
+                                                    <MdPeople size={16} />
+                                                </Button>
+                                            </div>
+                                            <Collaborators
+                                                project={project}
+                                                showModal={showCollaboratorsModal}
+                                                setShowModal={setShowCollaboratorsModal}
+                                            />
                                         </>
                                     ) : (
                                         <div className="flex flex-col items-center text-xs">

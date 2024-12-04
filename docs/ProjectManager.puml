@@ -1,0 +1,31 @@
+@startuml
+
+interface ProjectManager<S, R> {
+    + init(dir: string, dst?: string, src?: string): Version
+    + currentVersion(dir: string): Version
+    + listVersions(dir: string): Version[]
+    + hasChanges(dir: string): boolean
+    + addTag(dir: string, versionId: string, tag: string): void
+    + removeTag(dir: string, tag: string): void
+    + createVersion(dir: string, versionName: string, description?: string): Version
+    + goToVersion(dir: string, versionId: string): Version
+    + discardChanges(dir: string): void
+    + getVersionState(dir: string, versionId?: string): S
+    + lastVersion(dir: string): Version
+    + checkDependencies(): ProjectDependencies[]
+
+    ' Remote handling
+    + pull(dir: string): R
+    + push(dir: string): void
+    + publish(dir: string, name: string, description: string): void
+    + isPublished(dir: string): boolean
+    + finishMerge(dir: string, userInput: S, versionName: string, description: string): void
+    + getMergeStatus(dir: string): R
+}
+
+note top of ProjectManager
+S: Tipo genérico que representa el Estado de una versión.
+R: Tipo genérico que representa el Resultado de la operación pull.
+end note
+
+@enduml

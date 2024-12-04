@@ -1,0 +1,52 @@
+@startuml
+
+actor User
+participant TDProcessor
+participant FileSystem
+participant toeexpand.exe
+
+User -> TDProcessor: preprocess(dir, outDir)
+activate TDProcessor
+activate FileSystem
+
+TDProcessor -> TDProcessor: process.cwd(dir)
+TDProcessor -> FileSystem: find .toe file
+FileSystem -> FileSystem: search .toe
+
+alt toe file found
+    FileSystem -> TDProcessor: return .toe path
+else toe file not found
+    FileSystem -> TDProcessor: .toe not found
+    TDProcessor -> User: throw MissingFileError
+end
+
+
+
+TDProcessor -> toeexpand.exe: execute `toeexpand.exe toePath`
+activate toeexpand.exe
+alt success execution
+    toeexpand.exe --> TDProcessor: text files generated
+else failed execution
+    toeexpand.exe --> TDProcessor: return error
+end
+Deactivate toeexpand.exe
+
+TDProcessor -> FileSystem: validate text files
+FileSystem -> FileSystem: check text files
+
+alt files ok
+    FileSystem -> TDProcessor: return ok
+else corrupted files
+    FileSystem -> TDProcessor: return error
+    TDProcessor -> User: throw  CorruptedFilesError
+end
+
+TDProcessor -> FileSystem: save files at outDir
+FileSystem -> FileSystem: move files to outDir
+FileSystem -> TDProcessor: files moved
+deactivate FileSystem
+
+TDProcessor -> TDProcessor: process.cwd(originalDir)
+TDProcessor -> User: return text files
+deactivate TDProcessor
+@enduml

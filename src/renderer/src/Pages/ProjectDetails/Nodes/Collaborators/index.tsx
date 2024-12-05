@@ -161,7 +161,7 @@ const Collaborators: React.FC<CollaboratorProps> = ({ project, showModal, setSho
                                             className="bg-gray-800 text-white p-2 rounded-lg w-full"
                                         />
                                     </div>
-                                    <div className="overflow-y-auto flex flex-col h-[30rem]">
+                                    <div className="overflow-y-auto flex flex-col h-[20rem] scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700">
                                         {loading && <p className="text-white mb-4">Searching...</p>}
                                         {error && <p className="text-red-500 mb-4">{error}</p>}
                                         {foundUsers.length > 0 && (

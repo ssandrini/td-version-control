@@ -5,12 +5,19 @@ import { User } from '../../../../../../main/models/api/User';
 import Project from '../../../../../../main/models/Project';
 import { Dialog, DialogContent } from '@renderer/components/ui/dialog';
 import { useVariableContext } from '@renderer/hooks/Variables/useVariableContext';
+import { motion } from 'framer-motion';
 
 interface CollaboratorProps {
     project?: Project;
     showModal: boolean;
     setShowModal: React.Dispatch<SetStateAction<boolean>>;
 }
+
+const userAnimationVariants = {
+    hidden: { opacity: 0, y: -1 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: 1 }
+};
 
 const Collaborators: React.FC<CollaboratorProps> = ({ project, showModal, setShowModal }) => {
     const [collaborators, setCollaborators] = useState<User[]>([]);
@@ -162,18 +169,42 @@ const Collaborators: React.FC<CollaboratorProps> = ({ project, showModal, setSho
                                         />
                                     </div>
                                     <div className="overflow-y-auto flex flex-col h-[20rem] scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700">
-                                        {loading && <p className="text-white mb-4">Searching...</p>}
-                                        {error && <p className="text-red-500 mb-4">{error}</p>}
+                                        {loading && (
+                                            <motion.p
+                                                key="loading"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="text-white mb-4"
+                                            >
+                                                Searching...
+                                            </motion.p>
+                                        )}
+                                        {error && (
+                                            <motion.p
+                                                key="error"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="text-red-500 mb-4"
+                                            >
+                                                {error}
+                                            </motion.p>
+                                        )}
                                         {foundUsers.length > 0 && (
                                             <div className="flex flex-col gap-4">
                                                 {foundUsers
                                                     .filter(
                                                         (foundUser) =>
-                                                            foundUser.username != user?.username
+                                                            foundUser.username !== user?.username
                                                     )
                                                     .map((user) => (
-                                                        <div
+                                                        <motion.div
                                                             key={user.username}
+                                                            variants={userAnimationVariants}
+                                                            initial="hidden"
+                                                            animate="visible"
+                                                            exit="exit"
                                                             className="flex items-center justify-between bg-gray-800 p-2 rounded-lg"
                                                         >
                                                             <div className="flex items-center gap-4">
@@ -191,7 +222,8 @@ const Collaborators: React.FC<CollaboratorProps> = ({ project, showModal, setSho
                                                             </div>
                                                             {collaborators.find(
                                                                 (collab) =>
-                                                                    collab.username == user.username
+                                                                    collab.username ===
+                                                                    user.username
                                                             ) ? (
                                                                 <button
                                                                     onClick={() =>
@@ -213,7 +245,7 @@ const Collaborators: React.FC<CollaboratorProps> = ({ project, showModal, setSho
                                                                     Add
                                                                 </button>
                                                             )}
-                                                        </div>
+                                                        </motion.div>
                                                     ))}
                                             </div>
                                         )}

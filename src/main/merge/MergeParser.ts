@@ -86,3 +86,20 @@ export const resolveWithCurrentBranch = (conflictedContent: Content): Content =>
 export const resolveWithIncomingBranch = (conflictedContent: Content): Content => {
     return conflictedContent.replace(conflictRegex, (_, __, rightContent) => rightContent.trim());
 };
+
+export const cleanMergeFile = (fileContent: Content, linesToRemove: string[]): Content => {
+    const cleanedContent = fileContent.replace(
+        conflictRegex,
+        (_match, leftContent, rightContent) => {
+            const leftLines = leftContent.trim().split('\n');
+            const rightLines = rightContent.trim().split('\n');
+            return [...leftLines, ...rightLines].join('\n');
+        }
+    );
+
+    const uniqueLines = Array.from(new Set(cleanedContent.split('\n')));
+    const finalLines = uniqueLines.filter(
+        (line) => !linesToRemove.some((toRemove) => line.includes(toRemove))
+    );
+    return finalLines.filter((line) => line.trim() !== '').join('\n');
+};

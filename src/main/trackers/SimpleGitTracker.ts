@@ -15,6 +15,7 @@ import fs from 'fs-extra';
 import path from 'node:path';
 import { Content, Filename, MergeStatus, TrackerMergeResult } from '../merge/TrackerMergeResult';
 import {
+    cleanMergeFile,
     parseMergeConflicts,
     preprocessMergeConflicts,
     resolveFileConflicts,
@@ -337,6 +338,24 @@ export class SimpleGitTracker implements Tracker {
                 this.handleError(error, 'Merge failed without conflict details.');
             }
             conflicts = mergeSummary.conflicts;
+        }
+
+        // TOC file has conflicts
+        const tocConflict = conflicts.find((c: MergeConflict) => c.file?.endsWith('.toc'));
+        if (tocConflict && tocConflict.file) {
+            const tocPath = path.join(dir, tocConflict.file);
+            const tocContent = this.readFileContent(tocPath);
+            log.debug('CONFLICTO EN EL TOC!!!!!!!!!!');
+            const deleted = Array.from(
+                new Set(
+                    (await this.git.status()).deleted.map((path) =>
+                        path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'))
+                    )
+                )
+            );
+            const cleanToc = cleanMergeFile(tocContent, deleted);
+            fs.writeFileSync(tocPath, cleanToc);
+            await this.git.add(tocConflict.file);
         }
 
         log.info(`Merge encountered ${conflicts.length} conflict(s)`);

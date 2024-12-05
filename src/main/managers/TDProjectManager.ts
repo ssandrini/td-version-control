@@ -62,6 +62,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
         this.excludedFiles = [
             /\.build$/,
+            /\.start$/,
             /\.lod$/,
             /\.bin$/,
             /^local\/.*$/,

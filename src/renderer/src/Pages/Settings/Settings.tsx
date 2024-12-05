@@ -329,11 +329,13 @@ const Settings: React.FC<SettingsProps> = () => {
                     </Dialog>
                 )}
 
+                <hr className="border-t border-gray-300" />
+
                 <div className="w-full flex flex-col items-center justify-center px-20 py-5">
-                    <div className="p-6 bg-gray-800 rounded-lg shadow-md text-center">
-                        <h3 className="text-xl font-semibold mb-4 text-white">Did You Know?</h3>
-                        <p className="text-white">
-                            This VCS is designed specifically for TouchDesigner files, allowing you
+                    <div className="p-6 bg-white text-center">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-600">Did You Know?</h3>
+                        <p className="text-gray-600">
+                            Mariana is designed specifically for TouchDesigner files, allowing you
                             to easily version control and collaborate on your visual projects. A
                             little assistant that reminds you of everything you have done!
                         </p>

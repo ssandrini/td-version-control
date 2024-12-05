@@ -33,6 +33,7 @@ const ProjectDetail: React.FC = () => {
         | {
               currentState: TDState | null;
               incomingState: TDState | null;
+              commonState: TDState | null;
           }
         | undefined
     >(undefined);
@@ -148,7 +149,8 @@ const ProjectDetail: React.FC = () => {
             } else if (result.status === TDMergeStatus.IN_PROGRESS) {
                 setMergeConflicts({
                     currentState: result.currentState,
-                    incomingState: result.incomingState
+                    incomingState: result.incomingState,
+                    commonState: result.commonState
                 });
             }
         });

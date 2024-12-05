@@ -389,16 +389,17 @@ const OperatorCard: React.FC<OperatorCardProps> = ({ node, Icon, iconColor, comp
     return (
         <Popover modal>
             <PopoverTrigger
-                className={
-                    (iconColor === 'text-blue-800'
-                        ? 'border-2 border-3 border-blue-800'
+                className={`${
+                    iconColor === 'text-blue-700'
+                        ? 'border-2 border-blue-700'
                         : iconColor === 'text-red-600'
-                          ? 'border-2 border-3 border-red-600'
+                          ? 'border-2 border-red-600'
                           : iconColor === 'text-green-500'
-                            ? 'border-2 border-3 border-green-500'
-                            : '') +
-                    ' m-1 flex bg-gray-700 rounded-md w-full h-full flex-col items-center'
-                }
+                            ? 'border-2 border-green-500'
+                            : iconColor === 'text-yellow-400'
+                              ? 'border-2 border-yellow-400 shadow-lg shadow-yellow-500/50'
+                              : ''
+                } m-1 flex bg-gray-700 rounded-md w-full h-full flex-col items-center`}
             >
                 {' '}
                 <div className="w-full h-full text-white rounded-md p-2 relative flex justify-center items-center">

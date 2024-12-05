@@ -26,6 +26,7 @@ interface ProjectDetailsHeaderProps {
         | {
               currentState: TDState | null;
               incomingState: TDState | null;
+              commonState: TDState | null;
           }
         | undefined;
     setMergeConflicts: React.Dispatch<
@@ -33,6 +34,7 @@ interface ProjectDetailsHeaderProps {
             | {
                   currentState: TDState | null;
                   incomingState: TDState | null;
+                  commonState: TDState | null;
               }
             | undefined
         >
@@ -239,7 +241,8 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                 } else {
                     setMergeConflicts({
                         currentState: result.currentState,
-                        incomingState: result.incomingState
+                        incomingState: result.incomingState,
+                        commonState: result.commonState
                     });
                 }
             })

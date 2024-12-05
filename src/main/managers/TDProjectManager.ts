@@ -82,13 +82,17 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
         if (result.mergeStatus === MergeStatus.FINISHED) {
             log.debug('No merge in progress');
-            return Promise.resolve(new TDMergeResult(TDMergeStatus.FINISHED, null, null));
+            return Promise.resolve(new TDMergeResult(TDMergeStatus.FINISHED, null, null, null));
         }
 
         log.debug('Merge status is IN_PROGRESS.');
         const [currentState, incomingState] = await this.createStatesFromConflicts(dir);
+        let commonState: TDState | null = null;
+        if (result.lastCommonVersion) {
+            commonState = await this.createVersionState(dir, result.lastCommonVersion);
+        }
         return Promise.resolve(
-            new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState)
+            new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState, commonState)
         );
     }
 
@@ -327,7 +331,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         );
 
         if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
-            return new TDMergeResult(TDMergeStatus.UP_TO_DATE, null, null);
+            return new TDMergeResult(TDMergeStatus.UP_TO_DATE, null, null, null);
         } else if (
             result.mergeStatus === MergeStatus.FINISHED_WITHOUT_CONFLICTS ||
             result.mergeStatus === MergeStatus.FINISHED_WITHOUT_ACTIONS
@@ -340,7 +344,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
                 lastModified,
                 path.join(hiddenDirPath, this.checkoutTimestampFile)
             );
-            return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
+            return new TDMergeResult(TDMergeStatus.FINISHED, null, null, null);
         } else if (result.mergeStatus === MergeStatus.FINISHED) {
             await this.processor.postprocess(hiddenDirPath, dir);
             await this.saveVersionState(dir, this.stateFile);
@@ -354,7 +358,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
                 lastModified,
                 path.join(hiddenDirPath, this.checkoutTimestampFile)
             );
-            return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
+            return new TDMergeResult(TDMergeStatus.FINISHED, null, null, null);
         } else if (
             result.mergeStatus === MergeStatus.IN_PROGRESS &&
             result.unresolvedConflicts === null
@@ -369,7 +373,17 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
             `MergeResult: IN_PROGRESS, currentState: ${currentState.toString()}, incomingState: ${incomingState.toString()}`
         );
         log.debug('Merge result common versionId: ', result.lastCommonVersion);
-        return new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState);
+        let commonState: TDState | null = null;
+        if (result.lastCommonVersion) {
+            commonState = await this.createVersionState(dir, result.lastCommonVersion);
+        }
+
+        return new TDMergeResult(
+            TDMergeStatus.IN_PROGRESS,
+            currentState,
+            incomingState,
+            commonState
+        );
     }
 
     async push(dir: string): Promise<void> {

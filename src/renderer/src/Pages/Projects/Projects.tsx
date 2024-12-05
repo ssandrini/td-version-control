@@ -340,13 +340,15 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                         <>
                             {projects.map((project, index) => (
                                 <div
-                                    className="flex flex-col text-black bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] p-1 shadow-lg rounded-lg cursor-pointer min-w-[20rem] w-fit text-ellipsis overflow-hidden"
+                                    className="flex flex-col text-black bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] p-1 shadow-lg rounded-lg cursor-pointer min-w-[20rem] max-w-[20rem] w-fit text-ellipsis overflow-hidden"
                                     key={index}
                                     onClick={(event) => handleCellClick(event, project)}
                                 >
                                     <div className="flex bg-gray-200 rounded-lg flex-col pl-3 pb-4 h-full">
                                         <div className="whitespace-nowrap flex flex-row items-center justify-between gap-2 text-ellipsis font-bold text-md">
-                                            <div>{project.name.split('/').pop()}</div>
+                                            <div className="truncate">
+                                                {project.name.split('/').pop()}
+                                            </div>
                                             <div className="flex flex-row items-center pt-1">
                                                 <Button
                                                     className="mr-2 p-2 bg-transparent hover:bg-green-200 text-green-500 hover:text-green-400"

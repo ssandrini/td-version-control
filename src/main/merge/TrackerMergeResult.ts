@@ -18,6 +18,7 @@ export type Content = string;
 export type TrackerMergeResult = {
     mergeStatus: MergeStatus;
     unresolvedConflicts: Map<Filename, Set<[Content, Content]>> | null;
+    lastCommonVersion?: string;
 };
 
 /*

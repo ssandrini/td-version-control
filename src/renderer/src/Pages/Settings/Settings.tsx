@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { motion } from 'framer-motion';
 import { Button } from '@renderer/components/ui/button';
@@ -32,16 +32,6 @@ const Settings: React.FC<SettingsProps> = () => {
     const [confirmPasswordType, setConfirmPasswordType] = useState('password');
     const [passwordMatch, setPasswordMatch] = useState(true);
     const [passwordError, setPasswordError] = useState('');
-
-    useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api.getDefaultProjectsFolder().then((path: string) => {
-            if (path) {
-                setDefaultProjectLocation(path);
-            }
-        });
-    }, [setDefaultProjectLocation]);
 
     const handleSetLocation = async () => {
         try {

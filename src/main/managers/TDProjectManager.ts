@@ -340,7 +340,9 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         } else if (result.mergeStatus === MergeStatus.FINISHED) {
             await this.processor.postprocess(hiddenDirPath, dir);
             await this.saveVersionState(dir, this.stateFile);
+            await this.processor.preprocess(dir, hiddenDirPath);
             await this.tracker.createVersion(hiddenDirPath, 'MergeVersion');
+            await this.processor.postprocess(hiddenDirPath, dir);
             await this.tracker.push(hiddenDirPath);
             const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
             const lastModified = await getLastModifiedDate(toeFile);
@@ -362,6 +364,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         log.debug(
             `MergeResult: IN_PROGRESS, currentState: ${currentState.toString()}, incomingState: ${incomingState.toString()}`
         );
+        log.debug('Merge result common versionId: ', result.lastCommonVersion);
         return new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState);
     }
 
@@ -386,6 +389,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         const hiddenDirPath = this.hiddenDirPath(dir);
         const result: TrackerMergeResult = await this.tracker.getMergeResult(hiddenDirPath);
         log.debug('Merge result status:', result.mergeStatus);
+        log.debug('Merge result common versionId: ', result.lastCommonVersion);
 
         if (result.mergeStatus === MergeStatus.FINISHED) {
             log.debug('Merge already finished; no further action required.');
@@ -420,7 +424,9 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await this.tracker.settleConflicts(hiddenDirPath, resolvedContents);
         await this.processor.postprocess(hiddenDirPath, dir);
         await this.saveVersionState(dir, this.stateFile);
+        await this.processor.preprocess(dir, hiddenDirPath);
         await this.tracker.createVersion(hiddenDirPath, versionName, description);
+        await this.processor.postprocess(hiddenDirPath, dir);
         const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
         const lastModified = await getLastModifiedDate(toeFile);
         await dumpTimestampToFile(

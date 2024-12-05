@@ -14,8 +14,14 @@ import MissingDependenciesDialog from '@renderer/components/ui/MissingDependenci
 import { AnimatePresence, motion } from 'framer-motion';
 
 const Layout: React.FC = () => {
-    const { hasMissingDependencies, missingDependencies, setMissingDependencies, user, setUser } =
-        useVariableContext();
+    const {
+        hasMissingDependencies,
+        missingDependencies,
+        setMissingDependencies,
+        user,
+        setUser,
+        setDefaultProjectLocation
+    } = useVariableContext();
     const [userStateReady, setUserStateReady] = useState<boolean>(false);
     const [expanded, setExpanded] = useState<boolean>(false);
 
@@ -45,6 +51,16 @@ const Layout: React.FC = () => {
             setMissingDependencies(missingDeps);
         });
     }, []);
+
+    useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.getDefaultProjectsFolder().then((path: string) => {
+            if (path) {
+                setDefaultProjectLocation(path);
+            }
+        });
+    }, [setDefaultProjectLocation]);
 
     const recheckDependencies = async () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

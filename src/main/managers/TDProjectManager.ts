@@ -71,6 +71,10 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         ];
     }
 
+    abortMerge(dir: string): Promise<void> {
+        return this.tracker.abortMerge(this.hiddenDirPath(dir));
+    }
+
     async getMergeStatus(dir: string): Promise<TDMergeResult> {
         const hiddenDirPath = this.hiddenDirPath(dir);
         const result: TrackerMergeResult = await this.tracker.getMergeResult(hiddenDirPath);

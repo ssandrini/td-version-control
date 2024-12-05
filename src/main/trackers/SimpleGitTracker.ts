@@ -316,6 +316,16 @@ export class SimpleGitTracker implements Tracker {
             return { mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null };
         }
 
+        let commonAncestorHash: string | undefined;
+        try {
+            const mergeBaseResult = await this.git.raw(['merge-base', 'HEAD', 'FETCH_HEAD']);
+            commonAncestorHash = mergeBaseResult.trim();
+            log.info(`Last common ancestor commit: ${commonAncestorHash}`);
+        } catch (error) {
+            log.error('Error determining the common ancestor:', error);
+            commonAncestorHash = undefined;
+        }
+
         let conflicts: MergeConflict[];
         try {
             const mergeSummary = await this.git.merge(['FETCH_HEAD']);
@@ -402,19 +412,6 @@ export class SimpleGitTracker implements Tracker {
 
         if (conflictMap.size > 0) {
             log.info('Merge status: IN_PROGRESS with unresolved conflicts');
-            let commonAncestorHash: string | undefined;
-            try {
-                const mergeBaseResult = await this.git.raw([
-                    'merge-base',
-                    '--is-ancestor',
-                    'HEAD~1',
-                    'HEAD'
-                ]);
-                commonAncestorHash = mergeBaseResult.trim();
-            } catch (error) {
-                log.error('Error determining the common ancestor:', error);
-                commonAncestorHash = undefined;
-            }
             return {
                 mergeStatus: MergeStatus.IN_PROGRESS,
                 unresolvedConflicts: conflictMap,
@@ -578,13 +575,9 @@ export class SimpleGitTracker implements Tracker {
         let commonAncestorHash: string | undefined;
         if (conflictMap.size > 0) {
             try {
-                const mergeBaseResult = await this.git.raw([
-                    'merge-base',
-                    '--is-ancestor',
-                    'HEAD~1',
-                    'HEAD'
-                ]);
+                const mergeBaseResult = await this.git.raw(['merge-base', 'HEAD', 'MERGE_HEAD']);
                 commonAncestorHash = mergeBaseResult.trim();
+                log.info(`Last common ancestor commit: ${commonAncestorHash}`);
             } catch (error) {
                 log.error('Error determining the common ancestor:', error);
                 commonAncestorHash = undefined;

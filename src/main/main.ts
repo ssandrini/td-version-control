@@ -415,4 +415,8 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
     ipcMain.handle(API_METHODS.GET_DEFAULT_PROJECTS_FOLDER, async () => {
         return userDataMgr.getDefaultProjectsLocation();
     });
+
+    ipcMain.handle(API_METHODS.ABORT_MERGE, async (_, dir: string) => {
+        return projectManager.abortMerge(dir);
+    });
 };

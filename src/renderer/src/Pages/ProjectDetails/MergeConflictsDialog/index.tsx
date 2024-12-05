@@ -57,10 +57,20 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
     };
 
     const handleAbortMerge = () => {
-        // Logic to abort the merge
-        console.log('Merge aborted.');
-        setMergeConflicts(undefined);
-        setShowConfirmationDialog(false);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api
+            .abortMerge(project?.path)
+            .then(() => {
+                setMergeConflicts(undefined);
+                setShowConfirmationDialog(false);
+            })
+            .catch((error: any) => {
+                console.log(error);
+            })
+            .finally(() => {
+                setMergeConflicts(undefined);
+            });
     };
 
     return (

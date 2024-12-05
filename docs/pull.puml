@@ -1,5 +1,5 @@
 @startuml
-actor User
+participant User
 participant ProjectManager
 participant Tracker
 participant Git

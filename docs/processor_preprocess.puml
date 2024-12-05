@@ -1,6 +1,6 @@
 @startuml
 
-actor User
+participant User
 participant TDProcessor
 participant FileSystem
 participant toeexpand.exe

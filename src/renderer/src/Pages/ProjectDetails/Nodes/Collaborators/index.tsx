@@ -4,6 +4,7 @@ import { ApiResponse } from '../../../../../../main/errors/ApiResponse';
 import { User } from '../../../../../../main/models/api/User';
 import Project from '../../../../../../main/models/Project';
 import { Dialog, DialogContent } from '@renderer/components/ui/dialog';
+import { useVariableContext } from '@renderer/hooks/Variables/useVariableContext';
 
 interface CollaboratorProps {
     project?: Project;
@@ -18,6 +19,8 @@ const Collaborators: React.FC<CollaboratorProps> = ({ project, showModal, setSho
     const [foundUsers, setFoundUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    const { user } = useVariableContext();
 
     useEffect(() => {
         if (project && project.remote && project.remote !== '') {
@@ -158,38 +161,63 @@ const Collaborators: React.FC<CollaboratorProps> = ({ project, showModal, setSho
                                             className="bg-gray-800 text-white p-2 rounded-lg w-full"
                                         />
                                     </div>
-                                    {loading && <p className="text-white mb-4">Searching...</p>}
-                                    {error && <p className="text-red-500 mb-4">{error}</p>}
-                                    {foundUsers.length > 0 && (
-                                        <div className="flex flex-col gap-4">
-                                            {foundUsers.map((user) => (
-                                                <div
-                                                    key={user.username}
-                                                    className="flex items-center justify-between bg-gray-800 p-2 rounded-lg"
-                                                >
-                                                    <div className="flex items-center gap-4">
-                                                        <img
-                                                            src={
-                                                                user.avatar_url ||
-                                                                '/default-avatar.png'
-                                                            }
-                                                            alt={`${user.username}'s avatar`}
-                                                            className="w-10 h-10 rounded-full"
-                                                        />
-                                                        <span className="text-white">
-                                                            {user.username}
-                                                        </span>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => handleAddCollaborator(user)}
-                                                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                                                    >
-                                                        Add
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                    <div className="overflow-y-auto flex flex-col h-[30rem]">
+                                        {loading && <p className="text-white mb-4">Searching...</p>}
+                                        {error && <p className="text-red-500 mb-4">{error}</p>}
+                                        {foundUsers.length > 0 && (
+                                            <div className="flex flex-col gap-4">
+                                                {foundUsers
+                                                    .filter(
+                                                        (foundUser) =>
+                                                            foundUser.username != user?.username
+                                                    )
+                                                    .map((user) => (
+                                                        <div
+                                                            key={user.username}
+                                                            className="flex items-center justify-between bg-gray-800 p-2 rounded-lg"
+                                                        >
+                                                            <div className="flex items-center gap-4">
+                                                                <img
+                                                                    src={
+                                                                        user.avatar_url ||
+                                                                        '/default-avatar.png'
+                                                                    }
+                                                                    alt={`${user.username}'s avatar`}
+                                                                    className="w-10 h-10 rounded-full"
+                                                                />
+                                                                <span className="text-white">
+                                                                    {user.username}
+                                                                </span>
+                                                            </div>
+                                                            {collaborators.find(
+                                                                (collab) =>
+                                                                    collab.username == user.username
+                                                            ) ? (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        handleRemoveCollaborator(
+                                                                            user.username
+                                                                        )
+                                                                    }
+                                                                    className="text-red-500 hover:text-red-700"
+                                                                >
+                                                                    <FaTrash />
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        handleAddCollaborator(user)
+                                                                    }
+                                                                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+                                                                >
+                                                                    Add
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="flex gap-2 mt-4">
                                         <button
                                             onClick={() => {

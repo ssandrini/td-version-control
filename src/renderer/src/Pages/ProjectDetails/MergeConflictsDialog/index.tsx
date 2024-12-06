@@ -71,7 +71,7 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
             .finally(() => {
                 setMergeConflicts(undefined);
                 setIsLoadingMerge(false);
-                setWipVersion(undefined);
+                setWipVersion(null);
             });
     };
 
@@ -92,7 +92,7 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
             .finally(() => {
                 setMergeConflicts(undefined);
                 setIsLoadingMerge(false);
-                setWipVersion(undefined);
+                setWipVersion(null);
             });
     };
 

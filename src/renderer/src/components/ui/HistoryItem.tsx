@@ -151,7 +151,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({
                         onClick={() => setShowCreateTagModal(true)}
                     >
                         <div className="font-bold flex flex-row items-center cursor-pointer justify-center text-center bg-green-500 w-6 h-6 rounded-lg shadow-lg">
-                            <FaPlus className="" />
+                            <FaPlus className="" title={'Add a new tag'} />
                         </div>
                     </motion.div>
                 )}

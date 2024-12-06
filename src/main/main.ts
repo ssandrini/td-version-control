@@ -304,7 +304,18 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
         return result.serialize();
     });
 
-    ipcMain.handle(API_METHODS.PUSH, (_, dir: string) => projectManager.push(dir));
+    ipcMain.handle(API_METHODS.PUSH, async (_, dir: string) => {
+        try {
+            await projectManager.push(dir);
+        } catch (e: any) {
+            if (e.message.includes('before pushing')) {
+                return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.LocalError));
+            } else {
+                return Promise.resolve(ApiResponse.fromErrorCode(APIErrorCode.CommunicationError));
+            }
+        }
+        return Promise.resolve(ApiResponse.fromResult());
+    });
 
     ipcMain.handle(
         API_METHODS.FINISH_MERGE,

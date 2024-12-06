@@ -427,25 +427,13 @@ export class SimpleGitTracker implements Tracker {
         await this.git.cwd(dir);
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            const branches = await this.git.branch(['--list']);
-            const currentBranch = branches.current;
-
-            const hasUpstream = branches.all.some((branch) =>
-                branch.includes(`remotes/origin/${currentBranch}`)
-            );
-
-            if (!hasUpstream) {
-                log.info(`Setting upstream branch for the first push.`);
-                await this.git.push(['-u', remoteUrl, 'HEAD']);
-                await this.git.pushTags(remoteUrl);
-            } else {
-                const result = await this.git.push(remoteUrl);
-                await this.git.pushTags(remoteUrl);
-                log.info(`Push successful: ${result.pushed.length} references updated.`);
-            }
+            const result = await this.git.push(remoteUrl);
+            await this.git.pushTags(remoteUrl);
+            log.info(`Push successful: ${result.pushed.length} references updated.`);
         } catch (error) {
             const errorMessage = `Failed to push changes from ${dir}`;
-            this.handleError(error, errorMessage);
+            const cause = error instanceof Error ? error.message : String(error);
+            this.handleError(error, cause.includes('before pushing') ? cause : errorMessage);
         }
     }
 

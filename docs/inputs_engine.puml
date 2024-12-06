@@ -1,0 +1,32 @@
+@startuml
+start
+:Initialize rules;
+note right
+- **NetworkFileRule**
+- **NFileRule**
+- **ParmFileApplyOperatorRule**:
+- **ParmFileBasicOperatorRule**:
+- **ParmFileChangeOperatorRule**:
+end note
+
+:Receive file content;
+
+repeat
+:Take the next rule from the rules list;
+if (Rule matches the content?) then (Yes)
+    :Apply rule's extract method;
+    :Add extracted inputs to result list;
+else (No)
+    :Move to next rule;
+endif
+repeat while (More rules?)
+
+:Filter duplicates from the result list;
+note right
+Duplicates are removed by ensuring
+unique destinations in the inputs.
+end note
+
+:Return filtered inputs;
+stop
+@enduml

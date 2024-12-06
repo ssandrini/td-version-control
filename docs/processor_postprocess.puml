@@ -1,0 +1,56 @@
+@startuml
+
+participant User
+participant TDProcessor
+participant FileSystem
+participant toecollapse.exe
+
+User -> TDProcessor: postprocess(dir, outDir?)
+activate TDProcessor
+activate FileSystem
+
+TDProcessor -> TDProcessor: process.cwd(dir)
+TDProcessor -> FileSystem: find .toc file
+FileSystem -> FileSystem: search .toc
+
+alt toc file found
+    FileSystem -> TDProcessor: return .toc path
+else toc file not found
+    FileSystem -> TDProcessor: .toc not found
+    TDProcessor -> User: throw MissingFileError
+end
+
+TDProcessor -> toecollapse.exe: execute `toecollapse.exe toePath`
+activate toecollapse.exe
+alt success execution
+    toecollapse.exe --> TDProcessor: toe file generated
+else failed execution
+    toecollapse.exe --> TDProcessor: return error
+    TDProcessor -> User: throw CollapseError
+end
+Deactivate toecollapse.exe
+
+TDProcessor -> FileSystem: validate toe file
+FileSystem -> FileSystem: check toe file
+
+alt file ok
+    FileSystem -> TDProcessor: return ok
+else file not found
+    FileSystem -> TDProcessor: return error
+    TDProcessor -> User: throw MissingFileError
+end
+
+alt outDir specified
+    TDProcessor -> FileSystem: save toe file at outDir
+    FileSystem -> FileSystem: move toe file to outDir
+    FileSystem -> TDProcessor: file moved
+else no outDir
+    TDProcessor -> TDProcessor: skip file movement
+end
+deactivate FileSystem
+
+TDProcessor -> TDProcessor: process.cwd(originalDir)
+TDProcessor -> User: return toe file path
+deactivate TDProcessor
+
+@enduml

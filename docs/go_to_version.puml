@@ -1,0 +1,24 @@
+@startuml
+participant User
+participant ProjectManager
+participant Processor
+participant Tracker
+participant FileSystem as FS
+
+User -> ProjectManager : Go to version <versionId>
+ProjectManager -> FS : Validate directory
+alt Working directory has changes
+    ProjectManager -> Tracker : Check changes
+    Tracker -> ProjectManager : Changes detected
+    ProjectManager -> User : Reject (Working directory dirty)
+else No changes
+    ProjectManager -> Tracker : Go to version <versionId>
+    Tracker-> FS: Restore files of version <versionId>
+    Tracker -> ProjectManager : Ok
+    ProjectManager -> Processor : Postprocess files to generate binary of <versionId>
+    Processor -> FS : Replace binary
+    FS -> Processor : Ok
+    Processor -> ProjectManager : Ok
+    ProjectManager -> User : Version <versionId>
+end
+@enduml

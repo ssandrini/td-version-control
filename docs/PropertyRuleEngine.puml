@@ -1,0 +1,26 @@
+@startuml
+' Define paquetes para organización vertical
+
+@startuml
+interface PropertyRule {
+        + name: string
+        + description: string
+        + match(line: string): boolean
+        + extract(line: string, nodeProperties: Map<string, string>): void
+    }
+
+    class DefaultPropertyRule {
+    }
+
+    class IgnorePropertyRule {
+    }
+
+    class TilePropertyRule {
+    }
+
+    PropertyRule <|-- DefaultPropertyRule
+    PropertyRule <|-- IgnorePropertyRule
+    PropertyRule <|-- TilePropertyRule
+
+    PropertyRuleEngine "1" *-- "n" PropertyRule
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+start
+:Initialize rules;
+note right
+- IgnorePropertyRule:
+  flags, view, pageindex
+- TilePropertyRule
+- DefaultPropertyRule
+end note
+
+:Receive a line and a property map;
+
+if (Filter by ruleNames?) then (Yes)
+    :Filter rules by specified ruleNames;
+else (No)
+    :Use all initialized rules;
+endif
+
+repeat
+:Take the next rule from the applicable rules list;
+if (Rule matches the line?) then (Yes)
+    :Apply extract method of the rule;
+    :Update the property map with extracted data;
+endif
+repeat while (More rules?)
+
+:Finish processing the line;
+stop
+@enduml
+

@@ -1,0 +1,36 @@
+appId: com.electron.app
+productName: Mariana
+directories:
+    buildResources: resources
+files:
+    - '!**/.vscode/*'
+    - '!src/*'
+    - '!electron.vite.config.{js,ts,mjs,cjs}'
+    - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+    - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+    - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+extraResources:
+    - resources/templates
+win:
+    executableName: Mariana
+    icon: resources/img.png
+nsis:
+    artifactName: ${name}-${version}-setup.${ext}
+    shortcutName: ${productName}
+    uninstallDisplayName: ${productName}
+    createDesktopShortcut: always
+    include: build/installer.nsh
+mac:
+    icon: resources/icon.icns
+    entitlementsInherit: build/entitlements.mac.plist
+    extendInfo:
+        NSCameraUsageDescription: Application requests access to the device's camera.
+        NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+        NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+        NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+    notarize: false
+    target:
+        - target: pkg
+          arch: universal
+pkg:
+    artifactName: ${name}-${version}.${ext}

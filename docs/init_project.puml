@@ -1,0 +1,48 @@
+@startuml
+participant User
+participant ProjectManager
+participant Processor
+participant Tracker
+participant FileSystem as FS
+participant RemoteProject
+
+User -> ProjectManager : init(dir, dst, src)
+ProjectManager -> FS : validateDirectory(dir)
+alt src is provided
+    alt src is a URL (remote project)
+        ProjectManager -> Tracker : clone remote project
+        Tracker -> RemoteProject: download files
+        RemoteProject -> Tracker : files
+        ProjectManager -> Processor : postprocess files to generate binary
+        Processor -> FS : save binary file (.toe)
+        ProjectManager -> Tracker : create initial version
+        Tracker -> FS : commit changes to Git
+        return version
+        Tracker -> ProjectManager : return version
+    else src is a template directory
+        ProjectManager -> FS : validate directory exists
+        ProjectManager -> FS : copy(src, dir)
+        FS -> ProjectManager : return version or error
+    end
+else no src
+    note over ProjectManager : Proceed without copying initial files
+end
+
+ProjectManager -> FS : create hidden folder (.mar)
+ProjectManager -> Tracker:  create initial version
+
+activate ProjectManager
+ProjectManager -> FS : validate Directory(dir)
+ProjectManager -> Processor : preprocess(dir, hiddenDir)
+Processor -> FS : process files for Git
+ProjectManager -> FS : save version state
+ProjectManager -> Tracker : create version
+Tracker -> FS : commit changes to Git
+return Version
+deactivate ProjectManager
+
+alt dst is provided
+    ProjectManager -> Tracker : push to remote project
+    Tracker -> RemoteProject : update
+end
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+participant User
+participant ProjectManager
+participant Tracker
+participant Git
+participant Processor
+participant FileSystem as FS
+
+User -> ProjectManager : pull(dir)
+ProjectManager -> ProjectManager : hasChanges(dir)
+alt Changes present
+    ProjectManager -> User : Reject (Cannot pull because of current changes)
+else No changes
+    ProjectManager -> Tracker : pull changes
+    Tracker -> Git : fetch(remoteUrl)
+    alt Fetch fails
+        Git -> Tracker : Throw error
+        Tracker -> ProjectManager : Handle error
+        ProjectManager -> User : Reject (Fetch failed)
+    else Fetch succeeds
+        Tracker -> Git : rev-list HEAD...FETCH_HEAD
+        alt Repository up-to-date
+            Tracker -> ProjectManager : MergeStatus.UP_TO_DATE
+            ProjectManager -> User : Return (TDMergeResult.UP_TO_DATE)
+        else Merge required
+            Tracker -> Git : merge FETCH_HEAD
+            alt Merge without conflicts or actions
+                Tracker -> ProjectManager : MergeStatus.FINISHED_WITHOUT_CONFLICTS
+                ProjectManager -> Processor : postprocess(hiddenDirPath, dir)
+                Processor -> FS : Process post-merge
+                ProjectManager -> User : Return (TDMergeResult.FINISHED)
+            else Merge with conflicts
+                Tracker -> Git : Analyze conflicts
+                alt Auto-resolvable conflicts
+                    Tracker -> FS : Resolve and add to Git
+                else Unresolvable conflicts
+                    Tracker -> FS : Preprocess and mark as unresolved
+                    Tracker -> ProjectManager : MergeStatus.IN_PROGRESS (unresolvedConflicts)
+                    ProjectManager -> User : Return (TDMergeResult.IN_PROGRESS)
+                end
+            end
+        end
+    end
+end
+@enduml

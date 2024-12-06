@@ -1,4 +1,5 @@
 {
     "id": "template0",
-    "name": "Empty project"
+    "name": "Basic project",
+    "description": "TouchDesigner default project"
 }

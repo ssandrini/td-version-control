@@ -1,0 +1,29 @@
+@startuml
+
+left to right direction
+
+class Filename << (T,#FF7700) >> {
+    + <<type>> Filename: string
+}
+
+class Content << (T,#FF7700) >> {
+    + <<type>> Content: string
+}
+
+class TrackerMergeResult {
+    - mergeStatus: MergeStatus
+    - unresolvedConflicts: Map<Filename, Set<[Content, Content]>>
+}
+
+class Version {
+    - name: string
+    - author: Author
+    - id: string
+    - description: string?
+    - tag: string?
+    - date: Date
+    + Version(name: string, author: Author, id: string, date: Date, description?: string, tag?: string)
+}
+
+' Relación para posicionamiento
+@enduml

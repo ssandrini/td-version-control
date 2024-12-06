@@ -1,0 +1,33 @@
+@startuml
+
+interface InputRule {
+    + name: string
+    + description: string
+    + match(content: string): boolean
+    + extract(content: string): TDEdge[]
+}
+
+class NetworkFileRule {
+}
+
+class NFileRule {
+}
+
+class ParmFileApplyOperatorRule {
+}
+
+class ParmFileBasicOperatorRule {
+}
+
+class ParmFileChangeOperatorRule {
+}
+
+InputRule <|-- NetworkFileRule
+InputRule <|-- NFileRule
+InputRule <|-- ParmFileApplyOperatorRule
+InputRule <|-- ParmFileBasicOperatorRule
+InputRule <|-- ParmFileChangeOperatorRule
+
+InputRuleEngine "1" *-- "n" InputRule
+
+@enduml

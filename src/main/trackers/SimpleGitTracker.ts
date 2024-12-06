@@ -15,12 +15,13 @@ import fs from 'fs-extra';
 import path from 'node:path';
 import { Content, Filename, MergeStatus, TrackerMergeResult } from '../merge/TrackerMergeResult';
 import {
+    cleanMergeFile,
     parseMergeConflicts,
     preprocessMergeConflicts,
     resolveFileConflicts,
     resolveWithCurrentBranch
 } from '../merge/MergeParser';
-import { extractFileName } from '../utils/utils';
+import { extractFileName, findFileByExt } from '../utils/utils';
 import userDataManager from '../managers/UserDataManager';
 import { User } from '../models/api/User';
 
@@ -30,6 +31,7 @@ export class SimpleGitTracker implements Tracker {
     readonly EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
     readonly ignoredFiles = ['diff', 'workingState.json', 'checkout.timestamp'];
     readonly attributes: ReadonlyMap<string, string[]>;
+    readonly REMOTE_NAME = 'origin';
 
     constructor() {
         this.git = simpleGit();
@@ -255,7 +257,9 @@ export class SimpleGitTracker implements Tracker {
         }
     }
 
-    async clone(dir: string, url: string): Promise<void> {
+    // clone into output within directory dir
+    async clone(dir: string, output: string, url: string): Promise<void> {
+        await this.git.cwd(dir);
         try {
             const { username, password } = userDataManager.getUserCredentials()!;
             const normalizedUrl = new URL(url);
@@ -264,7 +268,14 @@ export class SimpleGitTracker implements Tracker {
             normalizedUrl.password = password;
             const remoteWithCredentials = normalizedUrl.toString();
             log.debug('remote with cred: ', remoteWithCredentials);
-            await this.git.clone(remoteWithCredentials, dir);
+            await this.git.clone(remoteWithCredentials, output, {
+                '--config': 'core.autocrlf=false'
+            });
+            await this.git.cwd(path.join(dir, output));
+            const user: User = userDataManager.getUser()!;
+            await this.git.raw(['config', '--local', 'user.name', user.username]);
+            await this.git.raw(['config', '--local', 'user.email', user.email]);
+            await this.git.raw(['config', '--local', 'push.autoSetupRemote', 'true']);
         } catch (error) {
             const errorMessage = `Failed cloning ${url} into ${dir}`;
             this.handleError(error, errorMessage);
@@ -282,7 +293,7 @@ export class SimpleGitTracker implements Tracker {
         let fetchResult: FetchResult;
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            fetchResult = await this.git.fetch(remoteUrl);
+            fetchResult = await this.git.fetch(remoteUrl, ['--tags']);
             log.info('Fetch completed successfully.');
         } catch (fetchError) {
             this.handleError(fetchError, 'Fetch failed during pull operation');
@@ -303,6 +314,16 @@ export class SimpleGitTracker implements Tracker {
         ) {
             log.info('FETCH indicates repository is up-to-date.');
             return { mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null };
+        }
+
+        let commonAncestorHash: string | undefined;
+        try {
+            const mergeBaseResult = await this.git.raw(['merge-base', 'HEAD', 'FETCH_HEAD']);
+            commonAncestorHash = mergeBaseResult.trim();
+            log.info(`Last common ancestor commit: ${commonAncestorHash}`);
+        } catch (error) {
+            log.error('Error determining the common ancestor:', error);
+            commonAncestorHash = undefined;
         }
 
         let conflicts: MergeConflict[];
@@ -327,6 +348,31 @@ export class SimpleGitTracker implements Tracker {
                 this.handleError(error, 'Merge failed without conflict details.');
             }
             conflicts = mergeSummary.conflicts;
+        }
+
+        // TOC file has conflicts
+        const tocConflict = conflicts.find((c: MergeConflict) => c.file?.endsWith('.toc'));
+        if (tocConflict && tocConflict.file) {
+            const toeDir = findFileByExt('dir', dir);
+            const tocPath = path.join(dir, tocConflict.file);
+            const tocContent = this.readFileContent(tocPath);
+            log.debug('TOC file conflict');
+            const deleted = Array.from(
+                new Set(
+                    (await this.git.status()).deleted.map((path) =>
+                        path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'))
+                    )
+                )
+            );
+            let cleanToc = cleanMergeFile(tocContent, deleted);
+            const tocLines = cleanToc.split('\n');
+            const validLines = tocLines.filter((line) => {
+                const filePath = path.resolve(dir, toeDir!, line.trim());
+                return fs.existsSync(filePath);
+            });
+            cleanToc = validLines.join('\n');
+            fs.writeFileSync(tocPath, cleanToc);
+            await this.git.add(tocConflict.file);
         }
 
         log.info(`Merge encountered ${conflicts.length} conflict(s)`);
@@ -366,7 +412,11 @@ export class SimpleGitTracker implements Tracker {
 
         if (conflictMap.size > 0) {
             log.info('Merge status: IN_PROGRESS with unresolved conflicts');
-            return { mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap };
+            return {
+                mergeStatus: MergeStatus.IN_PROGRESS,
+                unresolvedConflicts: conflictMap,
+                lastCommonVersion: commonAncestorHash
+            };
         }
 
         return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
@@ -377,23 +427,13 @@ export class SimpleGitTracker implements Tracker {
         await this.git.cwd(dir);
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            const branches = await this.git.branch(['--list']);
-            const currentBranch = branches.current;
-
-            const hasUpstream = branches.all.some((branch) =>
-                branch.includes(`remotes/origin/${currentBranch}`)
-            );
-
-            if (!hasUpstream) {
-                log.info(`Setting upstream branch for the first push.`);
-                await this.git.push(['-u', remoteUrl, 'HEAD']);
-            } else {
-                const result = await this.git.push(remoteUrl, '--tags');
-                log.info(`Push successful: ${result.pushed.length} references updated.`);
-            }
+            const result = await this.git.push(remoteUrl);
+            await this.git.pushTags(remoteUrl);
+            log.info(`Push successful: ${result.pushed.length} references updated.`);
         } catch (error) {
             const errorMessage = `Failed to push changes from ${dir}`;
-            this.handleError(error, errorMessage);
+            const cause = error instanceof Error ? error.message : String(error);
+            this.handleError(error, cause.includes('before pushing') ? cause : errorMessage);
         }
     }
 
@@ -520,10 +560,56 @@ export class SimpleGitTracker implements Tracker {
             conflictMap.set(extractFileName(file)!, conflicts);
         }
 
+        let commonAncestorHash: string | undefined;
         if (conflictMap.size > 0) {
-            return { mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap };
+            try {
+                const mergeBaseResult = await this.git.raw(['merge-base', 'HEAD', 'MERGE_HEAD']);
+                commonAncestorHash = mergeBaseResult.trim();
+                log.info(`Last common ancestor commit: ${commonAncestorHash}`);
+            } catch (error) {
+                log.error('Error determining the common ancestor:', error);
+                commonAncestorHash = undefined;
+            }
+
+            return {
+                mergeStatus: MergeStatus.IN_PROGRESS,
+                unresolvedConflicts: conflictMap,
+                lastCommonVersion: commonAncestorHash
+            };
         }
 
         return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
+    }
+
+    async setRemote(dir: string, url: string): Promise<void> {
+        log.info(`Setting remote to URL "${url}" in ${dir}`);
+        await this.git.cwd(dir);
+        try {
+            const remotes = await this.git.getRemotes();
+            const existingRemote = remotes.find((remote) => remote.name === this.REMOTE_NAME);
+            if (existingRemote) {
+                // If the remote already exists, update the URL
+                await this.git.remote(['set-url', this.REMOTE_NAME, url]);
+            } else {
+                // Otherwise, add a new remote
+                await this.git.addRemote(this.REMOTE_NAME, url);
+            }
+            log.info(`Remote set to "${url}" successfully.`);
+        } catch (error) {
+            this.handleError(error, `Failed to set remote to "${url}".`);
+        }
+    }
+
+    async getRemote(dir: string): Promise<string | undefined> {
+        log.info(`Fetching URL for remote in ${dir}`);
+        await this.git.cwd(dir);
+        try {
+            // Get the URL of the specified remote
+            const remoteUrl = (await this.git.remote(['get-url', this.REMOTE_NAME])) || undefined;
+            log.info(`Remote URL: ${remoteUrl}`);
+            return remoteUrl;
+        } catch (error) {
+            this.handleError(error, `Failed to fetch URL for remote.`);
+        }
     }
 }

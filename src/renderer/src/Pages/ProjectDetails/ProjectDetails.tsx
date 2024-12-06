@@ -27,11 +27,13 @@ const ProjectDetail: React.FC = () => {
     const { user } = useVariableContext();
     const [wipVersion, setWipVersion] = useState<Version | null>(null);
     const [fetch, setFetch] = useState(false);
+    const [isPublished, setIsPublished] = useState(false);
 
     const [mergeConflicts, setMergeConflicts] = useState<
         | {
               currentState: TDState | null;
               incomingState: TDState | null;
+              commonState: TDState | null;
           }
         | undefined
     >(undefined);
@@ -147,7 +149,8 @@ const ProjectDetail: React.FC = () => {
             } else if (result.status === TDMergeStatus.IN_PROGRESS) {
                 setMergeConflicts({
                     currentState: result.currentState,
-                    incomingState: result.incomingState
+                    incomingState: result.incomingState,
+                    commonState: result.commonState
                 });
             }
         });
@@ -171,6 +174,19 @@ const ProjectDetail: React.FC = () => {
             });
     }, [compareVersion]);
 
+    useEffect(() => {
+        console.log(project?.remote);
+        setIsPublished(
+            project != undefined && project.remote != undefined && project.remote !== ''
+        );
+        /*
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.isPublished(project?.path).then((isPublished: boolean) => {
+            setIsPublished(isPublished);
+        });*/
+    }, [project]);
+
     return (
         <motion.div
             exit={{ opacity: 0, scale: 1.1 }}
@@ -182,7 +198,6 @@ const ProjectDetail: React.FC = () => {
                 <Nodes
                     current={currentState}
                     compare={compareState}
-                    project={project}
                     selectedVersion={selectedVersion}
                 />
             </div>
@@ -191,6 +206,9 @@ const ProjectDetail: React.FC = () => {
                     project={project}
                     selectedVersion={selectedVersion}
                     setMergeConflicts={setMergeConflicts}
+                    isPublished={isPublished}
+                    setIsPublished={setIsPublished}
+                    update={() => setFetch(!fetch)}
                 />
 
                 {mergeConflicts && (
@@ -198,6 +216,8 @@ const ProjectDetail: React.FC = () => {
                         project={project}
                         mergeConflicts={mergeConflicts}
                         setMergeConflicts={setMergeConflicts}
+                        update={() => setFetch(!fetch)}
+                        setWipVersion={setWipVersion}
                     />
                 )}
                 <div className="flex flex-row h-full w-full">

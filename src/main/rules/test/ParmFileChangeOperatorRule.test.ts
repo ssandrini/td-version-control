@@ -35,4 +35,12 @@ describe('ParmFileChangeOperatorRule', () => {
         const invalidContent = `?\ninvalidcommand 0 input\n?`.trim();
         expect(rule.match(invalidContent)).toBe(false);
     });
+
+    it('should not add duplicate inputs', () => {
+        const content = `?\ntop 0 comp1\nchop 0 comp1\nsop 1 comp2\nchop 0 comp1\n?`.trim();
+        const expectedInputs = [new TDEdge('comp1', true), new TDEdge('comp2', true)];
+
+        const actualInputs = rule.extract(content);
+        expect(actualInputs).toEqual(expectedInputs);
+    });
 });

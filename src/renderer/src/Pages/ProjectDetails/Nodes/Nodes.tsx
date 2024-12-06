@@ -3,9 +3,6 @@ import { TDState } from '../../../../../main/models/TDState';
 import NodeList from './NodeList/NodeList';
 import { FaCircleNodes, FaDiagramProject } from 'react-icons/fa6';
 import NodeGraph from './NodeGraph/NodeGraph';
-import { GoPeople } from 'react-icons/go';
-import Collaborators from './Collaborators';
-import Project from '../../../../../main/models/Project';
 import { GiSpawnNode } from 'react-icons/gi';
 import { Version } from '../../../../../main/models/Version';
 import { FaUserCircle } from 'react-icons/fa';
@@ -14,7 +11,6 @@ import { motion } from 'framer-motion';
 
 interface NodesProps {
     selectedVersion?: Version;
-    project?: Project;
     current: TDState | undefined;
     compare: TDState | undefined;
 }
@@ -22,16 +18,14 @@ interface NodesProps {
 const Viz: {
     GRAPH: string;
     NODELIST: string;
-    COLLABORATORS: string;
     CONFLICTS: string;
 } = {
     GRAPH: 'GRAPH',
     NODELIST: 'NODELIST',
-    COLLABORATORS: 'COLLABORATORS',
     CONFLICTS: 'CONFLICTS'
 };
 
-const Nodes: React.FC<NodesProps> = ({ current, compare, project, selectedVersion }) => {
+const Nodes: React.FC<NodesProps> = ({ current, compare, selectedVersion }) => {
     const [graphViz, setGraphViz] = useState<string>(Viz.GRAPH);
 
     return (
@@ -56,27 +50,6 @@ const Nodes: React.FC<NodesProps> = ({ current, compare, project, selectedVersio
                             <FaCircleNodes />
                             Graph
                         </motion.div>
-
-                        {/* COLLABORATORS Tab */}
-                        {project?.remote && (
-                            <motion.div
-                                layout
-                                initial={false}
-                                animate={{
-                                    backgroundColor:
-                                        graphViz === Viz.COLLABORATORS ? '#1E40AF' : '#4B5563',
-                                    color: graphViz === Viz.COLLABORATORS ? '#FFFFFF' : '#9CA3AF'
-                                }}
-                                transition={{ duration: 0.3 }}
-                                className="flex gap-2 flex-row items-center p-2 rounded-lg cursor-pointer"
-                                onClick={() => {
-                                    setGraphViz(Viz.COLLABORATORS);
-                                }}
-                            >
-                                <GoPeople />
-                                Collaborators
-                            </motion.div>
-                        )}
 
                         {/* NODELIST Tab */}
                         <motion.div
@@ -140,7 +113,6 @@ const Nodes: React.FC<NodesProps> = ({ current, compare, project, selectedVersio
             {/* Hidden instead of not rendered to avoid re-rendering the ReactFlow diagram each time */}
             <NodeGraph hidden={graphViz != Viz.GRAPH} current={current} compare={compare} />
             {graphViz != Viz.NODELIST ? <></> : <NodeList current={current} />}
-            {graphViz != Viz.COLLABORATORS ? <></> : <Collaborators project={project} />}
         </div>
     );
 };

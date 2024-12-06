@@ -25,7 +25,7 @@ import Spinner from '../../components/ui/Spinner';
 import { useToast } from '../../hooks/use-toast';
 import { CiWarning } from 'react-icons/ci';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
-import { MdOutlineCloud, MdOutlineCloudOff } from 'react-icons/md';
+import { MdCloud, MdOutlineCloudOff } from 'react-icons/md';
 import { motion } from 'framer-motion';
 import { cn } from '@renderer/lib/utils';
 import { Input } from '@renderer/components/ui/input';
@@ -52,6 +52,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
     const [filteredProjects, setFilteredProjects] = useState<Project[]>([]); // For filtered projects
     const [searchQuery, setSearchQuery] = useState<string>(''); // For search input
     const [isLoadingRemote, setIsLoadingRemote] = useState<boolean>(false);
+    const [isLoadingClone, setIsLoadingClone] = useState<boolean>(false);
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
@@ -183,6 +184,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
             .filePicker()
             .then((files) => {
                 if (files.filePaths.length > 0) {
+                    setIsLoadingClone(true);
                     const selectedPath = files.filePaths[0];
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-expect-error
@@ -194,8 +196,36 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                             false,
                             projectToClone?.remote
                         )
-                        .then((response) => {
-                            console.log(response);
+                        .then((response: ApiResponse<Project>) => {
+                            if (response.errorCode) {
+                                toast({
+                                    className: '',
+                                    style: {
+                                        borderTop: '0.35rem solid transparent',
+                                        borderBottom: 'transparent',
+                                        borderRight: 'transparent',
+                                        borderLeft: 'transparent',
+                                        borderImage:
+                                            'linear-gradient(to right, rgb(255, 0, 0), rgb(252, 80, 80))',
+                                        borderImageSlice: '1'
+                                    },
+                                    description: (
+                                        <div className="w-full h-full flex flex-row items-start gap-2">
+                                            <CiWarning className="bg-gradient-to-r from-red-400 to-red-600 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                                            <div className="flex flex-col">
+                                                <div className="font-p1_bold text-h3">
+                                                    Error on download
+                                                </div>
+                                                <div className="font-p1_regular">
+                                                    Please try again or contact the mariana team @
+                                                    marianamasabra@gmail.com.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                });
+                                return;
+                            }
                             setReload(!reload);
                             toast({
                                 className: '',
@@ -253,6 +283,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                             });
                         })
                         .finally(() => {
+                            setIsLoadingClone(false);
                             setProjectToClone(undefined);
                         });
                 } else {
@@ -297,22 +328,27 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                 <div
                     className={cn(
                         projects.length != 0
-                            ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-                            : 'flex flex-row flex-wrap items-center justify-center',
-                        'gap-4 w-full max-w-6xl mx-auto'
+                            ? 'items-center justify-start'
+                            : 'items-center justify-center',
+                        ignoreRemote
+                            ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-6xl mx-auto'
+                            : 'flex flex-row flex-wrap',
+                        'gap-4 w-full'
                     )}
                 >
                     {projects.length > 0 ? (
                         <>
                             {projects.map((project, index) => (
                                 <div
-                                    className="flex flex-col text-black bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] p-1 shadow-lg rounded-lg cursor-pointer min-w-[20rem] w-fit text-ellipsis overflow-hidden"
+                                    className="flex flex-col text-black bg-gradient-to-r via-[rgb(75, 60, 144)] from-[rgb(59,243,197)] to-[rgb(58,42,177)] p-1 shadow-lg rounded-lg cursor-pointer min-w-[20rem] max-w-[20rem] w-fit text-ellipsis overflow-hidden"
                                     key={index}
                                     onClick={(event) => handleCellClick(event, project)}
                                 >
                                     <div className="flex bg-gray-200 rounded-lg flex-col pl-3 pb-4 h-full">
                                         <div className="whitespace-nowrap flex flex-row items-center justify-between gap-2 text-ellipsis font-bold text-md">
-                                            <div>{project.name.split('/').pop()}</div>
+                                            <div className="truncate">
+                                                {project.name.split('/').pop()}
+                                            </div>
                                             <div className="flex flex-row items-center pt-1">
                                                 <Button
                                                     className="mr-2 p-2 bg-transparent hover:bg-green-200 text-green-500 hover:text-green-400"
@@ -335,11 +371,16 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                                     <FaTrashAlt />
                                                 </Button>
                                                 <Button
-                                                    className="mr-2 p-2 bg-transparent hover:cursor-default"
-                                                    disabled={true}
+                                                    className="mr-2 p-2 bg-transparent hover:bg-transparent"
+                                                    disabled={false}
+                                                    title={
+                                                        project.remote
+                                                            ? 'This project is published in Mariana Cloud'
+                                                            : 'This project is not published in Mariana Cloud'
+                                                    }
                                                 >
                                                     {project.remote ? (
-                                                        <MdOutlineCloud className="text-green-500" />
+                                                        <MdCloud className="text-green-500" />
                                                     ) : (
                                                         <MdOutlineCloudOff className="text-red-600" />
                                                     )}
@@ -368,7 +409,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
             </div>
 
             {!ignoreRemote && (
-                <div className="flex-1 m-8 text-white bg-gray-800 rounded-lg">
+                <div className="flex-1 m-8 text-white bg-[#2b2d30] rounded-lg">
                     {/* Header */}
                     <div className="flex flex-row justify-between items-center">
                         <h3 className="font-semibold pl-5">Remote Projects</h3>
@@ -380,7 +421,7 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                     value={searchQuery}
                                     onChange={handleSearchChange}
                                     placeholder="Search by name, author, or description..."
-                                    className="p-2 border border-gray-400 rounded-md text-white bg-gray-700"
+                                    className="p-2 border border-gray-400 rounded-md !text-white bg-[#2b2d30]"
                                 />
                             </div>
                         )}
@@ -432,7 +473,17 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                                             setProjectToClone(project);
                                                         }}
                                                     >
-                                                        <FaDownload />
+                                                        {projectToClone?.name === project.name ? (
+                                                            <div className="flex justify-center items-center">
+                                                                <div
+                                                                    className={cn(
+                                                                        'animate-spin rounded-full h-8 w-8 border-t-4 border-solid border-green-500'
+                                                                    )}
+                                                                ></div>
+                                                            </div>
+                                                        ) : (
+                                                            <FaDownload />
+                                                        )}
                                                     </Button>
                                                 </td>
                                             </motion.tr>
@@ -461,12 +512,25 @@ const Projects: React.FC<ProjectsProps> = ({ hideHeader, ignoreRemote, setHasPro
                                 <DialogContent className="sm:max-w-[425px]">
                                     <DialogHeader>
                                         <DialogTitle>Select location for download</DialogTitle>
-                                        <DialogDescription>
-                                            Please select a location to store the project. It must
-                                            be an empty folder.
-                                        </DialogDescription>
+                                        {!isLoadingClone ? (
+                                            <DialogDescription>
+                                                Please select a location to store the project. It
+                                                must be an empty folder.
+                                            </DialogDescription>
+                                        ) : (
+                                            <div className="h-[10rem] flex items-center justify-center">
+                                                <Spinner />
+                                            </div>
+                                        )}
                                     </DialogHeader>
                                     <DialogFooter>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            onClick={() => setProjectToClone(undefined)}
+                                        >
+                                            Cancel
+                                        </Button>
                                         <Button type="button" onClick={handleCloneProject}>
                                             Select location
                                         </Button>

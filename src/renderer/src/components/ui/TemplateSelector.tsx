@@ -47,7 +47,7 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onTemplateSelect })
                                 <div
                                     key={template.id}
                                     onClick={() => handleTemplateClick(template)}
-                                    className={`bg-gray-800 text-white p-4 rounded-lg cursor-pointer border-2 ${
+                                    className={`text-white p-4 rounded-lg cursor-pointer border-2 ${
                                         selectedTemplateId === template.id
                                             ? 'border-blue-500'
                                             : 'border-transparent'

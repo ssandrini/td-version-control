@@ -73,6 +73,8 @@ const HistoryContainer: React.FC<HistoryContainerProps> = ({
             .finally(() => {
                 setShowNewVersionModal(false);
                 setIsLoadingNewVersion(false);
+                setName('');
+                setDescription('');
             });
     };
 
@@ -110,12 +112,6 @@ const HistoryContainer: React.FC<HistoryContainerProps> = ({
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         className="w-full p-2 border border-gray-300 rounded"
-                                        onKeyDown={(e) => {
-                                            if (e.key === ' ') {
-                                                // jaja que queres? poner un espacio? no.
-                                                e.preventDefault();
-                                            }
-                                        }}
                                     />
                                 </div>
                                 <div className="mb-4">

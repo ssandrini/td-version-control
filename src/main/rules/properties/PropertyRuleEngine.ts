@@ -3,6 +3,7 @@ import { IgnorePropertyRule } from './IgnorePropertyRule';
 import { TilePropertyRule } from './TilePropertyRule';
 import { DefaultPropertyRule } from './DefaultPropertyRule';
 import { PropertyRule } from './interfaces/PropertyRule';
+import { QuotedPropertyRule } from './QuotedPropertyRule';
 
 export class PropertyRuleEngine {
     private readonly rules: PropertyRule[];
@@ -25,7 +26,8 @@ export class PropertyRuleEngine {
                 (line: string) => line.startsWith('pageindex')
             ),
             new TilePropertyRule(),
-            new DefaultPropertyRule()
+            new DefaultPropertyRule(),
+            new QuotedPropertyRule()
         ];
     }
 

@@ -19,6 +19,8 @@ export const API_METHODS = {
     GET_TEMPLATES: 'get-templates',
     COMPARE: 'compare-versions',
     GET_STATE: 'get-state',
+    PUBLISH: 'publish',
+    IS_PUBLISHED: 'is-published',
     PULL: 'pull',
     PUSH: 'push',
     FINISH_MERGE: 'finish-merge',
@@ -34,5 +36,9 @@ export const API_METHODS = {
     REGISTER: 'register',
     GET_MERGE_STATUS: 'get-merge-status',
     PROJECT_CHANGED: 'project-changed',
-    LAST_VERSION: 'last-version'
+    LAST_VERSION: 'last-version',
+    CHANGE_PASSWORD: 'change-password',
+    SAVE_DEFAULT_PROJECTS_FOLDER: 'save-default-projects-folder',
+    GET_DEFAULT_PROJECTS_FOLDER: 'get-default-projects-folder',
+    ABORT_MERGE: 'abort-merge'
 };

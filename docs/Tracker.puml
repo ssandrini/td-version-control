@@ -1,0 +1,23 @@
+@startuml
+interface Tracker {
+    + init(dir: string, dst?: string): void
+    + currentVersion(dir: string): Version
+    + initialVersion(dir: string): Version
+    + listVersions(dir: string): Version[]
+    + createVersion(dir: string, versionName: string, description?: string): Version
+    + addTag(dir: string, versionId: string, tag: string): void
+    + removeTag(dir: string, tag: string): void
+    + goToVersion(dir: string, versionId: string): Version
+    + discardChanges(dir: string): void
+    + compare(dir: string, versionId?: string, file?: string): string
+    + readFile(dir: string, filePath: string, versionId?: string): string
+    + clone(dir: string, output: string, url: string): void
+    + getRemote(dir: string): string | undefined
+    + setRemote(dir: string, remoteUrl: string): void
+    + pull(dir: string): TrackerMergeResult
+    + push(dir: string): void
+    + settleConflicts(dir: string, userInput: Map<Filename, Content[]>): void
+    + abortMerge(dir: string): void
+    + getMergeResult(dir: string): TrackerMergeResult
+}
+@enduml

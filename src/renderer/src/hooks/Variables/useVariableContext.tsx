@@ -11,6 +11,11 @@ export const VariableContext: React.Context<VariableContextType> =
 export function VariableProvider({ children }: { children: ReactNode }): JSX.Element {
     const [missingDependencies, setMissingDependencies] = useState<ProjectDependencies[]>([]);
     const [user, setUser] = useState<User | undefined>(undefined);
+    const [defaultProjectLocation, setDefaultProjectLocation] = useState<string>('');
+
+    const hasDefaultProjectLocation = (): boolean => {
+        return defaultProjectLocation.length != 0;
+    };
 
     const isLoggedIn = (): boolean => {
         return user != undefined;
@@ -28,7 +33,10 @@ export function VariableProvider({ children }: { children: ReactNode }): JSX.Ele
                 hasMissingDependencies,
                 isLoggedIn,
                 user,
-                setUser
+                setUser,
+                defaultProjectLocation,
+                setDefaultProjectLocation,
+                hasDefaultProjectLocation
             }}
         >
             {children}

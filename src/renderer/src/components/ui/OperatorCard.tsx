@@ -351,7 +351,8 @@ const PROPERTY_NAME_MAP: Record<string, string> = {
     aspect1: 'Aspect 1',
     aspect2: 'Aspect 2',
     offsetx: 'Offset X',
-    offsety: 'Offset Y'
+    offsety: 'Offset Y',
+    speed: 'Speed'
 };
 
 interface OperatorCardProps {
@@ -387,7 +388,20 @@ const OperatorCard: React.FC<OperatorCardProps> = ({ node, Icon, iconColor, comp
 
     return (
         <Popover modal>
-            <PopoverTrigger className="flex bg-gray-700 rounded-md w-full h-full flex-col items-center">
+            <PopoverTrigger
+                className={`${
+                    iconColor === 'text-blue-700'
+                        ? 'border-2 border-blue-700'
+                        : iconColor === 'text-red-600'
+                          ? 'border-2 border-red-600'
+                          : iconColor === 'text-green-500'
+                            ? 'border-2 border-green-500'
+                            : iconColor === 'text-yellow-400'
+                              ? 'border-2 border-yellow-400 shadow-lg shadow-yellow-500/50'
+                              : ''
+                } m-1 flex bg-gray-700 rounded-md w-full h-full flex-col items-center`}
+            >
+                {' '}
                 <div className="w-full h-full text-white rounded-md p-2 relative flex justify-center items-center">
                     <img
                         src={getFileImage(node.type)}

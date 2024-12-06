@@ -19,7 +19,8 @@ import {
     readDateFromFile,
     splitSet,
     validateDirectory,
-    validateTag
+    validateTag,
+    verifyUrl
 } from '../utils/utils';
 import { MissingFileError } from '../errors/MissingFileError';
 import { TDState } from '../models/TDState';
@@ -33,6 +34,9 @@ import { TDMergeResult, TDMergeStatus } from '../models/TDMergeResult';
 import { resolveWithCurrentBranch, resolveWithIncomingBranch } from '../merge/MergeParser';
 import { TagError } from '../errors/TagError';
 import { ProjectDependencies } from '../../renderer/src/models/ProjectDependencies';
+import remoteRepoService from '../services/RemoteRepoService';
+import { RemoteError } from '../errors/RemoteError';
+import userDataManager from './UserDataManager';
 
 export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> {
     readonly processor: Processor;
@@ -58,12 +62,17 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
         this.excludedFiles = [
             /\.build$/,
+            /\.start$/,
             /\.lod$/,
             /\.bin$/,
             /^local\/.*$/,
             /\.json$/,
             /.*\.dir\/[^/]+\.(n|parm|panel)$/
         ];
+    }
+
+    abortMerge(dir: string): Promise<void> {
+        return this.tracker.abortMerge(this.hiddenDirPath(dir));
     }
 
     async getMergeStatus(dir: string): Promise<TDMergeResult> {
@@ -73,13 +82,17 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
         if (result.mergeStatus === MergeStatus.FINISHED) {
             log.debug('No merge in progress');
-            return Promise.resolve(new TDMergeResult(TDMergeStatus.FINISHED, null, null));
+            return Promise.resolve(new TDMergeResult(TDMergeStatus.FINISHED, null, null, null));
         }
 
         log.debug('Merge status is IN_PROGRESS.');
         const [currentState, incomingState] = await this.createStatesFromConflicts(dir);
+        let commonState: TDState | null = null;
+        if (result.lastCommonVersion) {
+            commonState = await this.createVersionState(dir, result.lastCommonVersion);
+        }
         return Promise.resolve(
-            new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState)
+            new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState, commonState)
         );
     }
 
@@ -87,7 +100,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await validateDirectory(dir);
 
         if (src) {
-            if (this.verifyUrl(src)) {
+            if (verifyUrl(src)) {
                 return this.initFromUrl(dir, src);
             }
 
@@ -318,7 +331,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         );
 
         if (result.mergeStatus === MergeStatus.UP_TO_DATE) {
-            return new TDMergeResult(TDMergeStatus.UP_TO_DATE, null, null);
+            return new TDMergeResult(TDMergeStatus.UP_TO_DATE, null, null, null);
         } else if (
             result.mergeStatus === MergeStatus.FINISHED_WITHOUT_CONFLICTS ||
             result.mergeStatus === MergeStatus.FINISHED_WITHOUT_ACTIONS
@@ -331,11 +344,13 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
                 lastModified,
                 path.join(hiddenDirPath, this.checkoutTimestampFile)
             );
-            return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
+            return new TDMergeResult(TDMergeStatus.FINISHED, null, null, null);
         } else if (result.mergeStatus === MergeStatus.FINISHED) {
             await this.processor.postprocess(hiddenDirPath, dir);
             await this.saveVersionState(dir, this.stateFile);
+            await this.processor.preprocess(dir, hiddenDirPath);
             await this.tracker.createVersion(hiddenDirPath, 'MergeVersion');
+            await this.processor.postprocess(hiddenDirPath, dir);
             await this.tracker.push(hiddenDirPath);
             const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
             const lastModified = await getLastModifiedDate(toeFile);
@@ -343,7 +358,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
                 lastModified,
                 path.join(hiddenDirPath, this.checkoutTimestampFile)
             );
-            return new TDMergeResult(TDMergeStatus.FINISHED, null, null);
+            return new TDMergeResult(TDMergeStatus.FINISHED, null, null, null);
         } else if (
             result.mergeStatus === MergeStatus.IN_PROGRESS &&
             result.unresolvedConflicts === null
@@ -357,7 +372,18 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         log.debug(
             `MergeResult: IN_PROGRESS, currentState: ${currentState.toString()}, incomingState: ${incomingState.toString()}`
         );
-        return new TDMergeResult(TDMergeStatus.IN_PROGRESS, currentState, incomingState);
+        log.debug('Merge result common versionId: ', result.lastCommonVersion);
+        let commonState: TDState | null = null;
+        if (result.lastCommonVersion) {
+            commonState = await this.createVersionState(dir, result.lastCommonVersion);
+        }
+
+        return new TDMergeResult(
+            TDMergeStatus.IN_PROGRESS,
+            currentState,
+            incomingState,
+            commonState
+        );
     }
 
     async push(dir: string): Promise<void> {
@@ -381,6 +407,7 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         const hiddenDirPath = this.hiddenDirPath(dir);
         const result: TrackerMergeResult = await this.tracker.getMergeResult(hiddenDirPath);
         log.debug('Merge result status:', result.mergeStatus);
+        log.debug('Merge result common versionId: ', result.lastCommonVersion);
 
         if (result.mergeStatus === MergeStatus.FINISHED) {
             log.debug('Merge already finished; no further action required.');
@@ -415,7 +442,9 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         await this.tracker.settleConflicts(hiddenDirPath, resolvedContents);
         await this.processor.postprocess(hiddenDirPath, dir);
         await this.saveVersionState(dir, this.stateFile);
+        await this.processor.preprocess(dir, hiddenDirPath);
         await this.tracker.createVersion(hiddenDirPath, versionName, description);
+        await this.processor.postprocess(hiddenDirPath, dir);
         const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
         const lastModified = await getLastModifiedDate(toeFile);
         await dumpTimestampToFile(
@@ -567,18 +596,9 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
         return nodeNames;
     }
 
-    private verifyUrl(url: string): boolean {
-        try {
-            const parsedUrl = new URL(url);
-            return parsedUrl.href.includes('git');
-        } catch (error) {
-            return false;
-        }
-    }
-
     private async initFromUrl(dir: string, url: string): Promise<Version> {
         const hiddenDirPath = this.hiddenDirPath(dir);
-        await this.tracker.clone(hiddenDirPath, url);
+        await this.tracker.clone(dir, this.hiddenDir, url);
         hidefile.hideSync(hiddenDirPath);
         await this.processor.postprocess(hiddenDirPath, dir);
         const toeFile = path.join(dir, await this.findFileWithCheck(dir, 'toe'));
@@ -683,5 +703,44 @@ export class TDProjectManager implements ProjectManager<TDState, TDMergeResult> 
 
     checkDependencies(): Promise<ProjectDependencies[]> {
         return checkDependencies();
+    }
+
+    async isPublished(dir: string): Promise<boolean> {
+        log.info(`Checking if ${dir} is published.`);
+        await validateDirectory(dir);
+        const hiddenDir = this.hiddenDirPath(dir);
+        try {
+            const remoteUrl = await this.tracker.getRemote(hiddenDir);
+            return remoteUrl !== undefined;
+        } catch (error: any) {
+            log.error(`Error getting remote due to ${error.message}.`);
+            return Promise.reject(new TDError(`Error verifying if ${hiddenDir} is published`));
+        }
+    }
+
+    async publish(dir: string, name: string, description: string): Promise<void> {
+        log.info(`Publishing ${dir} to Mariana Cloud`);
+        await validateDirectory(dir);
+        const hiddenDir = this.hiddenDirPath(dir);
+        const response = await remoteRepoService.createRepository(name, description);
+        if (response.errorCode) {
+            log.error(`Could not publish ${dir}: received ${response.errorCode}`);
+            return Promise.reject(new RemoteError('Unable to publish project', response.errorCode));
+        }
+        const remoteUrl = response.result!;
+        try {
+            await this.tracker.setRemote(hiddenDir, remoteUrl);
+            userDataManager.addRemoteToProject(name, remoteUrl);
+        } catch (error: any) {
+            log.error(`Unable to set remote to ${dir}: ${error.message}`);
+            return Promise.reject(new TDError(`Error publishing project to Mariana Cloud.`));
+        }
+
+        try {
+            await this.tracker.push(hiddenDir);
+        } catch (error: any) {
+            log.error(`Unable to push to ${dir}: ${error.message}`);
+            return Promise.reject(new TDError(`Error pushing project content to Mariana Cloud.`));
+        }
     }
 }

@@ -94,6 +94,48 @@ export class AuthService {
         }
     }
 
+    async changePassword(
+        username: string,
+        oldPassword: string,
+        newPassword: string
+    ): Promise<ApiResponse> {
+        log.debug('Attempting to change password for user:', username);
+
+        const authResponse = await this.authenticate(username, oldPassword);
+        if (authResponse.errorCode) {
+            log.error(`Authentication failed. Error code: ${authResponse.errorCode}`);
+            return ApiResponse.fromErrorCode(authResponse.errorCode!);
+        }
+
+        log.debug('Old password verified, proceeding to change password');
+
+        const changePasswordResponse = await giteaAPIConnector.apiRequest<User>(
+            `/admin/users/${username}`,
+            HttpMethod.PATCH,
+            { password: newPassword, login_name: username, source_id: 0 }
+        );
+
+        if (!changePasswordResponse.result) {
+            log.error(
+                `Failed to change password for user: ${username}. Error code: ${changePasswordResponse.errorCode}`
+            );
+            return ApiResponse.fromErrorCode(changePasswordResponse.errorCode!);
+        }
+
+        log.debug('Password successfully changed, creating a new token');
+
+        const newAuthResponse = await this.authenticate(username, newPassword);
+        if (authResponse.errorCode) {
+            log.error(
+                `Failed to generate a new token after password change. Error code: ${newAuthResponse.errorCode}`
+            );
+            return ApiResponse.fromErrorCode(newAuthResponse.errorCode!);
+        }
+
+        log.debug('Password changed and new token created successfully');
+        return ApiResponse.fromResult();
+    }
+
     private newAuthTokenRequest(): AuthTokenRequest {
         return {
             name: crypto.randomUUID().toString(),

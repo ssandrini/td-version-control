@@ -299,7 +299,7 @@ export const validateTag = (tag: string): void => {
         fail('cannot be the single character "@".');
     }
 
-    if (tag.includes('.')) {
+    if (tag.includes('..')) {
         fail('cannot contain a bare dot (.).');
     }
 };
@@ -406,4 +406,24 @@ const checkDependenciesWin = async (): Promise<ProjectDependencies[]> => {
 
 const checkDependenciesMac = async (): Promise<ProjectDependencies[]> => {
     return Promise.resolve([]);
+};
+
+export const verifyUrl = (url: string): boolean => {
+    try {
+        const parsedUrl = new URL(url);
+        return parsedUrl.href.includes('git');
+    } catch (error) {
+        return false;
+    }
+};
+
+export const createProjectDirectory = async (dir: string, name: string): Promise<string> => {
+    const completePath = path.join(dir, name);
+    try {
+        fs.mkdirSync(completePath);
+        return completePath;
+    } catch (error) {
+        log.error(`Error creating directory ${completePath}. Cause:`, error);
+        return Promise.reject(error);
+    }
 };

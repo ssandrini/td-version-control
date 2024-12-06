@@ -27,12 +27,14 @@ interface MergeConflictsDialogProps {
             | undefined
         >
     >;
+    update?: () => void;
 }
 
 const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
     project,
     mergeConflicts,
-    setMergeConflicts
+    setMergeConflicts,
+    update
 }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -41,17 +43,22 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
+    const [isLoadingMerge, setIsLoadingMerge] = useState<boolean>(false);
+
     const handleResolveConflict = (
         resolvedState: TDState | undefined,
         name: string,
         description: string
     ) => {
         if (!resolvedState) return;
+
+        setIsLoadingMerge(true);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
             .finishMerge(project?.path, resolvedState, name, description)
             .then((response) => {
+                update && update();
                 console.log(response);
             })
             .catch((error: any) => {
@@ -59,10 +66,12 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
             })
             .finally(() => {
                 setMergeConflicts(undefined);
+                setIsLoadingMerge(false);
             });
     };
 
     const handleAbortMerge = () => {
+        setIsLoadingMerge(true);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         window.api
@@ -70,12 +79,14 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
             .then(() => {
                 setMergeConflicts(undefined);
                 setShowConfirmationDialog(false);
+                update && update();
             })
             .catch((error: any) => {
                 console.log(error);
             })
             .finally(() => {
                 setMergeConflicts(undefined);
+                setIsLoadingMerge(false);
             });
     };
 
@@ -151,7 +162,9 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                             />
                             <Button
                                 className="w-1/2 mt-2"
-                                disabled={name.length === 0 || description.length === 0}
+                                disabled={
+                                    name.length === 0 || description.length === 0 || isLoadingMerge
+                                }
                                 onClick={() => {
                                     handleResolveConflict(
                                         mergeConflicts?.currentState ?? undefined,
@@ -171,7 +184,9 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                             />
                             <Button
                                 className="w-1/2 mt-2"
-                                disabled={name.length === 0 || description.length === 0}
+                                disabled={
+                                    name.length === 0 || description.length === 0 || isLoadingMerge
+                                }
                                 onClick={() => {
                                     handleResolveConflict(
                                         mergeConflicts?.incomingState ?? undefined,
@@ -207,11 +222,16 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                         <div className="flex gap-4">
                             <Button
                                 variant="secondary"
+                                disabled={isLoadingMerge}
                                 onClick={() => setShowConfirmationDialog(false)}
                             >
                                 Cancel
                             </Button>
-                            <Button variant="destructive" onClick={handleAbortMerge}>
+                            <Button
+                                disabled={isLoadingMerge}
+                                variant="destructive"
+                                onClick={handleAbortMerge}
+                            >
                                 Abort Merge
                             </Button>
                         </div>

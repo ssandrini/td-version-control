@@ -215,6 +215,7 @@ const ProjectDetail: React.FC = () => {
                         project={project}
                         mergeConflicts={mergeConflicts}
                         setMergeConflicts={setMergeConflicts}
+                        update={() => setFetch(!fetch)}
                     />
                 )}
                 <div className="flex flex-row h-full w-full">

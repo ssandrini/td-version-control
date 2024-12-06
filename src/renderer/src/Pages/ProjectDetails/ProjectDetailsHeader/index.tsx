@@ -43,6 +43,7 @@ interface ProjectDetailsHeaderProps {
     >;
     isPublished: boolean;
     setIsPublished: React.Dispatch<SetStateAction<boolean>>;
+    update?: () => void;
 }
 
 const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
@@ -50,7 +51,8 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
     selectedVersion,
     setMergeConflicts,
     isPublished,
-    setIsPublished
+    setIsPublished,
+    update
 }) => {
     const { toast } = useToast();
 
@@ -168,6 +170,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
             })
             .finally(() => {
                 setIsLoadingPush(false);
+                update && update();
             });
     };
 
@@ -326,6 +329,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
             })
             .finally(() => {
                 setIsLoadingPull(false);
+                update && update();
             });
     };
 

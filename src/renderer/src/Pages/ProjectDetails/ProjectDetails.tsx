@@ -208,6 +208,7 @@ const ProjectDetail: React.FC = () => {
                     setMergeConflicts={setMergeConflicts}
                     isPublished={isPublished}
                     setIsPublished={setIsPublished}
+                    update={() => setFetch(!fetch)}
                 />
 
                 {mergeConflicts && (

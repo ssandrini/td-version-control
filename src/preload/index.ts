@@ -84,6 +84,8 @@ const api = {
         ipcRenderer.invoke(API_METHODS.SAVE_DEFAULT_PROJECTS_FOLDER, dir),
     getDefaultProjectsFolder: async () =>
         ipcRenderer.invoke(API_METHODS.GET_DEFAULT_PROJECTS_FOLDER),
+    abortMerge: async (dir: string) => ipcRenderer.invoke(API_METHODS.ABORT_MERGE, dir),
+
     // MAIN TO RENDERER METHODS
     onProjectChanged: (callback: (data: any) => void) => {
         ipcRenderer.on(API_METHODS.PROJECT_CHANGED, (_event, data) => callback(data));

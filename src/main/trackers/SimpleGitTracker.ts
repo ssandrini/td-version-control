@@ -21,7 +21,7 @@ import {
     resolveFileConflicts,
     resolveWithCurrentBranch
 } from '../merge/MergeParser';
-import { extractFileName } from '../utils/utils';
+import { extractFileName, findFileByExt } from '../utils/utils';
 import userDataManager from '../managers/UserDataManager';
 import { User } from '../models/api/User';
 
@@ -316,6 +316,16 @@ export class SimpleGitTracker implements Tracker {
             return { mergeStatus: MergeStatus.UP_TO_DATE, unresolvedConflicts: null };
         }
 
+        let commonAncestorHash: string | undefined;
+        try {
+            const mergeBaseResult = await this.git.raw(['merge-base', 'HEAD', 'FETCH_HEAD']);
+            commonAncestorHash = mergeBaseResult.trim();
+            log.info(`Last common ancestor commit: ${commonAncestorHash}`);
+        } catch (error) {
+            log.error('Error determining the common ancestor:', error);
+            commonAncestorHash = undefined;
+        }
+
         let conflicts: MergeConflict[];
         try {
             const mergeSummary = await this.git.merge(['FETCH_HEAD']);
@@ -343,9 +353,10 @@ export class SimpleGitTracker implements Tracker {
         // TOC file has conflicts
         const tocConflict = conflicts.find((c: MergeConflict) => c.file?.endsWith('.toc'));
         if (tocConflict && tocConflict.file) {
+            const toeDir = findFileByExt('dir', dir);
             const tocPath = path.join(dir, tocConflict.file);
             const tocContent = this.readFileContent(tocPath);
-            log.debug('CONFLICTO EN EL TOC!!!!!!!!!!');
+            log.debug('TOC file conflict');
             const deleted = Array.from(
                 new Set(
                     (await this.git.status()).deleted.map((path) =>
@@ -353,7 +364,13 @@ export class SimpleGitTracker implements Tracker {
                     )
                 )
             );
-            const cleanToc = cleanMergeFile(tocContent, deleted);
+            let cleanToc = cleanMergeFile(tocContent, deleted);
+            const tocLines = cleanToc.split('\n');
+            const validLines = tocLines.filter((line) => {
+                const filePath = path.resolve(dir, toeDir!, line.trim());
+                return fs.existsSync(filePath);
+            });
+            cleanToc = validLines.join('\n');
             fs.writeFileSync(tocPath, cleanToc);
             await this.git.add(tocConflict.file);
         }
@@ -395,7 +412,11 @@ export class SimpleGitTracker implements Tracker {
 
         if (conflictMap.size > 0) {
             log.info('Merge status: IN_PROGRESS with unresolved conflicts');
-            return { mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap };
+            return {
+                mergeStatus: MergeStatus.IN_PROGRESS,
+                unresolvedConflicts: conflictMap,
+                lastCommonVersion: commonAncestorHash
+            };
         }
 
         return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };
@@ -406,25 +427,13 @@ export class SimpleGitTracker implements Tracker {
         await this.git.cwd(dir);
         try {
             const remoteUrl = await this.addCredentialsToRemoteUrl(dir);
-            const branches = await this.git.branch(['--list']);
-            const currentBranch = branches.current;
-
-            const hasUpstream = branches.all.some((branch) =>
-                branch.includes(`remotes/origin/${currentBranch}`)
-            );
-
-            if (!hasUpstream) {
-                log.info(`Setting upstream branch for the first push.`);
-                await this.git.push(['-u', remoteUrl, 'HEAD']);
-                await this.git.pushTags(remoteUrl);
-            } else {
-                const result = await this.git.push(remoteUrl);
-                await this.git.pushTags(remoteUrl);
-                log.info(`Push successful: ${result.pushed.length} references updated.`);
-            }
+            const result = await this.git.push(remoteUrl);
+            await this.git.pushTags(remoteUrl);
+            log.info(`Push successful: ${result.pushed.length} references updated.`);
         } catch (error) {
             const errorMessage = `Failed to push changes from ${dir}`;
-            this.handleError(error, errorMessage);
+            const cause = error instanceof Error ? error.message : String(error);
+            this.handleError(error, cause.includes('before pushing') ? cause : errorMessage);
         }
     }
 
@@ -551,8 +560,22 @@ export class SimpleGitTracker implements Tracker {
             conflictMap.set(extractFileName(file)!, conflicts);
         }
 
+        let commonAncestorHash: string | undefined;
         if (conflictMap.size > 0) {
-            return { mergeStatus: MergeStatus.IN_PROGRESS, unresolvedConflicts: conflictMap };
+            try {
+                const mergeBaseResult = await this.git.raw(['merge-base', 'HEAD', 'MERGE_HEAD']);
+                commonAncestorHash = mergeBaseResult.trim();
+                log.info(`Last common ancestor commit: ${commonAncestorHash}`);
+            } catch (error) {
+                log.error('Error determining the common ancestor:', error);
+                commonAncestorHash = undefined;
+            }
+
+            return {
+                mergeStatus: MergeStatus.IN_PROGRESS,
+                unresolvedConflicts: conflictMap,
+                lastCommonVersion: commonAncestorHash
+            };
         }
 
         return { mergeStatus: MergeStatus.FINISHED, unresolvedConflicts: null };

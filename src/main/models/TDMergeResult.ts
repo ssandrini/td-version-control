@@ -10,7 +10,8 @@ export class TDMergeResult {
     constructor(
         public status: TDMergeStatus,
         public currentState: TDState | null,
-        public incomingState: TDState | null
+        public incomingState: TDState | null,
+        public commonState: TDState | null
     ) {}
 
     serialize(): object {
@@ -18,6 +19,11 @@ export class TDMergeResult {
     }
 
     static deserialize(data: any): TDMergeResult {
-        return new TDMergeResult(data.status, data.currentState, data.incomingState);
+        return new TDMergeResult(
+            data.status,
+            data.currentState,
+            data.incomingState,
+            data.commonState
+        );
     }
 }

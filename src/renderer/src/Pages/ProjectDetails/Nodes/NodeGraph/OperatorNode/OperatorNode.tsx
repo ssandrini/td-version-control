@@ -22,7 +22,10 @@ const OperatorNode: React.FC<OperatorNodeProps> = ({ data }) => {
         iconColor = 'text-red-600';
     } else if (data.variant === nodeState.modified) {
         Icon = FaEdit;
-        iconColor = 'text-blue-800';
+        iconColor = 'text-blue-700';
+    } else if (data.variant === nodeState.highlighted) {
+        Icon = FaEdit;
+        iconColor = 'text-yellow-400';
     }
 
     return (

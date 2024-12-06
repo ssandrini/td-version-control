@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useVariableContext } from '../../hooks/Variables/useVariableContext';
 import { motion } from 'framer-motion';
 import { Button } from '@renderer/components/ui/button';
@@ -32,16 +32,6 @@ const Settings: React.FC<SettingsProps> = () => {
     const [confirmPasswordType, setConfirmPasswordType] = useState('password');
     const [passwordMatch, setPasswordMatch] = useState(true);
     const [passwordError, setPasswordError] = useState('');
-
-    useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        window.api.getDefaultProjectsFolder().then((path: string) => {
-            if (path) {
-                setDefaultProjectLocation(path);
-            }
-        });
-    }, [setDefaultProjectLocation]);
 
     const handleSetLocation = async () => {
         try {
@@ -339,11 +329,13 @@ const Settings: React.FC<SettingsProps> = () => {
                     </Dialog>
                 )}
 
+                <hr className="border-t border-gray-300" />
+
                 <div className="w-full flex flex-col items-center justify-center px-20 py-5">
-                    <div className="p-6 bg-gray-800 rounded-lg shadow-md text-center">
-                        <h3 className="text-xl font-semibold mb-4 text-white">Did You Know?</h3>
-                        <p className="text-white">
-                            This VCS is designed specifically for TouchDesigner files, allowing you
+                    <div className="p-6 bg-white text-center">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-600">Did You Know?</h3>
+                        <p className="text-gray-600">
+                            Mariana is designed specifically for TouchDesigner files, allowing you
                             to easily version control and collaborate on your visual projects. A
                             little assistant that reminds you of everything you have done!
                         </p>

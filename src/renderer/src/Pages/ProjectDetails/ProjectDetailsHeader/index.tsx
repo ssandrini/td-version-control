@@ -12,6 +12,8 @@ import { TDState } from '../../../../../main/models/TDState';
 import { useToast } from '@renderer/hooks/use-toast';
 import { MdPeople } from 'react-icons/md';
 import Collaborators from '../Nodes/Collaborators';
+import { ApiResponse } from '../../../../../main/errors/ApiResponse';
+import { APIErrorCode } from '../../../../../main/errors/APIErrorCode';
 
 interface ProjectDetailsHeaderProps {
     project?: Project;
@@ -26,6 +28,7 @@ interface ProjectDetailsHeaderProps {
         | {
               currentState: TDState | null;
               incomingState: TDState | null;
+              commonState: TDState | null;
           }
         | undefined;
     setMergeConflicts: React.Dispatch<
@@ -33,12 +36,14 @@ interface ProjectDetailsHeaderProps {
             | {
                   currentState: TDState | null;
                   incomingState: TDState | null;
+                  commonState: TDState | null;
               }
             | undefined
         >
     >;
     isPublished: boolean;
     setIsPublished: React.Dispatch<SetStateAction<boolean>>;
+    update?: () => void;
 }
 
 const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
@@ -46,7 +51,8 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
     selectedVersion,
     setMergeConflicts,
     isPublished,
-    setIsPublished
+    setIsPublished,
+    update
 }) => {
     const { toast } = useToast();
 
@@ -62,29 +68,80 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
         // @ts-expect-error
         window.api
             .push(project?.path)
-            .then(() => {
-                toast({
-                    className: '',
-                    style: {
-                        borderTop: '0.35rem solid transparent',
-                        borderBottom: 'transparent',
-                        borderRight: 'transparent',
-                        borderLeft: 'transparent',
-                        borderImage: 'linear-gradient(to right, rgb(10, 27, 182), rgb(0, 0, 255))',
-                        borderImageSlice: '1'
-                    },
-                    description: (
-                        <div className="w-full h-full flex flex-row items-start gap-2">
-                            <FaCheck className="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
-                            <div className="flex flex-col">
-                                <div className="font-p1_bold text-h3">Project uploaded</div>
-                                <div className="font-p1_regular">
-                                    Your project is now up to date with the cloud.
+            .then((response: ApiResponse) => {
+                if (!response.errorCode) {
+                    toast({
+                        className: '',
+                        style: {
+                            borderTop: '0.35rem solid transparent',
+                            borderBottom: 'transparent',
+                            borderRight: 'transparent',
+                            borderLeft: 'transparent',
+                            borderImage:
+                                'linear-gradient(to right, rgb(10, 27, 182), rgb(0, 0, 255))',
+                            borderImageSlice: '1'
+                        },
+                        description: (
+                            <div className="w-full h-full flex flex-row items-start gap-2">
+                                <FaCheck className="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                                <div className="flex flex-col">
+                                    <div className="font-p1_bold text-h3">Project uploaded</div>
+                                    <div className="font-p1_regular">
+                                        Your project is now up to date with the cloud.
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )
-                });
+                        )
+                    });
+                } else if (response.errorCode === APIErrorCode.LocalError) {
+                    toast({
+                        className: '',
+                        style: {
+                            borderTop: '0.35rem solid transparent',
+                            borderBottom: 'transparent',
+                            borderRight: 'transparent',
+                            borderLeft: 'transparent',
+                            borderImage:
+                                'linear-gradient(to right, rgb(255, 223, 0), rgb(255, 153, 0))',
+                            borderImageSlice: '1'
+                        },
+                        description: (
+                            <div className="w-full h-full flex flex-row items-start gap-2">
+                                <CiWarning className="bg-gradient-to-r from-yellow-400 to-orange-600 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                                <div className="flex flex-col">
+                                    <div className="font-p1_bold text-h3">Sync required</div>
+                                    <div className="font-p1_regular">
+                                        Please refresh the latest changes before publishing.
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    });
+                } else {
+                    toast({
+                        className: '',
+                        style: {
+                            borderTop: '0.35rem solid transparent',
+                            borderBottom: 'transparent',
+                            borderRight: 'transparent',
+                            borderLeft: 'transparent',
+                            borderImage:
+                                'linear-gradient(to right, rgb(255, 0, 0), rgb(252, 80, 80))',
+                            borderImageSlice: '1'
+                        },
+                        description: (
+                            <div className="w-full h-full flex flex-row items-start gap-2">
+                                <CiWarning className="bg-gradient-to-r from-red-400 to-red-600 text-white rounded-full p-2.5 max-w-10 w-10 max-h-8 h-8" />
+                                <div className="flex flex-col">
+                                    <div className="font-p1_bold text-h3">Error on upload</div>
+                                    <div className="font-p1_regular">
+                                        Please check your internet connection.
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    });
+                }
             })
             .catch(() => {
                 toast({
@@ -113,6 +170,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
             })
             .finally(() => {
                 setIsLoadingPush(false);
+                update && update();
             });
     };
 
@@ -239,7 +297,8 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
                 } else {
                     setMergeConflicts({
                         currentState: result.currentState,
-                        incomingState: result.incomingState
+                        incomingState: result.incomingState,
+                        commonState: result.commonState
                     });
                 }
             })
@@ -270,6 +329,7 @@ const ProjectDetailsHeader: React.FC<ProjectDetailsHeaderProps> = ({
             })
             .finally(() => {
                 setIsLoadingPull(false);
+                update && update();
             });
     };
 

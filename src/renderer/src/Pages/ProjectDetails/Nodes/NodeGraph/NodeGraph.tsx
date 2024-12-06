@@ -21,6 +21,7 @@ import { Skeleton } from '@renderer/components/ui/skeleton';
 interface NodeGraphProps {
     current?: TDState | undefined;
     compare?: TDState | undefined;
+    reference?: TDState | undefined;
     hidden?: boolean;
 }
 
@@ -42,14 +43,15 @@ const compareProperties = (map1?: Map<string, string>, map2?: Map<string, string
     return true;
 };
 
-const NodeGraph: React.FC<NodeGraphProps> = ({ current, hidden, compare }) => {
+const NodeGraph: React.FC<NodeGraphProps> = ({ current, hidden, compare, reference }) => {
     const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | undefined>(
         undefined
     );
 
     const createNodesAndEdgesFromState = (
         currentState?: TDState,
-        compare?: TDState
+        compare?: TDState,
+        reference?: TDState
     ): {
         nodes: Node[];
         edges: Edge[];
@@ -100,6 +102,37 @@ const NodeGraph: React.FC<NodeGraphProps> = ({ current, hidden, compare }) => {
                     data: {
                         label: currentNode.name,
                         operator: currentNode
+                    }
+                };
+            }
+
+            if (
+                reference?.nodes.find(
+                    (referenceNode) =>
+                        currentNode.name === referenceNode.name &&
+                        currentNode.type === referenceNode.type &&
+                        currentNode.subtype === referenceNode.subtype &&
+                        !compareProperties(currentNode.properties, referenceNode.properties)
+                )
+            ) {
+                console.log('HIGHLIGHTED', currentNode.name);
+                return {
+                    id: currentNode.name,
+                    type: 'operator',
+                    position: {
+                        x: currentNode.properties?.get('tileX') ?? Math.random() * 400,
+                        y:
+                            -1 *
+                            ((currentNode.properties?.get('tileY') ??
+                                Math.random() * 400) as number)
+                    },
+                    data: {
+                        label: currentNode.name,
+                        operator: currentNode,
+                        variant: nodeState.highlighted,
+                        compare: reference?.nodes.find(
+                            (compareNode) => compareNode.name == currentNode.name
+                        )
                     }
                 };
             }
@@ -231,14 +264,16 @@ const NodeGraph: React.FC<NodeGraphProps> = ({ current, hidden, compare }) => {
 
     const { nodes: initialNodes, edges: initialEdges } = createNodesAndEdgesFromState(
         current,
-        compare
+        compare,
+        reference
     );
 
     useEffect(() => {
         if (current != undefined) {
             const { nodes: newNodes, edges: newEdges } = createNodesAndEdgesFromState(
                 current,
-                compare
+                compare,
+                reference
             );
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error

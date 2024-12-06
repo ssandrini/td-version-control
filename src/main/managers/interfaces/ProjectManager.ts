@@ -25,4 +25,5 @@ export interface ProjectManager<S, R> {
     isPublished(dir: string): Promise<boolean>;
     finishMerge(dir: string, userInput: S, versionName: string, description: string): Promise<void>;
     getMergeStatus(dir: string): Promise<R>;
+    abortMerge(dir: string): Promise<void>;
 }

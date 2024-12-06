@@ -33,6 +33,7 @@ const ProjectDetail: React.FC = () => {
         | {
               currentState: TDState | null;
               incomingState: TDState | null;
+              commonState: TDState | null;
           }
         | undefined
     >(undefined);
@@ -148,7 +149,8 @@ const ProjectDetail: React.FC = () => {
             } else if (result.status === TDMergeStatus.IN_PROGRESS) {
                 setMergeConflicts({
                     currentState: result.currentState,
-                    incomingState: result.incomingState
+                    incomingState: result.incomingState,
+                    commonState: result.commonState
                 });
             }
         });
@@ -206,6 +208,7 @@ const ProjectDetail: React.FC = () => {
                     setMergeConflicts={setMergeConflicts}
                     isPublished={isPublished}
                     setIsPublished={setIsPublished}
+                    update={() => setFetch(!fetch)}
                 />
 
                 {mergeConflicts && (
@@ -213,6 +216,8 @@ const ProjectDetail: React.FC = () => {
                         project={project}
                         mergeConflicts={mergeConflicts}
                         setMergeConflicts={setMergeConflicts}
+                        update={() => setFetch(!fetch)}
+                        setWipVersion={setWipVersion}
                     />
                 )}
                 <div className="flex flex-row h-full w-full">

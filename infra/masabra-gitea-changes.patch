@@ -1,0 +1,262 @@
+From 277f0908c723f4e0550d1f89999bd96435097734 Mon Sep 17 00:00:00 2001
+From: BraveJero <jbrave271@gmail.com>
+Date: Sat, 23 Nov 2024 08:31:03 -0300
+Subject: [PATCH 1/5] Remove the need for admin credentials on POST /user
+
+---
+ README.md             | 23 ++++++++++++++++++++++
+ models/user/user.go   |  2 +-
+ routers/api/v1/api.go | 44 +++----------------------------------------
+ 3 files changed, 27 insertions(+), 42 deletions(-)
+
+diff --git a/README.md b/README.md
+index c280c832a..1aae31008 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,28 @@
+ # Gitea
+ 
++# Custom Masabra run config
++```
++docker network create gitea-network
++```
++```
++docker run -d \
++ --name giteadb \
++ -e POSTGRES_USER=postgres \
++ -e POSTGRES_PASSWORD=postgres \
++ -e POSTGRES_DB=gitea \
++ -p 3333:5432 \
++ postgres:14
++```
++```
++docker network connect gitea-network giteadb
++```
++```
++docker build -t mariana-gitea .
++```
++```
++sudo docker run -d --name gitea5 --network gitea-network -p 80:3000   -e DB_TYPE=postgres  -e DB_HOST=giteadb:5432  -e DB_NAME=gitea  -e DB_USER=postgres  -e DB_PASSWD=postgres -v /mnt/disks/gitea-data:/data mariana-gitea
++```
++
+ [![](https://github.com/go-gitea/gitea/actions/workflows/release-nightly.yml/badge.svg?branch=main)](https://github.com/go-gitea/gitea/actions/workflows/release-nightly.yml?query=branch%3Amain "Release Nightly")
+ [![](https://img.shields.io/discord/322538954119184384.svg?logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.gg/Gitea "Join the Discord chat at https://discord.gg/Gitea")
+ [![](https://goreportcard.com/badge/code.gitea.io/gitea)](https://goreportcard.com/report/code.gitea.io/gitea "Go Report Card")
+diff --git a/models/user/user.go b/models/user/user.go
+index a2d916629..9e8a6757a 100644
+--- a/models/user/user.go
++++ b/models/user/user.go
+@@ -634,7 +634,7 @@ func CreateUser(ctx context.Context, u *User, meta *Meta, overwriteDefault ...*C
+ 
+ // AdminCreateUser is used by admins to manually create users
+ func AdminCreateUser(ctx context.Context, u *User, meta *Meta, overwriteDefault ...*CreateUserOverwriteOptions) (err error) {
+-	return createUser(ctx, u, meta, true, overwriteDefault...)
++	return createUser(ctx, u, meta, false, overwriteDefault...)
+ }
+ 
+ // createUser creates record of a new user.
+diff --git a/routers/api/v1/api.go b/routers/api/v1/api.go
+index 23f466873..dabb4a483 100644
+--- a/routers/api/v1/api.go
++++ b/routers/api/v1/api.go
+@@ -295,53 +295,14 @@ func checkTokenPublicOnly() func(ctx *context.APIContext) {
+ // if a token is not being used, reqToken will enforce other sign in methods
+ func tokenRequiresScopes(requiredScopeCategories ...auth_model.AccessTokenScopeCategory) func(ctx *context.APIContext) {
+ 	return func(ctx *context.APIContext) {
+-		// no scope required
+-		if len(requiredScopeCategories) == 0 {
+-			return
+-		}
+-
+-		// Need OAuth2 token to be present.
+-		scope, scopeExists := ctx.Data["ApiTokenScope"].(auth_model.AccessTokenScope)
+-		if ctx.Data["IsApiToken"] != true || !scopeExists {
+-			return
+-		}
+-
+-		// use the http method to determine the access level
+-		requiredScopeLevel := auth_model.Read
+-		if ctx.Req.Method == "POST" || ctx.Req.Method == "PUT" || ctx.Req.Method == "PATCH" || ctx.Req.Method == "DELETE" {
+-			requiredScopeLevel = auth_model.Write
+-		}
+-
+-		// get the required scope for the given access level and category
+-		requiredScopes := auth_model.GetRequiredScopes(requiredScopeLevel, requiredScopeCategories...)
+-		allow, err := scope.HasScope(requiredScopes...)
+-		if err != nil {
+-			ctx.Error(http.StatusForbidden, "tokenRequiresScope", "checking scope failed: "+err.Error())
+-			return
+-		}
+-
+-		if !allow {
+-			ctx.Error(http.StatusForbidden, "tokenRequiresScope", fmt.Sprintf("token does not have at least one of required scope(s): %v", requiredScopes))
+-			return
+-		}
+-
+-		ctx.Data["requiredScopeCategories"] = requiredScopeCategories
+-
+-		// check if scope only applies to public resources
+-		publicOnly, err := scope.PublicOnly()
+-		if err != nil {
+-			ctx.Error(http.StatusForbidden, "tokenRequiresScope", "parsing public resource scope failed: "+err.Error())
+-			return
+-		}
+-
+-		// assign to true so that those searching should only filter public repositories/users/organizations
+-		ctx.PublicOnly = publicOnly
++		return
+ 	}
+ }
+ 
+ // Contexter middleware already checks token for user sign in process.
+ func reqToken() func(ctx *context.APIContext) {
+ 	return func(ctx *context.APIContext) {
++		return
+ 		// If actions token is present
+ 		if true == ctx.Data["IsActionsToken"] {
+ 			return
+@@ -385,6 +346,7 @@ func reqBasicOrRevProxyAuth() func(ctx *context.APIContext) {
+ // reqSiteAdmin user should be the site admin
+ func reqSiteAdmin() func(ctx *context.APIContext) {
+ 	return func(ctx *context.APIContext) {
++		return
+ 		if !ctx.IsUserSiteAdmin() {
+ 			ctx.Error(http.StatusForbidden, "reqSiteAdmin", "user should be the site admin")
+ 			return
+-- 
+2.34.1
+
+
+From 4b74bbb17b6e11bd85f5c6012f2e5171d0f02805 Mon Sep 17 00:00:00 2001
+From: BraveJero <jbrave271@gmail.com>
+Date: Sun, 24 Nov 2024 10:44:15 -0300
+Subject: [PATCH 2/5] update
+
+---
+ routers/api/v1/api.go | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/routers/api/v1/api.go b/routers/api/v1/api.go
+index dabb4a483..e4851e416 100644
+--- a/routers/api/v1/api.go
++++ b/routers/api/v1/api.go
+@@ -106,6 +106,8 @@ import (
+ 
+ func sudo() func(ctx *context.APIContext) {
+ 	return func(ctx *context.APIContext) {
++		return
++		
+ 		sudo := ctx.FormString("sudo")
+ 		if len(sudo) == 0 {
+ 			sudo = ctx.Req.Header.Get("Sudo")
+-- 
+2.34.1
+
+
+From 7f1ff022986158cdc9a76c6ea8870fabe2329597 Mon Sep 17 00:00:00 2001
+From: ssandrini <ssandrini@itba.edu.ar>
+Date: Sun, 24 Nov 2024 19:34:29 -0300
+Subject: [PATCH 3/5] fix error 500
+
+---
+ routers/api/v1/admin/user.go | 2 --
+ routers/api/v1/api.go        | 9 ++++++++-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/routers/api/v1/admin/user.go b/routers/api/v1/admin/user.go
+index b0f40084d..7db55ad21 100644
+--- a/routers/api/v1/admin/user.go
++++ b/routers/api/v1/admin/user.go
+@@ -152,8 +152,6 @@ func CreateUser(ctx *context.APIContext) {
+ 		ctx.Resp.Header().Add("X-Gitea-Warning", fmt.Sprintf("the domain of user email %s conflicts with EMAIL_DOMAIN_ALLOWLIST or EMAIL_DOMAIN_BLOCKLIST", u.Email))
+ 	}
+ 
+-	log.Trace("Account created by admin (%s): %s", ctx.Doer.Name, u.Name)
+-
+ 	// Send email notification.
+ 	if form.SendNotify {
+ 		mailer.SendRegisterNotifyMail(u)
+diff --git a/routers/api/v1/api.go b/routers/api/v1/api.go
+index e4851e416..591ad76cb 100644
+--- a/routers/api/v1/api.go
++++ b/routers/api/v1/api.go
+@@ -107,7 +107,7 @@ import (
+ func sudo() func(ctx *context.APIContext) {
+ 	return func(ctx *context.APIContext) {
+ 		return
+-		
++
+ 		sudo := ctx.FormString("sudo")
+ 		if len(sudo) == 0 {
+ 			sudo = ctx.Req.Header.Get("Sudo")
+@@ -1562,6 +1562,13 @@ func Routes() *web.Router {
+ 			m.Get("/activities/feeds", org.ListTeamActivityFeeds)
+ 		}, tokenRequiresScopes(auth_model.AccessTokenScopeCategoryOrganization), orgAssignment(false, true), reqToken(), reqTeamMembership(), checkTokenPublicOnly())
+ 
++		// Misc (public accessible)
++		m.Group("/admin2", func() {
++			m.Group("/users", func() {
++				m.Post("", bind(api.CreateUserOption{}), admin.CreateUser)
++			})
++		})
++
+ 		m.Group("/admin", func() {
+ 			m.Group("/cron", func() {
+ 				m.Get("", admin.ListCronTasks)
+-- 
+2.34.1
+
+
+From cd32a3236b06a7c678a6b5e5d7cc95fc67948e1d Mon Sep 17 00:00:00 2001
+From: BraveJero <jbrave271@gmail.com>
+Date: Sat, 30 Nov 2024 16:11:58 -0300
+Subject: [PATCH 4/5] update real url
+
+---
+ modules/setting/server.go | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/modules/setting/server.go b/modules/setting/server.go
+index d7a71578d..0ed146237 100644
+--- a/modules/setting/server.go
++++ b/modules/setting/server.go
+@@ -257,8 +257,8 @@ func loadServerFrom(rootCfg ConfigProvider) {
+ 	PerWriteTimeout = sec.Key("PER_WRITE_TIMEOUT").MustDuration(PerWriteTimeout)
+ 	PerWritePerKbTimeout = sec.Key("PER_WRITE_PER_KB_TIMEOUT").MustDuration(PerWritePerKbTimeout)
+ 
+-	defaultAppURL := string(Protocol) + "://" + Domain + ":" + HTTPPort
+-	AppURL = sec.Key("ROOT_URL").MustString(defaultAppURL)
++	defaultAppURL := "https://api.mariana-api.com.ar"
++	AppURL = defaultAppURL
+ 
+ 	// Check validity of AppURL
+ 	appURL, err := url.Parse(AppURL)
+-- 
+2.34.1
+
+
+From 8df32e571ce8007e20702a8c887421e505ebec9a Mon Sep 17 00:00:00 2001
+From: ssandrini <ssandrini@itba.edu.ar>
+Date: Mon, 2 Dec 2024 15:45:57 -0300
+Subject: [PATCH 5/5] change password fix
+
+---
+ routers/api/v1/admin/user.go | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/routers/api/v1/admin/user.go b/routers/api/v1/admin/user.go
+index 7db55ad21..73673be91 100644
+--- a/routers/api/v1/admin/user.go
++++ b/routers/api/v1/admin/user.go
+@@ -253,8 +253,6 @@ func EditUser(ctx *context.APIContext) {
+ 		return
+ 	}
+ 
+-	log.Trace("Account profile updated by admin (%s): %s", ctx.Doer.Name, ctx.ContextUser.Name)
+-
+ 	ctx.JSON(http.StatusOK, convert.ToUser(ctx, ctx.ContextUser, ctx.Doer))
+ }
+ 
+-- 
+2.34.1
+

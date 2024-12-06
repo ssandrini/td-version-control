@@ -16,6 +16,7 @@ This repository contains the Terraform configurations for deploying the backend 
 -   [Destroying the Infrastructure](#destroying-the-infrastructure)
 -   [Troubleshooting](#troubleshooting)
 -   [Setting Up the gcloud SDK](#setting-up-the-gcloud-sdk)
+-   [Applying Custom Changes from the Original Gitea Repository](#applying-custom-changes-from-the-original-gitea-repository)
 -   [Deploy to the Artifact registry](#deploy-to-the-artifact-registry)
 
 ## Architecture Overview
@@ -208,6 +209,61 @@ To interact with GCP resources, and depliy the infraestructure, ensure the Googl
     ```
 
     If your instance is listed, the SDK is ready for use.
+
+## Applying Custom Changes from the Original Gitea Repository
+
+To apply the changes needed from the original Gitea repository to achieve the version in [Masabra-gitea](https://github.com/BraveJero/Masabra-gitea), follow these steps:
+
+### Step 1: Clone the Original Gitea Repository
+
+Clone the original Gitea repository to your local machine:
+
+```bash
+git clone https://github.com/go-gitea/gitea.git
+cd gitea
+```
+
+### Step 2: Download and Apply the Patch
+
+1. **Download the Patch File**:
+   Get the patch file (`/masabra-gitea-changes.patch`) that contains the custom changes. This file was generated based on commit `713364fc718d1d53840bd83ba6f6c307bd213fa8` from the main branch.
+
+2. **Apply the Patch**:
+   Use the `git apply` command to apply your changes to the cloned repository:
+
+   ```bash
+   git apply /masabra-gitea-changes.patch
+   ```
+
+3. **Verify the Patch**:
+   After applying the patch, check that the changes have been applied successfully:
+
+   ```bash
+   git status
+   ```
+
+   If there are any conflicts, Git will highlight them. Resolve these conflicts manually.
+
+### Step 3: Test the Updated Repository
+
+Before deploying the updated Gitea repository, build and test it locally to ensure the changes work as expected:
+
+```bash
+make build
+```
+
+> Gitea has a lot of requirements, we recommend building a Docker image from the `Dockerfile` configuration.
+
+### Step 4: Deploy the Updated Version
+
+Use the deployment steps outlined in the [Deploy to the Artifact Registry](#deploy-to-the-artifact-registry) section to build and deploy the updated Gitea image to your GCP infrastructure.
+
+### Troubleshooting
+
+If you encounter issues while applying the patch:
+- Ensure the patch file corresponds to the correct version of the original repository.
+- Resolve any merge conflicts manually by editing the conflicting files.
+- Use `git log` and `git diff` to debug and verify applied changes.
 
 ## Deploy to the Artifact registry
 

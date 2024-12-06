@@ -8,7 +8,7 @@ import { TDState } from '../../../../../main/models/TDState';
 import Project from '../../../../../main/models/Project';
 import HelpModal from '@renderer/components/ui/helpModal';
 import Spinner from '@renderer/components/ui/Spinner';
-import { FaSyncAlt } from 'react-icons/fa';
+import { Version } from '../../../../../main/models/Version';
 
 interface MergeConflictsDialogProps {
     project?: Project;
@@ -30,13 +30,15 @@ interface MergeConflictsDialogProps {
         >
     >;
     update?: () => void;
+    setWipVersion: React.Dispatch<React.SetStateAction<Version | null>>;
 }
 
 const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
     project,
     mergeConflicts,
     setMergeConflicts,
-    update
+    update,
+    setWipVersion
 }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -69,6 +71,7 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
             .finally(() => {
                 setMergeConflicts(undefined);
                 setIsLoadingMerge(false);
+                setWipVersion(undefined);
             });
     };
 
@@ -89,6 +92,7 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
             .finally(() => {
                 setMergeConflicts(undefined);
                 setIsLoadingMerge(false);
+                setWipVersion(undefined);
             });
     };
 

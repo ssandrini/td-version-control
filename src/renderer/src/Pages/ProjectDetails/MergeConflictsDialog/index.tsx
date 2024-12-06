@@ -7,6 +7,8 @@ import { Dialog } from '@radix-ui/react-dialog';
 import { TDState } from '../../../../../main/models/TDState';
 import Project from '../../../../../main/models/Project';
 import HelpModal from '@renderer/components/ui/helpModal';
+import Spinner from '@renderer/components/ui/Spinner';
+import { FaSyncAlt } from 'react-icons/fa';
 
 interface MergeConflictsDialogProps {
     project?: Project;
@@ -173,7 +175,13 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                                     );
                                 }}
                             >
-                                Local Version
+                                {isLoadingMerge ? (
+                                    <div className="scale-75">
+                                        <Spinner />
+                                    </div>
+                                ) : (
+                                    <>{'Local Version'}</>
+                                )}
                             </Button>
                         </div>
                         <div className="w-1/2 h-full items-center ml-2 flex flex-col">
@@ -195,7 +203,13 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                                     );
                                 }}
                             >
-                                Cloud Version
+                                {isLoadingMerge ? (
+                                    <div className="scale-75">
+                                        <Spinner />
+                                    </div>
+                                ) : (
+                                    <>{'Cloud Version'}</>
+                                )}
                             </Button>
                         </div>
                     </div>
@@ -225,14 +239,26 @@ const MergeConflictsDialog: React.FC<MergeConflictsDialogProps> = ({
                                 disabled={isLoadingMerge}
                                 onClick={() => setShowConfirmationDialog(false)}
                             >
-                                Cancel
+                                {isLoadingMerge ? (
+                                    <div className="scale-75">
+                                        <Spinner />
+                                    </div>
+                                ) : (
+                                    <>{'Cancel'}</>
+                                )}
                             </Button>
                             <Button
                                 disabled={isLoadingMerge}
                                 variant="destructive"
                                 onClick={handleAbortMerge}
                             >
-                                Abort Merge
+                                {isLoadingMerge ? (
+                                    <div className="scale-75">
+                                        <Spinner />
+                                    </div>
+                                ) : (
+                                    <>{'Abort Merge'}</>
+                                )}
                             </Button>
                         </div>
                     </DialogContent>

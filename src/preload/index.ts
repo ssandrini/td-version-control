@@ -7,6 +7,7 @@ import { RegisterUserRequest } from '../main/services/UserService';
 const api = {
     listVersions: async (dir: string) => ipcRenderer.invoke(API_METHODS.LIST_VERSIONS, dir),
     filePicker: async () => ipcRenderer.invoke(API_METHODS.FILE_PICKER),
+    fileFilePicker: async () => ipcRenderer.invoke(API_METHODS.FILE_FILE_PICKER),
     getRecentProjects: async () => ipcRenderer.invoke(API_METHODS.RECENT_PROJECTS),
     saveProject: async (project: Project) => ipcRenderer.invoke(API_METHODS.SAVE_PROJECT, project),
     deleteProject: async (path: string) => ipcRenderer.invoke(API_METHODS.DELETE_PROJECT, path),

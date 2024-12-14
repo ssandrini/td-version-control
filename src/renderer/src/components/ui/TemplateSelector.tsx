@@ -9,6 +9,9 @@ interface TemplateSelectorProps {
 
 const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onTemplateSelect }) => {
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+    const [selectedCustomTemplate, setSelectedCustomTemplate] = useState<Template | undefined>(
+        undefined
+    );
     const [marianaTemplates, setMarianaTemplates] = useState<Template[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
@@ -25,6 +28,24 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onTemplateSelect })
     const handleTemplateClick = (template: Template) => {
         setSelectedTemplateId(template.id);
         onTemplateSelect(template);
+        setSelectedCustomTemplate(undefined);
+    };
+
+    const handleNewtemplateClick = () => {
+        setSelectedTemplateId('-1');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        window.api.filePicker().then((files) => {
+            const selectedPath = files.filePaths[0];
+            const template = {
+                id: '-1',
+                dir: selectedPath,
+                name: 'Custom',
+                description: 'Custom'
+            };
+            onTemplateSelect(template);
+            setSelectedCustomTemplate(template);
+        });
     };
 
     return (
@@ -66,6 +87,21 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({ onTemplateSelect })
                                     </p>
                                 </div>
                             ))}
+                            <div
+                                onClick={() => handleNewtemplateClick()}
+                                className={`text-white p-4 rounded-lg cursor-pointer border-2 ${
+                                    selectedTemplateId === '-1'
+                                        ? 'border-blue-500'
+                                        : 'border-transparent'
+                                } hover:border-blue-300 transition-colors`}
+                            >
+                                <p className="mt-4 font-semibold text-lg">
+                                    Create from existing sources
+                                </p>
+                                <p className="mt-2 text-gray-400 text-sm truncate whitespace-pre-wrap break-words overflow-wrap break-word max-w-[90%] max-h-[10rem] overflow-hidden">
+                                    {selectedCustomTemplate && selectedCustomTemplate.dir}
+                                </p>
+                            </div>
                         </div>
                     )}
                 </>

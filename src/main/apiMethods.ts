@@ -6,6 +6,7 @@ export const API_METHODS = {
     CURRENT_VERSION: 'current-version',
     HAS_CHANGES: 'has-changes',
     FILE_PICKER: 'file-picker',
+    FILE_FILE_PICKER: 'file-file-picker',
     RECENT_PROJECTS: 'recent-projects',
     SAVE_PROJECT: 'save-project',
     DELETE_PROJECT: 'delete_project',

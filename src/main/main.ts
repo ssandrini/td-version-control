@@ -13,6 +13,7 @@ import { TDProcessor } from './processors/TDProcessor';
 import { API_METHODS } from './apiMethods';
 import {
     createProjectDirectory,
+    fileFilePicker,
     filePicker,
     findFileByExt,
     getTemplates,
@@ -201,6 +202,9 @@ const setupProject = <T, S>(projectManager: ProjectManager<T, S>): void => {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ipcMain.handle(API_METHODS.FILE_PICKER, (_) => filePicker());
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ipcMain.handle(API_METHODS.FILE_FILE_PICKER, (_) => fileFilePicker());
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ipcMain.handle(API_METHODS.RECENT_PROJECTS, (_) => userDataMgr.getRecentProjects());

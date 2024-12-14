@@ -37,6 +37,21 @@ export const filePicker = async (): Promise<Electron.OpenDialogReturnValue> => {
         return result;
     });
 };
+/**
+ * Opens a file picker dialog for selecting a file.
+ * @returns {Promise<Electron.OpenDialogReturnValue>} - The result of the file picker dialog.
+ */
+export const fileFilePicker = async (): Promise<Electron.OpenDialogReturnValue> => {
+    log.info('Opening file picker dialog for file selection.');
+    return dialog.showOpenDialog({ properties: ['openFile'] }).then((result) => {
+        if (result.canceled) {
+            log.info('File picker was canceled.');
+        } else {
+            log.info(`File selected: ${result.filePaths}`);
+        }
+        return result;
+    });
+};
 
 /**
  * Retrieves a list of templates from the 'resources/templates' directory.
